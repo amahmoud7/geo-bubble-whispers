@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -30,14 +29,13 @@ export const useGoogleMap = () => {
       }
     });
 
-    // Add click listener for street view
-    streetViewControl.addListener('click', (event: google.maps.MouseEvent) => {
+    // Add click listener for street view with correct event type
+    streetViewControl.addListener('click', (event: google.maps.MapMouseEvent) => {
       if (streetViewControl.getVisible() && event.latLng) {
         const position = {
           lat: event.latLng.lat(),
           lng: event.latLng.lng()
         };
-        // Dispatch a custom event with the clicked position
         window.dispatchEvent(new CustomEvent('streetViewClick', { 
           detail: position 
         }));

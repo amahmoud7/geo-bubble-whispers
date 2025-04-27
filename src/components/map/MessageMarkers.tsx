@@ -29,6 +29,8 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
             strokeColor: '#ffffff',
             strokeWeight: 2,
           }}
+          // Make markers visible in street view
+          visible={true}
         />
       ))}
     </>
