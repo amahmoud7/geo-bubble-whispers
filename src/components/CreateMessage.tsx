@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +20,13 @@ const CreateMessage: React.FC<CreateMessageProps> = ({ onClose, initialPosition 
   const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState(initialPosition);
   const [isPinPlaced, setIsPinPlaced] = useState(false);
+
+  useEffect(() => {
+    if (initialPosition) {
+      setPosition(initialPosition);
+      setIsPinPlaced(true);
+    }
+  }, [initialPosition]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

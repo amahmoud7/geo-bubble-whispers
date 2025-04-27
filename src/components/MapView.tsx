@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import MessageDetail from './MessageDetail';
@@ -26,6 +25,8 @@ const MapView: React.FC = () => {
     lat: 40.7128,
     lng: -74.0060
   });
+  const [isInStreetView, setIsInStreetView] = useState(false);
+  const [streetViewPosition, setStreetViewPosition] = useState<{ lat: number; lng: number } | null>(null);
 
   const {
     newPinPosition,
@@ -47,6 +48,19 @@ const MapView: React.FC = () => {
     const streetViewControl = map.getStreetView();
     streetViewControl.addListener('visible_changed', () => {
       setIsAttemptingStreetView(streetViewControl.getVisible());
+      setIsInStreetView(streetViewControl.getVisible());
+    });
+
+    streetViewControl.addListener('position_changed', () => {
+      if (streetViewControl.getVisible()) {
+        const position = streetViewControl.getPosition();
+        if (position) {
+          setStreetViewPosition({
+            lat: position.lat(),
+            lng: position.lng()
+          });
+        }
+      }
     });
   }, []);
 
@@ -109,10 +123,19 @@ const MapView: React.FC = () => {
     setIsCreating(true);
     startPinPlacement();
     setSelectedMessage(null);
-    toast({
-      title: "Place your Lo",
-      description: "Click on the map to place your Lo",
-    });
+
+    if (isInStreetView && streetViewPosition) {
+      setNewPinPosition(streetViewPosition);
+      toast({
+        title: "Location selected",
+        description: "Current street view position will be used for your Lo",
+      });
+    } else {
+      toast({
+        title: "Place your Lo",
+        description: "Click on the map to place your Lo",
+      });
+    }
   };
 
   const handleClose = () => {
@@ -136,6 +159,8 @@ const MapView: React.FC = () => {
       const streetViewControl = map.getStreetView();
       streetViewControl.setVisible(false);
       setIsAttemptingStreetView(false);
+      setIsInStreetView(false);
+      setStreetViewPosition(null);
     }
   };
 
@@ -159,14 +184,26 @@ const MapView: React.FC = () => {
       </Button>
 
       {isAttemptingStreetView && (
-        <Button
-          onClick={handleCancelStreetView}
-          className="absolute right-8 top-8 z-20 flex items-center gap-2 shadow-lg"
-          variant="destructive"
-        >
-          <X className="h-4 w-4" />
-          Exit Street View
-        </Button>
+        <div className="absolute right-8 top-8 z-20 flex flex-col gap-2">
+          <Button
+            onClick={handleCancelStreetView}
+            className="flex items-center gap-2 shadow-lg"
+            variant="destructive"
+          >
+            <X className="h-4 w-4" />
+            Exit Street View
+          </Button>
+          {isInStreetView && (
+            <Button
+              onClick={handleCreateMessage}
+              className="flex items-center gap-2 shadow-lg"
+              variant="default"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Drop Lo Here
+            </Button>
+          )}
+        </div>
       )}
 
       {isPlacingPin && (
@@ -222,4 +259,3 @@ const MapView: React.FC = () => {
 };
 
 export default MapView;
-
