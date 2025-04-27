@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import MessageDetail from './MessageDetail';
@@ -102,15 +101,6 @@ const MapView: React.FC = () => {
 
     if (isInStreetView && streetViewPosition) {
       setNewPinPosition(streetViewPosition);
-      toast({
-        title: "Location selected",
-        description: "Current street view position will be used for your Lo",
-      });
-    } else {
-      toast({
-        title: "Place your Lo",
-        description: "Click on the map to place your Lo",
-      });
     }
   };
 

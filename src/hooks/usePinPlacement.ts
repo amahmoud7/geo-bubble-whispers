@@ -1,5 +1,6 @@
 
 import { useState, useCallback } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 export interface PinPosition {
   lat: number;
@@ -17,11 +18,20 @@ export const usePinPlacement = () => {
         lng: e.latLng?.lng() || 0
       };
       setNewPinPosition(newPosition);
+      toast({
+        title: "Location selected",
+        description: "Now you can create your Lo at this location",
+      });
     }
   }, [isPlacingPin]);
 
   const startPinPlacement = useCallback(() => {
     setIsPlacingPin(true);
+    setNewPinPosition(null);
+    toast({
+      title: "Place your Lo",
+      description: "Click anywhere on the map to select a location",
+    });
   }, []);
 
   const endPinPlacement = useCallback(() => {
