@@ -1,57 +1,13 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import MessageDetail from './MessageDetail';
 import CreateMessage from './CreateMessage';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import SearchBox from './map/SearchBox';
-import FilterMenu from './map/FilterMenu';
 import MessageMarkers from './map/MessageMarkers';
-
-const mockMessages = [
-  {
-    id: '1',
-    position: { x: 40.7829, y: -73.9654 },
-    user: {
-      name: 'Alex Smith',
-      avatar: 'https://github.com/shadcn.png',
-    },
-    content: 'Just spotted a great street performance here! 🎸',
-    mediaUrl: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21',
-    isPublic: true,
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    expiresAt: new Date(Date.now() + 82800000).toISOString(),
-    location: 'Central Park, New York',
-  },
-  {
-    id: '2',
-    position: { x: 47.6062, y: -122.3321 },
-    user: {
-      name: 'Jordan Lee',
-      avatar: 'https://github.com/shadcn.png',
-    },
-    content: 'This coffee shop has the best latte in town! ☕️',
-    mediaUrl: '',
-    isPublic: true,
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
-    expiresAt: new Date(Date.now() + 79200000).toISOString(),
-    location: 'Downtown, Seattle',
-  },
-  {
-    id: '3',
-    position: { x: 34.0259, y: -118.7798 },
-    user: {
-      name: 'Taylor Swift',
-      avatar: 'https://github.com/shadcn.png',
-    },
-    content: 'Amazing sunset view from this spot! 🌅',
-    mediaUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-    isPublic: false,
-    timestamp: new Date(Date.now() - 10800000).toISOString(),
-    expiresAt: new Date(Date.now() + 75600000).toISOString(),
-    location: 'Malibu Beach, California',
-  },
-];
+import MapControls from './map/MapControls';
+import { usePinPlacement } from '@/hooks/usePinPlacement';
+import { defaultMapOptions } from '@/config/mapStyles';
+import { mockMessages } from '@/mock/messages';
 
 const MapView: React.FC = () => {
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
@@ -66,8 +22,14 @@ const MapView: React.FC = () => {
     lat: 40.7128,
     lng: -74.0060
   });
-  const [newPinPosition, setNewPinPosition] = useState<{ lat: number; lng: number } | null>(null);
-  const [isPlacingPin, setIsPlacingPin] = useState(false);
+
+  const {
+    newPinPosition,
+    isPlacingPin,
+    handleMapClick,
+    startPinPlacement,
+    endPinPlacement
+  } = usePinPlacement();
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -136,15 +98,14 @@ const MapView: React.FC = () => {
 
   const handleCreateMessage = () => {
     setIsCreating(true);
-    setIsPlacingPin(true);
+    startPinPlacement();
     setSelectedMessage(null);
   };
 
   const handleClose = () => {
     setSelectedMessage(null);
     setIsCreating(false);
-    setIsPlacingPin(false);
-    setNewPinPosition(null);
+    endPinPlacement();
   };
 
   const handleFilterChange = (type: 'showPublic' | 'showFollowers', checked: boolean) => {
@@ -157,22 +118,16 @@ const MapView: React.FC = () => {
     return false;
   });
 
-  const handleMapClick = useCallback((e: google.maps.MouseEvent) => {
-    if (isPlacingPin) {
-      const newPosition = {
-        lat: e.latLng?.lat() || 0,
-        lng: e.latLng?.lng() || 0
-      };
-      setNewPinPosition(newPosition);
-    }
-  }, [isPlacingPin]);
-
   if (!isLoaded) return <div>Loading...</div>;
 
   return (
     <div className="map-container relative w-full h-[calc(100vh-4rem)]">
-      <SearchBox onSearchBoxLoad={onSearchBoxLoad} />
-      <FilterMenu filters={filters} onFilterChange={handleFilterChange} />
+      <MapControls
+        onCreateMessage={handleCreateMessage}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onSearchBoxLoad={onSearchBoxLoad}
+      />
 
       <GoogleMap
         mapContainerClassName="w-full h-full"
@@ -181,112 +136,23 @@ const MapView: React.FC = () => {
         onLoad={onLoad}
         onUnmount={onUnmount}
         onClick={handleMapClick}
-        options={{
-          styles: [
-            {
-              featureType: "all",
-              elementType: "labels.text.fill",
-              stylers: [{ color: "#333333" }]
-            },
-            {
-              featureType: "administrative",
-              elementType: "geometry.fill",
-              stylers: [{ visibility: "on" }]
-            },
-            {
-              featureType: "road",
-              elementType: "geometry",
-              stylers: [{ color: "#ffffff" }]
-            },
-            {
-              featureType: "road",
-              elementType: "labels.text.fill",
-              stylers: [{ color: "#666666" }]
-            },
-            {
-              featureType: "road.arterial",
-              elementType: "geometry",
-              stylers: [{ color: "#ffffff" }]
-            },
-            {
-              featureType: "road.highway",
-              elementType: "geometry",
-              stylers: [{ color: "#ffffff" }]
-            },
-            {
-              featureType: "road.local",
-              elementType: "geometry",
-              stylers: [{ color: "#ffffff" }]
-            },
-            {
-              featureType: "transit",
-              elementType: "geometry",
-              stylers: [{ color: "#e5e5e5" }]
-            },
-            {
-              featureType: "water",
-              elementType: "geometry",
-              stylers: [{ color: "#c9c9c9" }]
-            },
-            {
-              featureType: "water",
-              elementType: "labels.text.fill",
-              stylers: [{ color: "#9e9e9e" }]
-            },
-            {
-              featureType: "poi",
-              elementType: "geometry",
-              stylers: [{ color: "#eeeeee" }]
-            },
-            {
-              featureType: "poi.park",
-              elementType: "geometry",
-              stylers: [{ color: "#e5e5e5" }]
-            }
-          ],
-          disableDefaultUI: false,
-          zoomControl: true,
-          mapTypeControl: false,
-          streetViewControl: true,
-          fullscreenControl: true,
-          scaleControl: true,
-        }}
+        options={defaultMapOptions}
       >
-        <Marker
-          position={userLocation}
-          icon={{
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 7,
-            fillColor: '#3b82f6',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          }}
-        />
-
         <MessageMarkers 
           messages={filteredMessages}
           onMessageClick={handleBubbleClick}
         />
 
         {isPlacingPin && newPinPosition && (
-          <Marker
-            position={newPinPosition}
-            draggable={true}
-            onDragEnd={(e) => {
-              setNewPinPosition({
-                lat: e.latLng?.lat() || 0,
-                lng: e.latLng?.lng() || 0
-              });
-            }}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: '#22c55e',
-              fillOpacity: 0.8,
-              strokeColor: '#ffffff',
-              strokeWeight: 2,
-            }}
+          <MessageMarkers
+            messages={[
+              {
+                id: 'new-pin',
+                position: { x: newPinPosition.lat, y: newPinPosition.lng },
+                isPublic: true
+              }
+            ]}
+            onMessageClick={() => {}}
           />
         )}
       </GoogleMap>
@@ -297,13 +163,6 @@ const MapView: React.FC = () => {
           onClose={handleClose}
         />
       )}
-      
-      <Button
-        className="absolute bottom-8 right-8 rounded-full h-14 w-14 shadow-lg"
-        onClick={handleCreateMessage}
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
       
       {isCreating && (
         <CreateMessage 
