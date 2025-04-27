@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
@@ -8,10 +8,25 @@ interface SearchBoxProps {
 }
 
 const SearchBox: React.FC<SearchBoxProps> = ({ onSearchBoxLoad }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!inputRef.current) return;
+
+    const searchBox = new google.maps.places.SearchBox(inputRef.current);
+    onSearchBoxLoad(searchBox);
+
+    return () => {
+      // Cleanup
+      google.maps.event.clearInstanceListeners(searchBox);
+    };
+  }, [onSearchBoxLoad]);
+
   return (
     <div className="absolute top-4 left-4 z-10 w-64">
       <div className="relative">
         <Input
+          ref={inputRef}
           type="text"
           placeholder="Search locations..."
           className="pl-10 pr-4 h-10 w-full bg-white"
