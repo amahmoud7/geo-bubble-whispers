@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import MessageDetail from './MessageDetail';
@@ -8,7 +9,8 @@ import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { mockMessages } from '@/mock/messages';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, X } from 'lucide-react';
+import { MessageSquare, X, MapPin } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const MapView: React.FC = () => {
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
@@ -107,6 +109,10 @@ const MapView: React.FC = () => {
     setIsCreating(true);
     startPinPlacement();
     setSelectedMessage(null);
+    toast({
+      title: "Place your Lo",
+      description: "Click on the map to place your Lo",
+    });
   };
 
   const handleClose = () => {
@@ -163,6 +169,13 @@ const MapView: React.FC = () => {
         </Button>
       )}
 
+      {isPlacingPin && (
+        <div className="absolute left-1/2 top-8 z-20 transform -translate-x-1/2 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-primary" />
+          <span className="text-sm">Click on the map to place your Lo</span>
+        </div>
+      )}
+
       <GoogleMap
         mapContainerClassName="w-full h-full"
         center={userLocation}
@@ -198,10 +211,10 @@ const MapView: React.FC = () => {
         />
       )}
       
-      {isCreating && (
+      {isCreating && newPinPosition && (
         <CreateMessage 
           onClose={handleClose}
-          initialPosition={newPinPosition || undefined}
+          initialPosition={newPinPosition}
         />
       )}
     </div>
@@ -209,3 +222,4 @@ const MapView: React.FC = () => {
 };
 
 export default MapView;
+
