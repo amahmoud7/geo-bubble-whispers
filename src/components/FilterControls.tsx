@@ -26,7 +26,11 @@ const FilterControls: React.FC<FilterControlsProps> = ({
 }) => {
   return (
     <div className="flex flex-col gap-4 mb-4 sticky top-0 bg-lo-off-white p-2 z-10">
-      <SearchBar onSearch={onSearch} />
+      <div className="flex justify-center">
+        <div className="w-full max-w-md">
+          <SearchBar onSearch={onSearch} />
+        </div>
+      </div>
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <DropdownMenu>
@@ -75,3 +79,4 @@ const FilterControls: React.FC<FilterControlsProps> = ({
 };
 
 export default FilterControls;
+
