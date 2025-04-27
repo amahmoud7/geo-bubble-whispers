@@ -8,6 +8,8 @@ import MapControls from './map/MapControls';
 import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { mockMessages } from '@/mock/messages';
+import { Button } from '@/components/ui/button';
+import { MessageSquare } from 'lucide-react';
 
 const MapView: React.FC = () => {
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
@@ -128,6 +130,15 @@ const MapView: React.FC = () => {
         onFilterChange={handleFilterChange}
         onSearchBoxLoad={onSearchBoxLoad}
       />
+
+      {/* Add Create Lo button */}
+      <Button
+        onClick={handleCreateMessage}
+        className="absolute right-8 top-1/2 transform -translate-y-1/2 z-20 h-12 w-12 rounded-full shadow-lg"
+        variant="default"
+      >
+        <MessageSquare className="h-6 w-6" />
+      </Button>
 
       <GoogleMap
         mapContainerClassName="w-full h-full"
