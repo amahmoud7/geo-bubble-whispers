@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import MessageBubble from './MessageBubble';
 import MessageDetail from './MessageDetail';
 import CreateMessage from './CreateMessage';
@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Filter, MapPin, Plus } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 
-// Mock data for message bubbles
+// Mock data with proper numeric coordinates
 const mockMessages = [
   {
     id: '1',
-    position: { x: '30%', y: '40%' },
+    position: { x: 40.7829, y: -73.9654 },
     user: {
       name: 'Alex Smith',
       avatar: 'https://github.com/shadcn.png',
@@ -25,7 +25,7 @@ const mockMessages = [
   },
   {
     id: '2',
-    position: { x: '70%', y: '20%' },
+    position: { x: 47.6062, y: -122.3321 },
     user: {
       name: 'Jordan Lee',
       avatar: 'https://github.com/shadcn.png',
@@ -39,7 +39,7 @@ const mockMessages = [
   },
   {
     id: '3',
-    position: { x: '50%', y: '60%' },
+    position: { x: 34.0259, y: -118.7798 },
     user: {
       name: 'Taylor Swift',
       avatar: 'https://github.com/shadcn.png',
@@ -60,6 +60,41 @@ const MapView: React.FC = () => {
     showPublic: true,
     showFollowers: true,
   });
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
+    lat: 40.7128,
+    lng: -74.0060
+  });
+
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: 'YOUR_GOOGLE_MAPS_API_KEY' // Replace with your API key
+  });
+
+  const onLoad = useCallback((map: google.maps.Map) => {
+    setMap(map);
+  }, []);
+
+  const onUnmount = useCallback(() => {
+    setMap(null);
+  }, []);
+
+  useEffect(() => {
+    // Get user's location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        () => {
+          console.log('Error getting location');
+        }
+      );
+    }
+  }, []);
 
   const handleBubbleClick = (id: string) => {
     setSelectedMessage(id);
@@ -82,16 +117,67 @@ const MapView: React.FC = () => {
     return false;
   });
 
-  useEffect(() => {
-    // Mock geolocation initialization
-    console.log('Map initialized with user location');
-  }, []);
+  if (!isLoaded) return <div>Loading...</div>;
 
   return (
-    <div className="map-container bg-lo-off-white relative">
-      {/* Map placeholder - would be replaced with actual map implementation */}
-      <div className="absolute inset-0 bg-gradient-to-b from-lo-light-blue to-lo-light-purple opacity-30"></div>
-      
+    <div className="map-container relative w-full h-[calc(100vh-4rem)]">
+      <GoogleMap
+        mapContainerClassName="w-full h-full"
+        center={userLocation}
+        zoom={13}
+        onLoad={onLoad}
+        onUnmount={onUnmount}
+        options={{
+          styles: [
+            {
+              featureType: 'all',
+              elementType: 'geometry',
+              stylers: [{ color: '#f5f5f5' }]
+            },
+            {
+              featureType: 'water',
+              elementType: 'geometry',
+              stylers: [{ color: '#e9e9e9' }]
+            },
+          ],
+          disableDefaultUI: false,
+          zoomControl: true,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        }}
+      >
+        {/* User location marker */}
+        <Marker
+          position={userLocation}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 7,
+            fillColor: '#3b82f6',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+          }}
+        />
+
+        {/* Message markers */}
+        {filteredMessages.map((message) => (
+          <Marker
+            key={message.id}
+            position={{ lat: message.position.x, lng: message.position.y }}
+            onClick={() => handleBubbleClick(message.id)}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: message.isPublic ? '#9370DB' : '#0EA5E9',
+              fillOpacity: 0.6,
+              strokeColor: '#ffffff',
+              strokeWeight: 2,
+            }}
+          />
+        ))}
+      </GoogleMap>
+
       {/* Filter controls */}
       <div className="absolute top-4 right-4 z-10">
         <DropdownMenu>
@@ -121,30 +207,7 @@ const MapView: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      
-      {/* Current location indicator */}
-      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        <div className="w-6 h-6 bg-lo-blue rounded-full flex items-center justify-center">
-          <MapPin className="h-3 w-3 text-white" />
-        </div>
-      </div>
-      
-      {/* Message bubbles */}
-      {filteredMessages.map((message) => (
-        <MessageBubble
-          key={message.id}
-          id={message.id}
-          position={{
-            x: message.position.x,
-            y: message.position.y,
-          }}
-          onClick={handleBubbleClick}
-          size={16}
-          color={message.isPublic ? 'rgba(147, 112, 219, 0.6)' : 'rgba(14, 165, 233, 0.6)'}
-          pulse={message.id === selectedMessage}
-        />
-      ))}
-      
+
       {/* Selected message detail */}
       {selectedMessage && (
         <MessageDetail 
