@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Filter, MapPin, Plus } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 
-// Mock data with proper numeric coordinates
 const mockMessages = [
   {
     id: '1',
@@ -68,7 +67,7 @@ const MapView: React.FC = () => {
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: 'YOUR_GOOGLE_MAPS_API_KEY' // Replace with your API key
+    googleMapsApiKey: 'AIzaSyCja18mhM6OgcQPkZp7rCZM6C29SGz3S4U'
   });
 
   const onLoad = useCallback((map: google.maps.Map) => {
@@ -80,7 +79,6 @@ const MapView: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Get user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -147,7 +145,6 @@ const MapView: React.FC = () => {
           fullscreenControl: false,
         }}
       >
-        {/* User location marker */}
         <Marker
           position={userLocation}
           icon={{
@@ -160,7 +157,6 @@ const MapView: React.FC = () => {
           }}
         />
 
-        {/* Message markers */}
         {filteredMessages.map((message) => (
           <Marker
             key={message.id}
@@ -178,7 +174,6 @@ const MapView: React.FC = () => {
         ))}
       </GoogleMap>
 
-      {/* Filter controls */}
       <div className="absolute top-4 right-4 z-10">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -208,7 +203,6 @@ const MapView: React.FC = () => {
         </DropdownMenu>
       </div>
 
-      {/* Selected message detail */}
       {selectedMessage && (
         <MessageDetail 
           message={mockMessages.find(m => m.id === selectedMessage)!}
@@ -216,7 +210,6 @@ const MapView: React.FC = () => {
         />
       )}
       
-      {/* Create message button */}
       <Button
         className="absolute bottom-8 right-8 rounded-full h-14 w-14 shadow-lg"
         onClick={handleCreateMessage}
@@ -224,7 +217,6 @@ const MapView: React.FC = () => {
         <Plus className="h-6 w-6" />
       </Button>
       
-      {/* Create message form */}
       {isCreating && (
         <CreateMessage onClose={handleClose} />
       )}
