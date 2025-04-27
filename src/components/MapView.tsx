@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import MessageDetail from './MessageDetail';
@@ -67,6 +66,8 @@ const MapView: React.FC = () => {
     lat: 40.7128,
     lng: -74.0060
   });
+  const [newPinPosition, setNewPinPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [isPlacingPin, setIsPlacingPin] = useState(false);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -135,12 +136,15 @@ const MapView: React.FC = () => {
 
   const handleCreateMessage = () => {
     setIsCreating(true);
+    setIsPlacingPin(true);
     setSelectedMessage(null);
   };
 
   const handleClose = () => {
     setSelectedMessage(null);
     setIsCreating(false);
+    setIsPlacingPin(false);
+    setNewPinPosition(null);
   };
 
   const handleFilterChange = (type: 'showPublic' | 'showFollowers', checked: boolean) => {
@@ -152,6 +156,16 @@ const MapView: React.FC = () => {
     if (!message.isPublic && filters.showFollowers) return true;
     return false;
   });
+
+  const handleMapClick = useCallback((e: google.maps.MouseEvent) => {
+    if (isPlacingPin) {
+      const newPosition = {
+        lat: e.latLng?.lat() || 0,
+        lng: e.latLng?.lng() || 0
+      };
+      setNewPinPosition(newPosition);
+    }
+  }, [isPlacingPin]);
 
   if (!isLoaded) return <div>Loading...</div>;
 
@@ -166,6 +180,7 @@ const MapView: React.FC = () => {
         zoom={13}
         onLoad={onLoad}
         onUnmount={onUnmount}
+        onClick={handleMapClick}
         options={{
           styles: [
             {
@@ -253,6 +268,27 @@ const MapView: React.FC = () => {
           messages={filteredMessages}
           onMessageClick={handleBubbleClick}
         />
+
+        {isPlacingPin && newPinPosition && (
+          <Marker
+            position={newPinPosition}
+            draggable={true}
+            onDragEnd={(e) => {
+              setNewPinPosition({
+                lat: e.latLng?.lat() || 0,
+                lng: e.latLng?.lng() || 0
+              });
+            }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: '#22c55e',
+              fillOpacity: 0.8,
+              strokeColor: '#ffffff',
+              strokeWeight: 2,
+            }}
+          />
+        )}
       </GoogleMap>
 
       {selectedMessage && (
@@ -270,7 +306,10 @@ const MapView: React.FC = () => {
       </Button>
       
       {isCreating && (
-        <CreateMessage onClose={handleClose} />
+        <CreateMessage 
+          onClose={handleClose}
+          initialPosition={newPinPosition || undefined}
+        />
       )}
     </div>
   );

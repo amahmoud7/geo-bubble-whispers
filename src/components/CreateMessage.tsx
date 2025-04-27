@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,25 +5,27 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { MapPin, Image, X } from 'lucide-react';
+import { MapPin, Image, X, Move } from 'lucide-react';
 
 interface CreateMessageProps {
   onClose: () => void;
+  initialPosition?: { lat: number; lng: number };
 }
 
-const CreateMessage: React.FC<CreateMessageProps> = ({ onClose }) => {
+const CreateMessage: React.FC<CreateMessageProps> = ({ onClose, initialPosition }) => {
   const [content, setContent] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [position, setPosition] = useState(initialPosition);
+  const [isPinPlaced, setIsPinPlaced] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
       
-      // Create a preview URL
       const reader = new FileReader();
       reader.onload = () => {
         setPreviewUrl(reader.result as string);
@@ -40,14 +41,23 @@ const CreateMessage: React.FC<CreateMessageProps> = ({ onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!position || !isPinPlaced) {
+      toast({
+        title: "Location required",
+        description: "Please place and confirm the pin location for your Lo",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     
-    // Here we'd normally submit to an API
     setTimeout(() => {
       setIsLoading(false);
       toast({
-        title: "Message created",
-        description: "Your message has been posted successfully!",
+        title: "Lo dropped!",
+        description: "Your Lo has been posted successfully!",
       });
       onClose();
     }, 1500);
@@ -59,7 +69,7 @@ const CreateMessage: React.FC<CreateMessageProps> = ({ onClose }) => {
         <form onSubmit={handleSubmit}>
           <CardHeader>
             <CardTitle className="text-xl flex justify-between items-center">
-              <span>Create Message</span>
+              <span>Drop a Lo</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -72,9 +82,26 @@ const CreateMessage: React.FC<CreateMessageProps> = ({ onClose }) => {
           </CardHeader>
           
           <CardContent className="space-y-4">
-            <div className="flex items-center text-sm text-muted-foreground mb-2">
-              <MapPin className="h-4 w-4 mr-1" />
-              <span>Using your current location</span>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4 mr-1" />
+                {isPinPlaced ? (
+                  <span>Pin placed! Move it to adjust location</span>
+                ) : (
+                  <span>Place your pin on the map</span>
+                )}
+              </div>
+              {isPinPlaced && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Move className="h-4 w-4" />
+                  Move Pin
+                </Button>
+              )}
             </div>
             
             <div className="space-y-1">
@@ -147,8 +174,12 @@ const CreateMessage: React.FC<CreateMessageProps> = ({ onClose }) => {
           </CardContent>
           
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={isLoading || !content}>
-              {isLoading ? "Posting..." : "Post Message"}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading || !content || !isPinPlaced}
+            >
+              {isLoading ? "Dropping Lo..." : "Drop Lo"}
             </Button>
           </CardFooter>
         </form>
