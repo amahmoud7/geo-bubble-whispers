@@ -1,12 +1,12 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
-import MessageBubble from './MessageBubble';
 import MessageDetail from './MessageDetail';
 import CreateMessage from './CreateMessage';
 import { Button } from '@/components/ui/button';
-import { Filter, MapPin, Plus, Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
+import { Plus } from 'lucide-react';
+import SearchBox from './map/SearchBox';
+import FilterMenu from './map/FilterMenu';
+import MessageMarkers from './map/MessageMarkers';
 
 const mockMessages = [
   {
@@ -142,6 +142,10 @@ const MapView: React.FC = () => {
     setIsCreating(false);
   };
 
+  const handleFilterChange = (type: 'showPublic' | 'showFollowers', checked: boolean) => {
+    setFilters(prev => ({ ...prev, [type]: checked }));
+  };
+
   const filteredMessages = mockMessages.filter(message => {
     if (message.isPublic && filters.showPublic) return true;
     if (!message.isPublic && filters.showFollowers) return true;
@@ -152,21 +156,8 @@ const MapView: React.FC = () => {
 
   return (
     <div className="map-container relative w-full h-[calc(100vh-4rem)]">
-      <div className="absolute top-4 left-4 z-10 w-64">
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="Search locations..."
-            className="pl-10 pr-4 h-10 w-full bg-white"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-              }
-            }}
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        </div>
-      </div>
+      <SearchBox onSearchBoxLoad={onSearchBoxLoad} />
+      <FilterMenu filters={filters} onFilterChange={handleFilterChange} />
 
       <GoogleMap
         mapContainerClassName="w-full h-full"
@@ -206,51 +197,11 @@ const MapView: React.FC = () => {
           }}
         />
 
-        {filteredMessages.map((message) => (
-          <Marker
-            key={message.id}
-            position={{ lat: message.position.x, lng: message.position.y }}
-            onClick={() => handleBubbleClick(message.id)}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: message.isPublic ? '#9370DB' : '#0EA5E9',
-              fillOpacity: 0.6,
-              strokeColor: '#ffffff',
-              strokeWeight: 2,
-            }}
-          />
-        ))}
+        <MessageMarkers 
+          messages={filteredMessages}
+          onMessageClick={handleBubbleClick}
+        />
       </GoogleMap>
-
-      <div className="absolute top-4 right-4 z-10">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="bg-white">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <DropdownMenuCheckboxItem
-              checked={filters.showPublic}
-              onCheckedChange={(checked) => 
-                setFilters(prev => ({ ...prev, showPublic: checked as boolean }))
-              }
-            >
-              Public Messages
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={filters.showFollowers}
-              onCheckedChange={(checked) => 
-                setFilters(prev => ({ ...prev, showFollowers: checked as boolean }))
-              }
-            >
-              Follower Messages
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
 
       {selectedMessage && (
         <MessageDetail 
