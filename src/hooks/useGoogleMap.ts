@@ -29,6 +29,20 @@ export const useGoogleMap = () => {
         }
       }
     });
+
+    // Add click listener for street view
+    streetViewControl.addListener('click', (event: google.maps.MouseEvent) => {
+      if (streetViewControl.getVisible() && event.latLng) {
+        const position = {
+          lat: event.latLng.lat(),
+          lng: event.latLng.lng()
+        };
+        // Dispatch a custom event with the clicked position
+        window.dispatchEvent(new CustomEvent('streetViewClick', { 
+          detail: position 
+        }));
+      }
+    });
   }, []);
 
   const handleCancelStreetView = useCallback(() => {
