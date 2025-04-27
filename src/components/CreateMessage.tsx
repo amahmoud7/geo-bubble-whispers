@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,8 @@ const CreateMessage: React.FC<CreateMessageProps> = ({ onClose, initialPosition 
       onClose();
     }, 1500);
   };
+
+  const isSubmitDisabled = isLoading || !content.trim() || !isPinPlaced;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -176,8 +179,8 @@ const CreateMessage: React.FC<CreateMessageProps> = ({ onClose, initialPosition 
           <CardFooter>
             <Button 
               type="submit" 
-              className="w-full" 
-              disabled={isLoading || !content || !isPinPlaced}
+              className={`w-full transition-opacity ${!content.trim() ? 'opacity-50' : 'opacity-100'}`}
+              disabled={isSubmitDisabled}
             >
               {isLoading ? "Dropping Lo..." : "Drop Lo"}
             </Button>
