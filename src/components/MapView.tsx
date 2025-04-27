@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import MessageDetail from './MessageDetail';
@@ -9,11 +8,12 @@ import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { mockMessages } from '@/mock/messages';
 import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, X } from 'lucide-react';
 
 const MapView: React.FC = () => {
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [isAttemptingStreetView, setIsAttemptingStreetView] = useState<boolean>(false);
   const [filters, setFilters] = useState({
     showPublic: true,
     showFollowers: true,
@@ -41,6 +41,11 @@ const MapView: React.FC = () => {
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
+
+    const streetViewControl = map.getStreetView();
+    streetViewControl.addListener('visible_changed', () => {
+      setIsAttemptingStreetView(streetViewControl.getVisible());
+    });
   }, []);
 
   const onUnmount = useCallback(() => {
@@ -120,6 +125,14 @@ const MapView: React.FC = () => {
     return false;
   });
 
+  const handleCancelStreetView = () => {
+    if (map) {
+      const streetViewControl = map.getStreetView();
+      streetViewControl.setVisible(false);
+      setIsAttemptingStreetView(false);
+    }
+  };
+
   if (!isLoaded) return <div>Loading...</div>;
 
   return (
@@ -131,7 +144,6 @@ const MapView: React.FC = () => {
         onSearchBoxLoad={onSearchBoxLoad}
       />
 
-      {/* Add Create Lo button */}
       <Button
         onClick={handleCreateMessage}
         className="absolute right-8 top-1/2 transform -translate-y-1/2 z-20 h-12 w-12 rounded-full shadow-lg"
@@ -139,6 +151,17 @@ const MapView: React.FC = () => {
       >
         <MessageSquare className="h-6 w-6" />
       </Button>
+
+      {isAttemptingStreetView && (
+        <Button
+          onClick={handleCancelStreetView}
+          className="absolute right-8 top-8 z-20 flex items-center gap-2 shadow-lg"
+          variant="destructive"
+        >
+          <X className="h-4 w-4" />
+          Exit Street View
+        </Button>
+      )}
 
       <GoogleMap
         mapContainerClassName="w-full h-full"
