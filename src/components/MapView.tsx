@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import MessageDetail from './MessageDetail';
@@ -24,6 +25,8 @@ const MapView: React.FC = () => {
     lat: 40.7128,
     lng: -74.0060
   });
+  // Add a force update state to trigger re-renders when messages change
+  const [, forceUpdate] = useState({});
 
   const {
     map,
@@ -108,6 +111,9 @@ const MapView: React.FC = () => {
     setSelectedMessage(null);
     setIsCreating(false);
     endPinPlacement();
+    
+    // Trigger re-render to show the new message
+    forceUpdate({});
   };
 
   const handleFilterChange = (type: 'showPublic' | 'showFollowers', checked: boolean) => {

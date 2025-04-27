@@ -12,7 +12,7 @@ export const usePinPlacement = () => {
   const [isPlacingPin, setIsPlacingPin] = useState(false);
 
   const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (isPlacingPin) {
+    if (isPlacingPin && e.latLng) {
       const newPosition = {
         lat: e.latLng?.lat() || 0,
         lng: e.latLng?.lng() || 0

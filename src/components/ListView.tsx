@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MessageDetail from './MessageDetail';
 import FilterControls from './FilterControls';
 import MessageCard from './MessageCard';
@@ -8,6 +8,21 @@ import { mockMessages } from '@/mock/messages';
 
 const ListView: React.FC = () => {
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  const [, setForceUpdate] = useState({});
+  
+  // Use useEffect to force a re-render when the component mounts
+  useEffect(() => {
+    // Force update to reflect any changes in mockMessages
+    setForceUpdate({});
+    
+    // Set up an interval to check for updates (simulates real-time updates)
+    const intervalId = setInterval(() => {
+      setForceUpdate({});
+    }, 2000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+  
   const {
     filters,
     setFilters,
@@ -31,7 +46,7 @@ const ListView: React.FC = () => {
   };
 
   return (
-    <div className="message-list bg-lo-off-white">
+    <div className="message-list bg-lo-off-white p-4">
       <FilterControls
         filters={filters}
         onFiltersChange={setFilters}
@@ -40,15 +55,21 @@ const ListView: React.FC = () => {
         onSearch={setSearchQuery}
       />
 
-      <div className="space-y-4 pb-4">
-        {filteredAndSortedMessages.map((message) => (
-          <MessageCard
-            key={message.id}
-            message={message}
-            onSelect={handleSelect}
-          />
-        ))}
-      </div>
+      {filteredAndSortedMessages.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No messages found.</p>
+        </div>
+      ) : (
+        <div className="space-y-4 pb-4">
+          {filteredAndSortedMessages.map((message) => (
+            <MessageCard
+              key={message.id}
+              message={message}
+              onSelect={handleSelect}
+            />
+          ))}
+        </div>
+      )}
       
       {selectedMessage && (
         <MessageDetail 

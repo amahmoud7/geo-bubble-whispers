@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { MapPin, Image, X, Move } from 'lucide-react';
+import { mockMessages } from '@/mock/messages';
 
 interface CreateMessageProps {
   onClose: () => void;
@@ -60,6 +62,28 @@ const CreateMessage: React.FC<CreateMessageProps> = ({ onClose, initialPosition 
 
     setIsLoading(true);
     
+    // Create a new message object
+    const newMessage = {
+      id: `new-${Date.now()}`,
+      content: content,
+      location: "Current Location",
+      user: {
+        name: "Current User",
+        avatar: "/placeholder.svg"
+      },
+      isPublic: isPublic,
+      timestamp: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      mediaUrl: previewUrl || undefined,
+      position: {
+        x: position.lat,
+        y: position.lng
+      }
+    };
+    
+    // Add the new message to mockMessages
+    mockMessages.unshift(newMessage);
+    
     setTimeout(() => {
       setIsLoading(false);
       toast({
@@ -67,7 +91,7 @@ const CreateMessage: React.FC<CreateMessageProps> = ({ onClose, initialPosition 
         description: "Your Lo has been posted successfully!",
       });
       onClose();
-    }, 1500);
+    }, 1000);
   };
 
   const isSubmitDisabled = isLoading || !content.trim() || !isPinPlaced;
