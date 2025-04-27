@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface MessageCardProps {
   message: {
@@ -19,11 +19,17 @@ interface MessageCardProps {
     timestamp: string;
     expiresAt: string;
     location: string;
+    position: {
+      x: number;
+      y: number;
+    };
   };
   onSelect: (id: string) => void;
 }
 
 const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
+  const navigate = useNavigate();
+
   const getTimeRemaining = (expiresAt: string) => {
     const now = new Date();
     const expiry = new Date(expiresAt);
@@ -36,6 +42,15 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleViewLocation = () => {
+    navigate('/home', { 
+      state: { 
+        center: { lat: message.position.x, lng: message.position.y },
+        messageId: message.id
+      }
+    });
   };
 
   return (
@@ -77,14 +92,27 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
         )}
       </CardContent>
       
-      <CardFooter className="p-4 pt-0 flex justify-between">
+      <CardFooter className="p-4 pt-0 flex justify-between items-center">
         <div className="flex items-center text-sm text-muted-foreground">
           <Clock className="h-4 w-4 mr-1" />
           <span>{getTimeRemaining(message.expiresAt)} left</span>
         </div>
-        <Button size="sm" variant="outline" onClick={() => onSelect(message.id)}>
-          View
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => onSelect(message.id)}
+          >
+            View
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleViewLocation}
+          >
+            <MapPin className="h-4 w-4" />
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
