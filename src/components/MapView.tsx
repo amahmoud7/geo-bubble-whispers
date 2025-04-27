@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import { useLocation } from 'react-router-dom';
 import MessageDetail from './MessageDetail';
 import CreateMessage from './CreateMessage';
 import MessageMarkers from './map/MessageMarkers';
@@ -15,6 +15,7 @@ import { mockMessages } from '@/mock/messages';
 import { toast } from '@/hooks/use-toast';
 
 const MapView: React.FC = () => {
+  const location = useLocation();
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [filters, setFilters] = useState({
@@ -25,7 +26,6 @@ const MapView: React.FC = () => {
     lat: 40.7128,
     lng: -74.0060
   });
-  // Add a force update state to trigger re-renders when messages change
   const [, forceUpdate] = useState({});
 
   const {
@@ -54,6 +54,26 @@ const MapView: React.FC = () => {
     googleMapsApiKey: 'AIzaSyCja18mhM6OgcQPkZp7rCZM6C29SGz3S4U',
     libraries: ['places']
   });
+
+  useEffect(() => {
+    if (location.state) {
+      const { center, messageId } = location.state as { center?: { lat: number; lng: number }, messageId?: string };
+      
+      if (center) {
+        setUserLocation(center);
+        if (messageId) {
+          setSelectedMessage(messageId);
+        }
+      }
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (map && userLocation) {
+      map.panTo(userLocation);
+      map.setZoom(15);
+    }
+  }, [map, userLocation]);
 
   useEffect(() => {
     if (!searchBox || !map) return;
@@ -85,17 +105,19 @@ const MapView: React.FC = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
+          if (!location.state?.center) {
+            setUserLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            });
+          }
         },
         () => {
           console.log('Error getting location');
         }
       );
     }
-  }, []);
+  }, [location.state]);
 
   const handleCreateMessage = () => {
     setIsCreating(true);
@@ -111,8 +133,6 @@ const MapView: React.FC = () => {
     setSelectedMessage(null);
     setIsCreating(false);
     endPinPlacement();
-    
-    // Trigger re-render to show the new message
     forceUpdate({});
   };
 

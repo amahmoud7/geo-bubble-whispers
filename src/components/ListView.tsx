@@ -64,7 +64,11 @@ const ListView: React.FC = () => {
           {filteredAndSortedMessages.map((message) => (
             <MessageCard
               key={message.id}
-              message={message}
+              message={{
+                ...message,
+                // Ensure position is always provided (default to 0,0 if not available)
+                position: message.position || { x: 0, y: 0 }
+              }}
               onSelect={handleSelect}
             />
           ))}
