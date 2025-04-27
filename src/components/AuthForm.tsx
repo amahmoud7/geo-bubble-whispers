@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { toast } from '@/hooks/use-toast';
-import { Gmail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
 const AuthForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -107,7 +108,7 @@ const AuthForm: React.FC = () => {
                     disabled={isLoading}
                     className="flex items-center justify-center"
                   >
-                    <Gmail className="mr-2" size={20} />
+                    <Mail className="mr-2" size={20} />
                     Google
                   </Button>
                   <Button
@@ -162,7 +163,7 @@ const AuthForm: React.FC = () => {
                     disabled={isLoading}
                     className="flex items-center justify-center"
                   >
-                    <Gmail className="mr-2" size={20} />
+                    <Mail className="mr-2" size={20} />
                     Google
                   </Button>
                   <Button
