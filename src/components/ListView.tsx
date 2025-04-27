@@ -26,13 +26,17 @@ const ListView: React.FC = () => {
     setSelectedMessage(null);
   };
 
+  const handleSortChange = (value: 'recent' | 'expiring') => {
+    setSortBy(value);
+  };
+
   return (
     <div className="message-list bg-lo-off-white">
       <FilterControls
         filters={filters}
         onFiltersChange={setFilters}
         sortBy={sortBy}
-        onSortChange={setSortBy}
+        onSortChange={handleSortChange}
         onSearch={setSearchQuery}
       />
 

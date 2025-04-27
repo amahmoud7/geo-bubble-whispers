@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,8 +11,8 @@ interface FilterControlsProps {
     showFollowers: boolean;
   };
   onFiltersChange: (filters: { showPublic: boolean; showFollowers: boolean }) => void;
-  sortBy: string;
-  onSortChange: (value: string) => void;
+  sortBy: 'recent' | 'expiring';
+  onSortChange: (value: 'recent' | 'expiring') => void;
   onSearch: (query: string) => void;
 }
 
@@ -79,4 +78,3 @@ const FilterControls: React.FC<FilterControlsProps> = ({
 };
 
 export default FilterControls;
-

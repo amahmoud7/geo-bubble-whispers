@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 
 interface MessageFilter {
@@ -12,10 +11,16 @@ interface Message {
   location: string;
   user: {
     name: string;
+    avatar: string;
   };
   isPublic: boolean;
   timestamp: string;
   expiresAt: string;
+  mediaUrl?: string;
+  position?: {
+    x: number;
+    y: number;
+  };
 }
 
 export const useMessageFilter = (messages: Message[]) => {
