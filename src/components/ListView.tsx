@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import MessageDetail from './MessageDetail';
+import SearchBar from './SearchBar';
 
-// Mock data for messages
 const mockMessages = [
   {
     id: '1',
@@ -88,9 +87,9 @@ const ListView: React.FC = () => {
     showPublic: true,
     showFollowers: true,
   });
-  
   const [sortBy, setSortBy] = useState('recent');
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleSelect = (id: string) => {
     setSelectedMessage(id);
@@ -100,12 +99,22 @@ const ListView: React.FC = () => {
     setSelectedMessage(null);
   };
 
-  // Filter and sort messages
   const filteredAndSortedMessages = [...mockMessages]
     .filter(message => {
-      if (message.isPublic && filters.showPublic) return true;
-      if (!message.isPublic && filters.showFollowers) return true;
-      return false;
+      if (!(message.isPublic && filters.showPublic) && !(!message.isPublic && filters.showFollowers)) {
+        return false;
+      }
+
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          message.content.toLowerCase().includes(query) ||
+          message.location.toLowerCase().includes(query) ||
+          message.user.name.toLowerCase().includes(query)
+        );
+      }
+
+      return true;
     })
     .sort((a, b) => {
       if (sortBy === 'recent') {
@@ -116,7 +125,6 @@ const ListView: React.FC = () => {
       return 0;
     });
 
-  // Calculate time remaining
   const getTimeRemaining = (expiresAt: string) => {
     const now = new Date();
     const expiry = new Date(expiresAt);
@@ -127,7 +135,6 @@ const ListView: React.FC = () => {
     return `${diffHours}h ${diffMinutes}m`;
   };
 
-  // Format timestamp
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -135,48 +142,51 @@ const ListView: React.FC = () => {
 
   return (
     <div className="message-list bg-lo-off-white">
-      <div className="flex justify-between items-center mb-4 sticky top-0 bg-lo-off-white p-2 z-10">
-        <div className="flex items-center space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="bg-white">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuCheckboxItem
-                checked={filters.showPublic}
-                onCheckedChange={(checked) => 
-                  setFilters(prev => ({ ...prev, showPublic: checked as boolean }))
-                }
-              >
-                Public Messages
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filters.showFollowers}
-                onCheckedChange={(checked) => 
-                  setFilters(prev => ({ ...prev, showFollowers: checked as boolean }))
-                }
-              >
-                Follower Messages
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+      <div className="flex flex-col gap-4 mb-4 sticky top-0 bg-lo-off-white p-2 z-10">
+        <SearchBar onSearch={setSearchQuery} />
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="bg-white">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuCheckboxItem
+                  checked={filters.showPublic}
+                  onCheckedChange={(checked) => 
+                    setFilters(prev => ({ ...prev, showPublic: checked as boolean }))
+                  }
+                >
+                  Public Messages
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filters.showFollowers}
+                  onCheckedChange={(checked) => 
+                    setFilters(prev => ({ ...prev, showFollowers: checked as boolean }))
+                  }
+                >
+                  Follower Messages
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
-        <Select
-          value={sortBy}
-          onValueChange={setSortBy}
-        >
-          <SelectTrigger className="w-[180px] bg-white">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="recent">Most Recent</SelectItem>
-            <SelectItem value="expiring">Expiring Soon</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select
+            value={sortBy}
+            onValueChange={setSortBy}
+          >
+            <SelectTrigger className="w-[180px] bg-white">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">Most Recent</SelectItem>
+              <SelectItem value="expiring">Expiring Soon</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="space-y-4 pb-4">
@@ -232,7 +242,6 @@ const ListView: React.FC = () => {
         ))}
       </div>
       
-      {/* Selected message detail */}
       {selectedMessage && (
         <MessageDetail 
           message={mockMessages.find(m => m.id === selectedMessage)!}
