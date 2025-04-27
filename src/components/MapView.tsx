@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import MessageBubble from './MessageBubble';
 import MessageDetail from './MessageDetail';
 import CreateMessage from './CreateMessage';
 import { Button } from '@/components/ui/button';
-import { Filter, MapPin, Plus } from 'lucide-react';
+import { Filter, MapPin, Plus, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 
 const mockMessages = [
@@ -60,6 +61,7 @@ const MapView: React.FC = () => {
     showFollowers: true,
   });
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [searchBox, setSearchBox] = useState<google.maps.places.SearchBox | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
     lat: 40.7128,
     lng: -74.0060
@@ -67,7 +69,8 @@ const MapView: React.FC = () => {
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: 'AIzaSyCja18mhM6OgcQPkZp7rCZM6C29SGz3S4U'
+    googleMapsApiKey: 'AIzaSyCja18mhM6OgcQPkZp7rCZM6C29SGz3S4U',
+    libraries: ['places']
   });
 
   const onLoad = useCallback((map: google.maps.Map) => {
@@ -77,6 +80,36 @@ const MapView: React.FC = () => {
   const onUnmount = useCallback(() => {
     setMap(null);
   }, []);
+
+  const onSearchBoxLoad = (ref: google.maps.places.SearchBox) => {
+    setSearchBox(ref);
+  };
+
+  useEffect(() => {
+    if (!searchBox || !map) return;
+
+    const listener = searchBox.addListener('places_changed', () => {
+      const places = searchBox.getPlaces();
+      if (!places || places.length === 0) return;
+
+      const bounds = new google.maps.LatLngBounds();
+      places.forEach((place) => {
+        if (!place.geometry || !place.geometry.location) return;
+
+        if (place.geometry.viewport) {
+          bounds.union(place.geometry.viewport);
+        } else {
+          bounds.extend(place.geometry.location);
+        }
+      });
+
+      map.fitBounds(bounds);
+    });
+
+    return () => {
+      google.maps.event.removeListener(listener);
+    };
+  }, [searchBox, map]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -119,6 +152,22 @@ const MapView: React.FC = () => {
 
   return (
     <div className="map-container relative w-full h-[calc(100vh-4rem)]">
+      <div className="absolute top-4 left-4 z-10 w-64">
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="Search locations..."
+            className="pl-10 pr-4 h-10 w-full bg-white"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+              }
+            }}
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        </div>
+      </div>
+
       <GoogleMap
         mapContainerClassName="w-full h-full"
         center={userLocation}
