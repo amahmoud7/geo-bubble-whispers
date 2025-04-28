@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { StandaloneSearchBox } from '@react-google-maps/api';
@@ -14,7 +14,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSearchBoxLoad }) => {
   return (
     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 w-64">
       <div className="relative">
-        {window.google?.maps ? (
+        {window.google?.maps?.places ? (
           <StandaloneSearchBox onLoad={onSearchBoxLoad}>
             <Input
               ref={inputRef}

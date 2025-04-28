@@ -14,6 +14,9 @@ import { defaultMapOptions } from '@/config/mapStyles';
 // We'll use a placeholder API key for now. In production, this should be in an environment variable
 const googleMapsApiKey = "AIzaSyA_o0YKA9BzIzZ9s8LZhGer6A8YJAf0oN8";
 
+// Define libraries array to avoid re-renders
+const libraries = ["places"];
+
 const MapView: React.FC = () => {
   const {
     selectedMessage,
@@ -94,7 +97,7 @@ const MapView: React.FC = () => {
 
       <LoadScript
         googleMapsApiKey={googleMapsApiKey}
-        libraries={['places']}
+        libraries={libraries}
       >
         <GoogleMap
           mapContainerClassName="w-full h-full"
