@@ -6,7 +6,6 @@ import CreateMessage from './CreateMessage';
 import MessageMarkers from './map/MessageMarkers';
 import MapControls from './map/MapControls';
 import StreetViewControls from './map/StreetViewControls';
-import CreateMessageButton from './map/CreateMessageButton';
 import PlacementIndicator from './map/PlacementIndicator';
 import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { useGoogleMap } from '@/hooks/useGoogleMap';
@@ -156,8 +155,6 @@ const MapView: React.FC = () => {
         onFilterChange={handleFilterChange}
         onSearchBoxLoad={onSearchBoxLoad}
       />
-
-      <CreateMessageButton onClick={handleCreateMessage} />
 
       {isAttemptingStreetView && (
         <StreetViewControls
