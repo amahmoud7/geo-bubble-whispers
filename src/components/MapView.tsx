@@ -1,31 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
-import { useLocation } from 'react-router-dom';
-import MessageDetail from './MessageDetail';
-import CreateMessage from './CreateMessage';
-import MessageMarkers from './map/MessageMarkers';
+
+import React, { useEffect } from 'react';
+import { GoogleMap } from '@react-google-maps/api';
 import MapControls from './map/MapControls';
 import StreetViewControls from './map/StreetViewControls';
 import PlacementIndicator from './map/PlacementIndicator';
+import MessagesDisplay from './map/MessagesDisplay';
 import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { useGoogleMap } from '@/hooks/useGoogleMap';
+import { useMapState } from '@/hooks/useMapState';
+import { useLocationInit } from '@/hooks/useLocation';
 import { defaultMapOptions } from '@/config/mapStyles';
-import { mockMessages } from '@/mock/messages';
-import { toast } from '@/hooks/use-toast';
 
 const MapView: React.FC = () => {
-  const location = useLocation();
-  const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState<boolean>(false);
-  const [filters, setFilters] = useState({
-    showPublic: true,
-    showFollowers: true,
-  });
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
-    lat: 40.7128,
-    lng: -74.0060
-  });
-  const [, forceUpdate] = useState({});
+  const {
+    selectedMessage,
+    setSelectedMessage,
+    isCreating,
+    setIsCreating,
+    filters,
+    userLocation,
+    setUserLocation,
+    handleFilterChange,
+    filteredMessages,
+  } = useMapState();
 
   const {
     map,
@@ -48,24 +45,7 @@ const MapView: React.FC = () => {
     setNewPinPosition,
   } = usePinPlacement();
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: 'AIzaSyCja18mhM6OgcQPkZp7rCZM6C29SGz3S4U',
-    libraries: ['places']
-  });
-
-  useEffect(() => {
-    if (location.state) {
-      const { center, messageId } = location.state as { center?: { lat: number; lng: number }, messageId?: string };
-      
-      if (center) {
-        setUserLocation(center);
-        if (messageId) {
-          setSelectedMessage(messageId);
-        }
-      }
-    }
-  }, [location.state]);
+  useLocationInit(setUserLocation, setSelectedMessage);
 
   useEffect(() => {
     if (map && userLocation) {
@@ -73,50 +53,6 @@ const MapView: React.FC = () => {
       map.setZoom(15);
     }
   }, [map, userLocation]);
-
-  useEffect(() => {
-    if (!searchBox || !map) return;
-
-    const listener = searchBox.addListener('places_changed', () => {
-      const places = searchBox.getPlaces();
-      if (!places || places.length === 0) return;
-
-      const bounds = new google.maps.LatLngBounds();
-      places.forEach((place) => {
-        if (!place.geometry || !place.geometry.location) return;
-
-        if (place.geometry.viewport) {
-          bounds.union(place.geometry.viewport);
-        } else {
-          bounds.extend(place.geometry.location);
-        }
-      });
-
-      map.fitBounds(bounds);
-    });
-
-    return () => {
-      google.maps.event.removeListener(listener);
-    };
-  }, [searchBox, map]);
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          if (!location.state?.center) {
-            setUserLocation({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            });
-          }
-        },
-        () => {
-          console.log('Error getting location');
-        }
-      );
-    }
-  }, [location.state]);
 
   const handleCreateMessage = () => {
     setIsCreating(true);
@@ -132,20 +68,7 @@ const MapView: React.FC = () => {
     setSelectedMessage(null);
     setIsCreating(false);
     endPinPlacement();
-    forceUpdate({});
   };
-
-  const handleFilterChange = (type: 'showPublic' | 'showFollowers', checked: boolean) => {
-    setFilters(prev => ({ ...prev, [type]: checked }));
-  };
-
-  const filteredMessages = mockMessages.filter(message => {
-    if (message.isPublic && filters.showPublic) return true;
-    if (!message.isPublic && filters.showFollowers) return true;
-    return false;
-  });
-
-  if (!isLoaded) return <div>Loading...</div>;
 
   return (
     <div className="map-container relative w-full h-[calc(100vh-4rem)]">
@@ -175,38 +98,16 @@ const MapView: React.FC = () => {
         onClick={handleMapClick}
         options={defaultMapOptions}
       >
-        <MessageMarkers 
-          messages={filteredMessages}
+        <MessagesDisplay
+          selectedMessage={selectedMessage}
+          isCreating={isCreating}
+          newPinPosition={newPinPosition}
+          isPlacingPin={isPlacingPin}
+          filteredMessages={filteredMessages}
           onMessageClick={setSelectedMessage}
+          onClose={handleClose}
         />
-
-        {isPlacingPin && newPinPosition && (
-          <MessageMarkers
-            messages={[
-              {
-                id: 'new-pin',
-                position: { x: newPinPosition.lat, y: newPinPosition.lng },
-                isPublic: true
-              }
-            ]}
-            onMessageClick={() => {}}
-          />
-        )}
       </GoogleMap>
-
-      {selectedMessage && (
-        <MessageDetail 
-          message={mockMessages.find(m => m.id === selectedMessage)!}
-          onClose={handleClose}
-        />
-      )}
-      
-      {isCreating && newPinPosition && (
-        <CreateMessage 
-          onClose={handleClose}
-          initialPosition={newPinPosition}
-        />
-      )}
     </div>
   );
 };
