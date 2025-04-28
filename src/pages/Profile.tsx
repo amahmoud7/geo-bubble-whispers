@@ -1,13 +1,13 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
+import EditProfileDialog from '../components/EditProfileDialog';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, User, Settings, ArrowLeft } from 'lucide-react';
+import { MapPin, ArrowLeft } from 'lucide-react';
 
 // Mock data for user profile
 const profile = {
@@ -41,6 +41,11 @@ const profile = {
 const Profile = () => {
   const navigate = useNavigate();
 
+  const handleSaveProfile = (updatedProfile: any) => {
+    // TODO: Implement save profile functionality
+    console.log('Profile updated:', updatedProfile);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
@@ -63,14 +68,20 @@ const Profile = () => {
                 <AvatarImage src={profile.avatar} />
                 <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-1" />
-                Edit Profile
-              </Button>
+              <EditProfileDialog 
+                profile={{
+                  name: profile.name,
+                  username: profile.username.substring(1), // Remove @ from username
+                  bio: profile.bio,
+                  location: profile.location,
+                  avatar: profile.avatar
+                }}
+                onSave={handleSaveProfile}
+              />
             </div>
             
             <CardTitle className="mt-4">{profile.name}</CardTitle>
-            <CardDescription>{profile.username}</CardDescription>
+            <CardDescription>{profile.username.substring(1)}</CardDescription>
           </CardHeader>
           
           <CardContent className="pb-4">
