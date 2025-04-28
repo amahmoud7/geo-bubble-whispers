@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { GoogleMap } from '@react-google-maps/api';
+import { GoogleMap, LoadScript } from '@react-google-maps/api';
 import MapControls from './map/MapControls';
 import StreetViewControls from './map/StreetViewControls';
 import PlacementIndicator from './map/PlacementIndicator';
@@ -10,6 +10,9 @@ import { useGoogleMap } from '@/hooks/useGoogleMap';
 import { useMapState } from '@/hooks/useMapState';
 import { useLocationInit } from '@/hooks/useLocation';
 import { defaultMapOptions } from '@/config/mapStyles';
+
+// We'll use a placeholder API key for now. In production, this should be in an environment variable
+const googleMapsApiKey = "AIzaSyA_o0YKA9BzIzZ9s8LZhGer6A8YJAf0oN8";
 
 const MapView: React.FC = () => {
   const {
@@ -89,25 +92,30 @@ const MapView: React.FC = () => {
 
       <PlacementIndicator isPlacingPin={isPlacingPin} />
 
-      <GoogleMap
-        mapContainerClassName="w-full h-full"
-        center={userLocation}
-        zoom={13}
-        onLoad={onLoad}
-        onUnmount={onUnmount}
-        onClick={handleMapClick}
-        options={defaultMapOptions}
+      <LoadScript
+        googleMapsApiKey={googleMapsApiKey}
+        libraries={['places']}
       >
-        <MessagesDisplay
-          selectedMessage={selectedMessage}
-          isCreating={isCreating}
-          newPinPosition={newPinPosition}
-          isPlacingPin={isPlacingPin}
-          filteredMessages={filteredMessages}
-          onMessageClick={setSelectedMessage}
-          onClose={handleClose}
-        />
-      </GoogleMap>
+        <GoogleMap
+          mapContainerClassName="w-full h-full"
+          center={userLocation}
+          zoom={13}
+          onLoad={onLoad}
+          onUnmount={onUnmount}
+          onClick={handleMapClick}
+          options={defaultMapOptions}
+        >
+          <MessagesDisplay
+            selectedMessage={selectedMessage}
+            isCreating={isCreating}
+            newPinPosition={newPinPosition}
+            isPlacingPin={isPlacingPin}
+            filteredMessages={filteredMessages}
+            onMessageClick={setSelectedMessage}
+            onClose={handleClose}
+          />
+        </GoogleMap>
+      </LoadScript>
     </div>
   );
 };

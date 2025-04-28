@@ -22,7 +22,7 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
           position={{ lat: message.position.x, lng: message.position.y }}
           onClick={() => onMessageClick(message.id)}
           icon={{
-            path: google.maps.SymbolPath.CIRCLE,
+            path: window.google?.maps?.SymbolPath?.CIRCLE || 0,
             scale: 8,
             fillColor: message.isPublic ? '#9370DB' : '#0EA5E9',
             fillOpacity: 0.6,
