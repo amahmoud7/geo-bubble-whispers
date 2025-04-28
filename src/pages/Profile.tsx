@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import EditProfileDialog from '../components/EditProfileDialog';
@@ -10,9 +11,9 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, ArrowLeft, User } from 'lucide-react';
 
 // Mock data for user profile
-const profile = {
+const initialProfile = {
   name: 'Jane Smith',
-  username: '@janesmith',
+  username: 'janesmith',
   avatar: 'https://github.com/shadcn.png',
   bio: 'Explorer of urban spaces and hidden gems. Always on the move!',
   location: 'San Francisco, CA',
@@ -40,10 +41,20 @@ const profile = {
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(initialProfile);
 
-  const handleSaveProfile = (updatedProfile: any) => {
-    // TODO: Implement save profile functionality
-    console.log('Profile updated:', updatedProfile);
+  const handleSaveProfile = (updatedProfileData: any) => {
+    // Update the profile state with new data
+    setProfile({
+      ...profile,
+      name: updatedProfileData.name,
+      username: updatedProfileData.username,
+      bio: updatedProfileData.bio,
+      location: updatedProfileData.location,
+      avatar: updatedProfileData.avatar,
+    });
+    
+    console.log('Profile updated:', updatedProfileData);
   };
 
   return (
@@ -71,7 +82,7 @@ const Profile = () => {
               <EditProfileDialog 
                 profile={{
                   name: profile.name,
-                  username: profile.username.substring(1), // Remove @ from username
+                  username: profile.username,
                   bio: profile.bio,
                   location: profile.location,
                   avatar: profile.avatar
@@ -81,7 +92,7 @@ const Profile = () => {
             </div>
             
             <CardTitle className="mt-4">{profile.name}</CardTitle>
-            <CardDescription>{profile.username.substring(1)}</CardDescription>
+            <CardDescription>@{profile.username}</CardDescription>
           </CardHeader>
           
           <CardContent className="pb-4">

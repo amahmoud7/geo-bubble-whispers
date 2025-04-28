@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Settings, Image } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileFormData {
   name: string;
@@ -29,7 +31,9 @@ const EditProfileDialog = ({
   profile: ProfileFormData;
   onSave: (data: ProfileFormData) => void;
 }) => {
-  const [formData, setFormData] = React.useState<ProfileFormData>(profile);
+  const [formData, setFormData] = useState<ProfileFormData>(profile);
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -39,10 +43,15 @@ const EditProfileDialog = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
+    toast({
+      title: "Profile updated",
+      description: "Your profile has been successfully updated.",
+    });
+    setOpen(false);
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Settings className="h-4 w-4 mr-1" />
@@ -114,7 +123,10 @@ const EditProfileDialog = ({
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
             <Button type="submit">Save Changes</Button>
           </div>
         </form>
