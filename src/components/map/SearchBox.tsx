@@ -23,13 +23,13 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSearchBoxLoad }) => {
   }, [onSearchBoxLoad]);
 
   return (
-    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 w-64">
+    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 w-64 md:w-80">
       <div className="relative">
         <Input
           ref={inputRef}
           type="text"
           placeholder="Search locations..."
-          className="pl-10 pr-4 h-10 w-full bg-white"
+          className="pl-10 pr-4 h-10 w-full bg-white shadow-md"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();

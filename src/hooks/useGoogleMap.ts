@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -59,7 +60,42 @@ export const useGoogleMap = () => {
 
   const onSearchBoxLoad = useCallback((ref: google.maps.places.SearchBox) => {
     setSearchBox(ref);
-  }, []);
+
+    // Add search box event listener
+    ref.addListener('places_changed', () => {
+      const places = ref.getPlaces();
+      if (!places || places.length === 0) {
+        return;
+      }
+
+      // Get the first place and update map
+      const place = places[0];
+      if (!place.geometry || !place.geometry.location) {
+        toast({
+          title: "No location found",
+          description: "Please try a different search term",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Update map to show the selected location
+      if (map) {
+        if (place.geometry.viewport) {
+          map.fitBounds(place.geometry.viewport);
+        } else {
+          map.setCenter(place.geometry.location);
+          map.setZoom(15);
+        }
+
+        // Notify user
+        toast({
+          title: "Location found",
+          description: `Showing results for ${place.name || 'selected location'}`
+        });
+      }
+    });
+  }, [map]);
 
   return {
     map,
