@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import SearchBox from './SearchBox';
 import FilterMenu from './FilterMenu';
 
@@ -26,11 +26,10 @@ const MapControls: React.FC<MapControlsProps> = ({
       <SearchBox onSearchBoxLoad={onSearchBoxLoad} />
       <FilterMenu filters={filters} onFilterChange={onFilterChange} />
       <Button
-        className="absolute left-1/2 bottom-8 -translate-x-1/2 flex items-center gap-2 shadow-lg"
+        className="absolute bottom-8 right-8 rounded-full h-14 w-14 shadow-lg"
         onClick={onCreateMessage}
       >
-        <MessageSquare className="h-4 w-4" />
-        Drop Lo Here
+        <Plus className="h-6 w-6" />
       </Button>
     </>
   );

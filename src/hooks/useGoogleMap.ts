@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -10,45 +9,38 @@ export const useGoogleMap = () => {
   const [streetViewPosition, setStreetViewPosition] = useState<{ lat: number; lng: number } | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
-    if (!map) return;
-    
     setMap(map);
 
     const streetViewControl = map.getStreetView();
-    
-    if (streetViewControl) {
-      streetViewControl.addListener('visible_changed', () => {
-        setIsAttemptingStreetView(streetViewControl.getVisible());
-        setIsInStreetView(streetViewControl.getVisible());
-      });
+    streetViewControl.addListener('visible_changed', () => {
+      setIsAttemptingStreetView(streetViewControl.getVisible());
+      setIsInStreetView(streetViewControl.getVisible());
+    });
 
-      streetViewControl.addListener('position_changed', () => {
-        if (streetViewControl.getVisible()) {
-          const position = streetViewControl.getPosition();
-          if (position) {
-            setStreetViewPosition({
-              lat: position.lat(),
-              lng: position.lng()
-            });
-          }
+    streetViewControl.addListener('position_changed', () => {
+      if (streetViewControl.getVisible()) {
+        const position = streetViewControl.getPosition();
+        if (position) {
+          setStreetViewPosition({
+            lat: position.lat(),
+            lng: position.lng()
+          });
         }
-      });
-
-      // Add click listener for street view
-      if (typeof window !== 'undefined' && window.google) {
-        streetViewControl.addListener('click', (event: google.maps.MapMouseEvent) => {
-          if (streetViewControl.getVisible() && event.latLng) {
-            const position = {
-              lat: event.latLng.lat(),
-              lng: event.latLng.lng()
-            };
-            window.dispatchEvent(new CustomEvent('streetViewClick', { 
-              detail: position 
-            }));
-          }
-        });
       }
-    }
+    });
+
+    // Add click listener for street view with correct event type
+    streetViewControl.addListener('click', (event: google.maps.MapMouseEvent) => {
+      if (streetViewControl.getVisible() && event.latLng) {
+        const position = {
+          lat: event.latLng.lat(),
+          lng: event.latLng.lng()
+        };
+        window.dispatchEvent(new CustomEvent('streetViewClick', { 
+          detail: position 
+        }));
+      }
+    });
   }, []);
 
   const handleCancelStreetView = useCallback(() => {
@@ -66,9 +58,7 @@ export const useGoogleMap = () => {
   }, []);
 
   const onSearchBoxLoad = useCallback((ref: google.maps.places.SearchBox) => {
-    if (ref) {
-      setSearchBox(ref);
-    }
+    setSearchBox(ref);
   }, []);
 
   return {

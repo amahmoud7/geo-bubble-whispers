@@ -14,9 +14,6 @@ interface MessageMarkersProps {
 }
 
 const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClick }) => {
-  // Get the circle symbol path if Google Maps is loaded
-  const circlePath = window.google?.maps?.SymbolPath?.CIRCLE || 0;
-  
   return (
     <>
       {messages.map((message) => (
@@ -25,7 +22,7 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
           position={{ lat: message.position.x, lng: message.position.y }}
           onClick={() => onMessageClick(message.id)}
           icon={{
-            path: circlePath,
+            path: google.maps.SymbolPath.CIRCLE,
             scale: 8,
             fillColor: message.isPublic ? '#9370DB' : '#0EA5E9',
             fillOpacity: 0.6,
