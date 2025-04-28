@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, ArrowLeft } from 'lucide-react';
+import { MapPin, ArrowLeft, User } from 'lucide-react';
 
 // Mock data for user profile
 const profile = {
