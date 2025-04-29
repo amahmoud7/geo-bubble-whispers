@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import MessageDetail from './MessageDetail';
@@ -15,6 +14,7 @@ import { useMessageState } from '@/hooks/useMessageState';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { mockMessages } from '@/mock/messages';
+import { toast } from '@/hooks/use-toast';
 
 const MapView: React.FC = () => {
   const { userLocation } = useUserLocation();
