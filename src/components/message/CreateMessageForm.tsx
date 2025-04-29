@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { X } from 'lucide-react';
+import { X, Loader } from 'lucide-react';
 import { mockMessages } from '@/mock/messages';
 import MediaUpload from './MediaUpload';
 import PrivacyToggle from './PrivacyToggle';
@@ -147,7 +147,12 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
             className={`w-full transition-opacity ${!content.trim() ? 'opacity-50' : 'opacity-100'}`}
             disabled={isSubmitDisabled}
           >
-            {isLoading ? "Dropping Lo..." : "Drop Lo"}
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <Loader className="h-4 w-4 mr-2 animate-spin" />
+                Dropping Lo...
+              </span>
+            ) : "Drop Lo"}
           </Button>
         </CardFooter>
       </form>
