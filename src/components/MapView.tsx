@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import MessageDetail from './MessageDetail';
 import CreateMessage from './CreateMessage';
@@ -61,8 +61,33 @@ const MapView: React.FC = () => {
 
     if (isInStreetView && streetViewPosition) {
       setNewPinPosition(streetViewPosition);
+      // In street view, we can immediately show the create message form
+      // since we already have the position
+      toast({
+        title: "Location selected",
+        description: "Now you can create your Lo at this location",
+      });
     }
   };
+
+  // Listen for street view clicks to place pins
+  useEffect(() => {
+    const handleStreetViewClick = (e: CustomEvent<{lat: number, lng: number}>) => {
+      if (isPlacingPin && isInStreetView && e.detail) {
+        setNewPinPosition(e.detail);
+        toast({
+          title: "Street View location selected",
+          description: "Now you can create your Lo at this location",
+        });
+      }
+    };
+
+    window.addEventListener('streetViewClick', handleStreetViewClick as EventListener);
+    
+    return () => {
+      window.removeEventListener('streetViewClick', handleStreetViewClick as EventListener);
+    };
+  }, [isPlacingPin, isInStreetView, setNewPinPosition]);
 
   if (!isLoaded) return <div>Loading...</div>;
 
@@ -75,7 +100,9 @@ const MapView: React.FC = () => {
         onSearchBoxLoad={onSearchBoxLoad}
       />
 
-      <CreateMessageButton onClick={handleCreateMessage} />
+      {!isInStreetView && (
+        <CreateMessageButton onClick={handleCreateMessage} />
+      )}
 
       {isAttemptingStreetView && (
         <StreetViewControls
@@ -85,7 +112,9 @@ const MapView: React.FC = () => {
         />
       )}
 
-      <PlacementIndicator isPlacingPin={isPlacingPin} />
+      {isPlacingPin && !isInStreetView && (
+        <PlacementIndicator isPlacingPin={isPlacingPin} />
+      )}
 
       <GoogleMap
         mapContainerClassName="w-full h-full"

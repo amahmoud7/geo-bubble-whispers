@@ -31,8 +31,8 @@ export const usePinPlacement = () => {
       if (isPlacingPin && e.detail) {
         setNewPinPosition(e.detail);
         toast({
-          title: "Location selected",
-          description: "Now you can create your Lo at this location",
+          title: "Street View location selected",
+          description: "Now you can create your Lo at this street view location",
         });
       }
     };
@@ -49,7 +49,7 @@ export const usePinPlacement = () => {
     setNewPinPosition(null);
     toast({
       title: "Place your Lo",
-      description: "Click anywhere to select a location",
+      description: "Click anywhere on the map or in Street View to select a location",
     });
   }, []);
 

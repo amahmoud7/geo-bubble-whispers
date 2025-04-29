@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 
 export const useGoogleMap = () => {
@@ -8,14 +8,24 @@ export const useGoogleMap = () => {
   const [isAttemptingStreetView, setIsAttemptingStreetView] = useState<boolean>(false);
   const [isInStreetView, setIsInStreetView] = useState(false);
   const [streetViewPosition, setStreetViewPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const streetViewPanoramaRef = useRef<google.maps.StreetViewPanorama | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
 
     const streetViewControl = map.getStreetView();
+    streetViewPanoramaRef.current = streetViewControl;
+    
     streetViewControl.addListener('visible_changed', () => {
       setIsAttemptingStreetView(streetViewControl.getVisible());
       setIsInStreetView(streetViewControl.getVisible());
+      
+      if (streetViewControl.getVisible()) {
+        toast({
+          title: "Street View activated",
+          description: "You can now drop a Lo in Street View mode",
+        });
+      }
     });
 
     streetViewControl.addListener('position_changed', () => {
@@ -30,7 +40,7 @@ export const useGoogleMap = () => {
       }
     });
 
-    // Add click listener for street view with correct event type
+    // Add click listener for street view
     streetViewControl.addListener('click', (event: google.maps.MapMouseEvent) => {
       if (streetViewControl.getVisible() && event.latLng) {
         const position = {
@@ -40,6 +50,19 @@ export const useGoogleMap = () => {
         window.dispatchEvent(new CustomEvent('streetViewClick', { 
           detail: position 
         }));
+      }
+    });
+
+    // Add pano changed listener to update position
+    streetViewControl.addListener('pano_changed', () => {
+      if (streetViewControl.getVisible()) {
+        const position = streetViewControl.getPosition();
+        if (position) {
+          setStreetViewPosition({
+            lat: position.lat(),
+            lng: position.lng()
+          });
+        }
       }
     });
   }, []);

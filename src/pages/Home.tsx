@@ -2,6 +2,7 @@
 import React from 'react';
 import Navigation from '../components/Navigation';
 import MapView from '../components/MapView';
+import { toast } from '@/hooks/use-toast';
 
 const Home = () => {
   return (
