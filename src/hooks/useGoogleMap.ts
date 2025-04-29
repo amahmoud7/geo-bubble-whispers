@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -77,6 +76,44 @@ export const useGoogleMap = () => {
     }
   }, [map]);
 
+  const activateStreetView = useCallback((position: { lat: number; lng: number }) => {
+    if (!map) return;
+    
+    setIsAttemptingStreetView(true);
+    
+    const streetViewService = new google.maps.StreetViewService();
+    
+    // Check if Street View is available at the location
+    streetViewService.getPanorama({
+      location: new google.maps.LatLng(position.lat, position.lng),
+      radius: 50 // Within 50 meters
+    }, (data, status) => {
+      if (status === google.maps.StreetViewStatus.OK) {
+        // Street View is available at this location
+        const streetViewControl = map.getStreetView();
+        streetViewControl.setPosition(new google.maps.LatLng(position.lat, position.lng));
+        streetViewControl.setVisible(true);
+        
+        setIsInStreetView(true);
+        setStreetViewPosition(position);
+        
+        toast({
+          title: "Street View Loaded",
+          description: "Now viewing location in Street View mode"
+        });
+      } else {
+        // Street View is not available at this location
+        setIsAttemptingStreetView(false);
+        
+        toast({
+          title: "Street View not available",
+          description: "Street View isn't available at this location",
+          variant: "destructive"
+        });
+      }
+    });
+  }, [map]);
+
   const onUnmount = useCallback(() => {
     setMap(null);
   }, []);
@@ -130,5 +167,6 @@ export const useGoogleMap = () => {
     onUnmount,
     onSearchBoxLoad,
     handleCancelStreetView,
+    activateStreetView,
   };
 };
