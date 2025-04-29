@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -48,9 +49,18 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
     navigate('/home', { 
       state: { 
         center: { lat: message.position.x, lng: message.position.y },
-        messageId: message.id
+        messageId: message.id,
+        activateStreetView: true
       }
     });
+  };
+
+  const handleViewMessage = () => {
+    // Navigate to the street view directly
+    handleViewLocation();
+    
+    // Also pass the message ID to the onSelect handler for any additional functionality
+    onSelect(message.id);
   };
 
   return (
@@ -101,7 +111,7 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
           <Button 
             size="sm" 
             variant="outline" 
-            onClick={() => onSelect(message.id)}
+            onClick={handleViewMessage}
           >
             View
           </Button>

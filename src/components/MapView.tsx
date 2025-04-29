@@ -1,5 +1,7 @@
+
 import React, { useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import { useLocation } from 'react-router-dom';
 import MessageDetail from './MessageDetail';
 import CreateMessage from './CreateMessage';
 import MessageMarkers from './map/MessageMarkers';
@@ -19,6 +21,7 @@ import { toast } from '@/hooks/use-toast';
 const MapView: React.FC = () => {
   const { userLocation } = useUserLocation();
   const { filters, filteredMessages, handleFilterChange } = useMessages();
+  const location = useLocation();
   const {
     selectedMessage,
     setSelectedMessage,
@@ -37,6 +40,7 @@ const MapView: React.FC = () => {
     onUnmount,
     onSearchBoxLoad,
     handleCancelStreetView,
+    activateStreetView,
   } = useGoogleMap();
 
   const {
@@ -69,6 +73,22 @@ const MapView: React.FC = () => {
       });
     }
   };
+
+  // Handle street view activation from navigation state
+  useEffect(() => {
+    if (location.state && location.state.activateStreetView && location.state.center && map) {
+      const { lat, lng } = location.state.center;
+      
+      // Set a small timeout to ensure map is fully loaded
+      setTimeout(() => {
+        activateStreetView({ lat, lng });
+        
+        if (location.state.messageId) {
+          setSelectedMessage(location.state.messageId);
+        }
+      }, 500);
+    }
+  }, [location.state, map, activateStreetView, setSelectedMessage]);
 
   // Listen for street view clicks to place pins
   useEffect(() => {
