@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,7 @@ interface MessageDetailProps {
   onClose: () => void;
 }
 
-// Mock comments data - in a real app, this would come from a database
+// Updated mock comments data with reply support
 const mockComments = [
   {
     id: '1',
@@ -37,6 +36,18 @@ const mockComments = [
     content: 'This is such a beautiful place! 😍',
     timestamp: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
     likes: 5,
+    replies: [
+      {
+        id: '1-reply-1',
+        user: {
+          name: 'Sam Williams',
+          avatar: 'https://i.pravatar.cc/150?u=sam',
+        },
+        content: 'I agree! The lighting is perfect.',
+        timestamp: new Date(Date.now() - 3600000 * 1).toISOString(), // 1 hour ago
+        likes: 2,
+      }
+    ]
   },
   {
     id: '2',
@@ -47,6 +58,7 @@ const mockComments = [
     content: 'I was there last week! The atmosphere is amazing.',
     timestamp: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 hours ago
     likes: 2,
+    replies: []
   },
   {
     id: '3',
@@ -57,6 +69,7 @@ const mockComments = [
     content: 'Great shot! 📸 What camera did you use?',
     timestamp: new Date(Date.now() - 3600000 * 12).toISOString(), // 12 hours ago
     likes: 0,
+    replies: []
   },
 ];
 
@@ -124,6 +137,7 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
         content: comment.trim(),
         timestamp: new Date().toISOString(),
         likes: 0,
+        replies: []
       };
       
       setComments([newComment, ...comments]);
