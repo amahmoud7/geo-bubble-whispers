@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { mockMessages } from '@/mock/messages';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { Message } from '@/types/database';
 
 interface Filters {
   showPublic: boolean;
@@ -40,7 +41,7 @@ export const useMessages = () => {
       
       if (data) {
         // Transform data to match our app's expected format
-        const transformedMessages = data.map(message => ({
+        const transformedMessages = data.map((message: Message) => ({
           id: message.id,
           content: message.content,
           mediaUrl: message.media_url,
@@ -57,9 +58,9 @@ export const useMessages = () => {
             y: message.lng
           },
           // Check if current user has liked this message
-          liked: user ? message.likes.some((like: any) => like.user_id === user.id) : false,
+          liked: user ? message.likes?.some((like: any) => like.user_id === user.id) : false,
           // Count of likes
-          likes: message.likes.length
+          likes: message.likes?.length || 0
         }));
         
         setMessages(transformedMessages);

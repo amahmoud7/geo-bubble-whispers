@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { Like } from '@/types/database';
 
 interface UseMessageInteractionsProps {
   initialLiked?: boolean;
@@ -44,7 +45,8 @@ export const useMessageInteractions = ({
         const { error } = await supabase
           .from('likes')
           .delete()
-          .match({ user_id: user.id, message_id: messageId });
+          .eq('user_id', user.id)
+          .eq('message_id', messageId);
           
         if (error) throw error;
         
@@ -54,7 +56,10 @@ export const useMessageInteractions = ({
         // Add like
         const { error } = await supabase
           .from('likes')
-          .insert({ user_id: user.id, message_id: messageId });
+          .insert({ 
+            user_id: user.id, 
+            message_id: messageId 
+          } as Partial<Like>);
           
         if (error) throw error;
         
