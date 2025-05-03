@@ -7,11 +7,13 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ProfileForm from "./ProfileForm";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileFormData {
   name: string;
@@ -30,6 +32,7 @@ const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
   const [formData, setFormData] = useState<ProfileFormData>(profile);
   const [open, setOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(profile.avatar);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -47,14 +50,81 @@ const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
     setFormData(prev => ({ ...prev, avatar: '' }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been successfully updated.",
-    });
-    setOpen(false);
+    setIsLoading(true);
+
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Not authenticated');
+      }
+      
+      // Check if profile exists for user
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select()
+        .eq('id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows returned
+        throw profileError;
+      }
+
+      let result;
+      if (existingProfile) {
+        // Update profile if exists
+        result = await supabase
+          .from('profiles')
+          .update({
+            name: formData.name,
+            username: formData.username,
+            bio: formData.bio,
+            location: formData.location,
+            avatar_url: formData.avatar,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+      } else {
+        // Insert new profile if doesn't exist
+        result = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            name: formData.name,
+            username: formData.username,
+            bio: formData.bio,
+            location: formData.location,
+            avatar_url: formData.avatar,
+            updated_at: new Date().toISOString()
+          });
+      }
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      // Update UI
+      onSave(formData);
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
+      });
+      
+      setOpen(false);
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update profile. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -68,6 +138,9 @@ const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
+          <DialogDescription>
+            Make changes to your profile here. Click save when you're done.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <ProfileForm
@@ -82,7 +155,9 @@ const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </form>
       </DialogContent>

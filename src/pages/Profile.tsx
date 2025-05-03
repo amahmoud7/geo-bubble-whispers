@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import EditProfileDialog from '../components/profile/EditProfileDialog';
@@ -8,43 +8,144 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, ArrowLeft, User } from 'lucide-react';
+import { MapPin, ArrowLeft, User, Loader2 } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from '@/hooks/use-toast';
 
-// Mock data for user profile
-const initialProfile = {
-  name: 'Jane Smith',
-  username: 'janesmith',
-  avatar: 'https://github.com/shadcn.png',
-  bio: 'Explorer of urban spaces and hidden gems. Always on the move!',
-  location: 'San Francisco, CA',
-  followers: 253,
-  following: 187,
-  messages: [
-    {
-      id: '101',
-      content: 'Found this amazing food market today! Worth checking out.',
-      location: 'Ferry Building, San Francisco',
-      timestamp: '2023-05-10T14:30:00Z',
-      isPublic: true,
-      mediaUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
-    },
-    {
-      id: '102',
-      content: 'Beautiful sunset over the Golden Gate Bridge today!',
-      location: 'Crissy Field, San Francisco',
-      timestamp: '2023-05-08T19:45:00Z',
-      isPublic: true,
-      mediaUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-    },
-  ],
+// Interface for profile data
+interface ProfileData {
+  name: string;
+  username: string;
+  avatar: string;
+  bio: string;
+  location: string;
+  followers?: number;
+  following?: number;
+  messages?: any[];
+}
+
+// Initial profile data for new users
+const defaultProfile: ProfileData = {
+  name: '',
+  username: '',
+  avatar: '',
+  bio: '',
+  location: '',
+  followers: 0,
+  following: 0,
+  messages: [],
 };
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState(initialProfile);
+  const [profile, setProfile] = useState<ProfileData>(defaultProfile);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch user profile on component mount
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      setIsLoading(true);
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Not authenticated, redirect to login page
+        toast({
+          title: "Authentication required",
+          description: "Please login to view your profile",
+          variant: "destructive"
+        });
+        // If you have a login page, redirect here
+        // navigate('/login');
+        return;
+      }
+
+      // Fetch profile from database
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows returned
+        throw error;
+      }
+
+      // If profile exists in database, use it
+      if (data) {
+        setProfile({
+          name: data.name || user.user_metadata?.name || '',
+          username: data.username || user.email?.split('@')[0] || '',
+          avatar: data.avatar_url || '',
+          bio: data.bio || '',
+          location: data.location || '',
+          followers: data.followers_count || 0,
+          following: data.following_count || 0,
+          messages: [], // We'll fetch messages separately
+        });
+      } else {
+        // Use default with user metadata if profile doesn't exist
+        setProfile({
+          name: user.user_metadata?.name || user.email?.split('@')[0] || '',
+          username: user.email?.split('@')[0] || '',
+          avatar: '',
+          bio: '',
+          location: '',
+          followers: 0,
+          following: 0,
+          messages: [],
+        });
+      }
+
+      // Fetch messages (in a real app, this would be a separate query)
+      // This just uses the mock data for now
+      fetchUserMessages(user.id);
+
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load profile data",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchUserMessages = async (userId: string) => {
+    // In a real app, we would fetch messages from the database
+    // For now, we'll use mock data
+    setProfile(prev => ({
+      ...prev,
+      messages: [
+        {
+          id: '101',
+          content: 'Found this amazing food market today! Worth checking out.',
+          location: 'Ferry Building, San Francisco',
+          timestamp: '2023-05-10T14:30:00Z',
+          isPublic: true,
+          mediaUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
+        },
+        {
+          id: '102',
+          content: 'Beautiful sunset over the Golden Gate Bridge today!',
+          location: 'Crissy Field, San Francisco',
+          timestamp: '2023-05-08T19:45:00Z',
+          isPublic: true,
+          mediaUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+        },
+      ]
+    }));
+  };
 
   const handleSaveProfile = (updatedProfileData: any) => {
-    // Update the profile state with new data
+    // Update the local state
     setProfile({
       ...profile,
       name: updatedProfileData.name,
@@ -53,9 +154,18 @@ const Profile = () => {
       location: updatedProfileData.location,
       avatar: updatedProfileData.avatar,
     });
-    
-    console.log('Profile updated:', updatedProfileData);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="flex items-center justify-center flex-grow">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -98,10 +208,12 @@ const Profile = () => {
           <CardContent className="pb-4">
             <p className="mb-4">{profile.bio}</p>
             
-            <div className="flex items-center text-sm text-muted-foreground mb-4">
-              <MapPin className="h-4 w-4 mr-1" />
-              <span>{profile.location}</span>
-            </div>
+            {profile.location && (
+              <div className="flex items-center text-sm text-muted-foreground mb-4">
+                <MapPin className="h-4 w-4 mr-1" />
+                <span>{profile.location}</span>
+              </div>
+            )}
             
             <div className="flex gap-4 text-sm mb-6">
               <div>
@@ -120,33 +232,43 @@ const Profile = () => {
               </TabsList>
               
               <TabsContent value="messages" className="space-y-4">
-                {profile.messages.map((message) => (
-                  <Card key={message.id} className="overflow-hidden">
-                    <CardContent className="p-0">
-                      {message.mediaUrl && (
-                        <div className="w-full h-48 bg-gray-100 relative">
-                          <img 
-                            src={message.mediaUrl} 
-                            alt={message.content}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute top-2 right-2">
-                            <Badge variant={message.isPublic ? "default" : "secondary"}>
-                              {message.isPublic ? 'Public' : 'Followers'}
-                            </Badge>
+                {profile.messages && profile.messages.length > 0 ? (
+                  profile.messages.map((message) => (
+                    <Card key={message.id} className="overflow-hidden">
+                      <CardContent className="p-0">
+                        {message.mediaUrl && (
+                          <div className="w-full h-48 bg-gray-100 relative">
+                            <img 
+                              src={message.mediaUrl} 
+                              alt={message.content}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute top-2 right-2">
+                              <Badge variant={message.isPublic ? "default" : "secondary"}>
+                                {message.isPublic ? 'Public' : 'Followers'}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+                        <div className="p-4">
+                          <p className="mb-2">{message.content}</p>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            <span>{message.location}</span>
                           </div>
                         </div>
-                      )}
-                      <div className="p-4">
-                        <p className="mb-2">{message.content}</p>
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span>{message.location}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                    <User className="h-10 w-10 text-muted-foreground mb-2" />
+                    <h3 className="font-medium mb-1">No messages yet</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Your messages will appear here
+                    </p>
+                  </div>
+                )}
               </TabsContent>
               
               <TabsContent value="expired">
