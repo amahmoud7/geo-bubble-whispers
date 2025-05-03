@@ -19,82 +19,70 @@ interface MessageMarkersProps {
 }
 
 const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClick }) => {
-  // Create a function to generate custom markers
-  const getCustomMarkerContent = (message: Message) => {
-    // Create a div to hold our custom marker
-    const div = document.createElement('div');
-    div.className = 'custom-marker';
-    div.style.position = 'absolute';
-    div.style.transform = 'translate(-50%, -50%)';
-    
-    // Create the avatar element
-    const avatarDiv = document.createElement('div');
-    avatarDiv.className = 'avatar-container';
-    avatarDiv.style.width = '32px';
-    avatarDiv.style.height = '32px';
-    avatarDiv.style.borderRadius = '50%';
-    avatarDiv.style.overflow = 'hidden';
-    avatarDiv.style.border = '2px solid white';
-    avatarDiv.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-    
-    // Add background color based on message type
-    avatarDiv.style.backgroundColor = message.isPublic ? '#9370DB' : '#0EA5E9';
-    
-    // Create image if avatar URL exists
-    if (message.user?.avatar && message.user.avatar !== '') {
-      const img = document.createElement('img');
-      img.src = message.user.avatar;
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'cover';
-      avatarDiv.appendChild(img);
-    } else {
-      // Add fallback initials if available
-      if (message.user?.name) {
-        avatarDiv.style.display = 'flex';
-        avatarDiv.style.alignItems = 'center';
-        avatarDiv.style.justifyContent = 'center';
-        avatarDiv.style.color = 'white';
-        avatarDiv.style.fontWeight = 'bold';
-        avatarDiv.textContent = message.user.name.charAt(0);
-      }
-    }
-    
-    div.appendChild(avatarDiv);
-    return div;
-  };
-
   return (
     <>
       {messages.map((message) => {
-        // Create the marker element for this message
-        const markerElement = getCustomMarkerContent(message);
-        
         return (
           <Marker
             key={message.id}
             position={{ lat: message.position.x, lng: message.position.y }}
             onClick={() => onMessageClick(message.id)}
-            // Use advanced marker feature for custom HTML content
             icon={{
-              url: message.user?.avatar || '',
-              scaledSize: new google.maps.Size(32, 32),
-              origin: new google.maps.Point(0, 0),
-              anchor: new google.maps.Point(16, 16),
-              // Use circle shape for avatar
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 16,
-              fillColor: message.isPublic ? '#9370DB' : '#0EA5E9',
-              fillOpacity: message.user?.avatar ? 0 : 0.7,
-              strokeColor: '#ffffff',
-              strokeWeight: 2,
+              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="16" fill="${message.isPublic ? '#9370DB' : '#0EA5E9'}" stroke="white" stroke-width="2"/>
+                  ${!message.user?.avatar ? 
+                    `<text x="18" y="22" font-family="Arial" font-size="14" fill="white" text-anchor="middle">${message.user?.name?.charAt(0) || '?'}</text>` : ''}
+                </svg>`
+              ),
+              anchor: new google.maps.Point(18, 18),
+              scaledSize: new google.maps.Size(36, 36)
             }}
-            // Make markers visible in street view
+            // This ensures the custom marker is visible in street view
             visible={true}
-            // Make sure avatar markers have higher z-index
-            zIndex={message.user?.avatar ? 2 : 1}
+            // Give avatar markers higher z-index
+            zIndex={2}
             animation={google.maps.Animation.DROP}
-          />
+          >
+            {/* We use DOM overlay for actual avatar images since SVG can't embed external images */}
+            {message.user?.avatar && (
+              <div
+                className="custom-marker-overlay"
+                style={{
+                  position: 'absolute',
+                  transform: 'translate(-50%, -50%)',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: '2px solid white',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                  backgroundColor: message.isPublic ? '#9370DB' : '#0EA5E9',
+                }}
+              >
+                <img
+                  src={message.user.avatar}
+                  alt={message.user.name?.charAt(0) || ''}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                  onError={(e) => {
+                    // Fallback if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.parentElement!.innerHTML = message.user?.name?.charAt(0) || '?';
+                    target.parentElement!.style.display = 'flex';
+                    target.parentElement!.style.alignItems = 'center';
+                    target.parentElement!.style.justifyContent = 'center';
+                    target.parentElement!.style.color = 'white';
+                    target.parentElement!.style.fontWeight = 'bold';
+                  }}
+                />
+              </div>
+            )}
+          </Marker>
         );
       })}
     </>

@@ -57,14 +57,20 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-md mx-auto bg-white fade-in">
-        <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between">
+        <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between">
           <div className="flex items-center space-x-3">
-            <Avatar>
-              <AvatarImage src={message.user.avatar} />
-              <AvatarFallback>{message.user.name.charAt(0)}</AvatarFallback>
+            <Avatar className="h-12 w-12 border-2 border-white shadow-md">
+              <AvatarImage 
+                src={message.user.avatar} 
+                alt={message.user.name.charAt(0)}
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white text-lg">
+                {message.user.name.charAt(0)}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold">{message.user.name}</p>
+              <p className="font-semibold text-base">{message.user.name}</p>
               <div className="flex items-center text-xs text-muted-foreground">
                 <MapPin className="h-3 w-3 mr-1" />
                 <span>{message.location}</span>
@@ -75,14 +81,14 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
             <Badge variant={message.isPublic ? "default" : "secondary"}>
               {message.isPublic ? 'Public' : 'Followers'}
             </Badge>
-            <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7">
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7 -mr-2">
               <X className="h-4 w-4" />
             </Button>
           </div>
         </CardHeader>
         
         <CardContent className="p-4">
-          <p className="mb-3">{message.content}</p>
+          <p className="mb-3 text-base">{message.content}</p>
           {message.mediaUrl && (
             <div className="w-full rounded-md overflow-hidden h-56 bg-gray-100 mb-3">
               <img

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { useLocation } from 'react-router-dom';
@@ -71,6 +70,14 @@ const MapView: React.FC = () => {
         title: "Location selected",
         description: "Now you can create your Lo at this location",
       });
+    }
+  };
+
+  const handleMessageClick = (id: string) => {
+    setSelectedMessage(id);
+    if (isCreating) {
+      setIsCreating(false);
+      endPinPlacement();
     }
   };
 
@@ -147,7 +154,7 @@ const MapView: React.FC = () => {
       >
         <MessageMarkers 
           messages={filteredMessages}
-          onMessageClick={setSelectedMessage}
+          onMessageClick={handleMessageClick}
         />
 
         {isPlacingPin && newPinPosition && (
@@ -158,7 +165,8 @@ const MapView: React.FC = () => {
                 position: { x: newPinPosition.lat, y: newPinPosition.lng },
                 isPublic: true,
                 user: {
-                  avatar: ''
+                  avatar: '',
+                  name: 'New'
                 }
               }
             ]}

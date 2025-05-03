@@ -67,9 +67,14 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
     <Card className="slide-up">
       <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between">
         <div className="flex items-center space-x-3">
-          <Avatar>
-            <AvatarImage src={message.user.avatar} />
-            <AvatarFallback>{message.user.name.charAt(0)}</AvatarFallback>
+          <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+            <AvatarImage 
+              src={message.user.avatar} 
+              alt={message.user.name.charAt(0)}
+            />
+            <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+              {message.user.name.charAt(0)}
+            </AvatarFallback>
           </Avatar>
           <div>
             <p className="font-semibold">{message.user.name}</p>
