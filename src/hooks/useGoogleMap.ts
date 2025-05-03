@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -14,6 +15,16 @@ export const useGoogleMap = () => {
 
     const streetViewControl = map.getStreetView();
     streetViewPanoramaRef.current = streetViewControl;
+    
+    // Configure Street View
+    streetViewControl.setOptions({
+      enableCloseButton: true,
+      imageDateControl: true,
+      visible: false,
+      motionTracking: false,
+      motionTrackingControl: false,
+      addressControl: true,
+    });
     
     streetViewControl.addListener('visible_changed', () => {
       setIsAttemptingStreetView(streetViewControl.getVisible());
