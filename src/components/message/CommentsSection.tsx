@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { ScrollArea } from "@/components/ui/scroll-area";
 import CommentsList from '../CommentsList';
 import CommentInput from './CommentInput';
 
@@ -18,12 +19,18 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
   onSubmitComment,
   showCommentInput
 }) => {
+  const hasComments = comments.length > 0;
+  
   return (
     <div className="p-4 pt-0">
-      {/* Comments list */}
-      <div className="mt-4 border-t pt-3">
-        <CommentsList comments={comments} />
-      </div>
+      {/* Comments list with scroll area */}
+      {hasComments && (
+        <div className="mt-4 border-t pt-3">
+          <ScrollArea className="max-h-[240px]">
+            <CommentsList comments={comments} />
+          </ScrollArea>
+        </div>
+      )}
       
       {/* Comment input field */}
       {showCommentInput && (
