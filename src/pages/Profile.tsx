@@ -65,42 +65,17 @@ const Profile = () => {
         return;
       }
 
-      // Fetch profile from database
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows returned
-        throw error;
-      }
-
-      // If profile exists in database, use it
-      if (data) {
-        setProfile({
-          name: data.name || user.user_metadata?.name || '',
-          username: data.username || user.email?.split('@')[0] || '',
-          avatar: data.avatar_url || '',
-          bio: data.bio || '',
-          location: data.location || '',
-          followers: data.followers_count || 0,
-          following: data.following_count || 0,
-          messages: [], // We'll fetch messages separately
-        });
-      } else {
-        // Use default with user metadata if profile doesn't exist
-        setProfile({
-          name: user.user_metadata?.name || user.email?.split('@')[0] || '',
-          username: user.email?.split('@')[0] || '',
-          avatar: '',
-          bio: '',
-          location: '',
-          followers: 0,
-          following: 0,
-          messages: [],
-        });
-      }
+      // For now, using user metadata since we don't have the profiles table yet
+      setProfile({
+        name: user.user_metadata?.name || user.email?.split('@')[0] || '',
+        username: user.email?.split('@')[0] || '',
+        avatar: user.user_metadata?.avatar_url || '',
+        bio: user.user_metadata?.bio || '',
+        location: user.user_metadata?.location || '',
+        followers: 0,
+        following: 0,
+        messages: [], // We'll fetch messages separately
+      });
 
       // Fetch messages (in a real app, this would be a separate query)
       // This just uses the mock data for now

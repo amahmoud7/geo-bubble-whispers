@@ -62,51 +62,7 @@ const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
         throw new Error('Not authenticated');
       }
       
-      // Check if profile exists for user
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select()
-        .eq('id', user.id)
-        .single();
-
-      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows returned
-        throw profileError;
-      }
-
-      let result;
-      if (existingProfile) {
-        // Update profile if exists
-        result = await supabase
-          .from('profiles')
-          .update({
-            name: formData.name,
-            username: formData.username,
-            bio: formData.bio,
-            location: formData.location,
-            avatar_url: formData.avatar,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-      } else {
-        // Insert new profile if doesn't exist
-        result = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            name: formData.name,
-            username: formData.username,
-            bio: formData.bio,
-            location: formData.location,
-            avatar_url: formData.avatar,
-            updated_at: new Date().toISOString()
-          });
-      }
-
-      if (result.error) {
-        throw result.error;
-      }
-
-      // Update UI
+      // Update the UI
       onSave(formData);
       
       toast({
