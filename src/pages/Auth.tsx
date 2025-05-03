@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,8 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { AtSign, Key, LogIn, UserPlus } from 'lucide-react';
-import { useEffect } from 'react';
+import { AtSign, Key, LogIn, UserPlus, Mail } from 'lucide-react';
 
 const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -18,7 +17,7 @@ const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle } = useAuth();
   
   // Redirect if already logged in
   useEffect(() => {
@@ -57,6 +56,22 @@ const Auth: React.FC = () => {
         variant: "destructive"
       });
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      await signInWithGoogle();
+      // Note: We don't need to show toast or navigate here as the auth state change will handle that
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      toast({
+        title: "Google authentication failed",
+        description: error.message || "Unable to sign in with Google",
+        variant: "destructive"
+      });
       setLoading(false);
     }
   };
@@ -169,6 +184,28 @@ const Auth: React.FC = () => {
                       </>
                     )}
                   </Button>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    Sign in with Gmail
+                  </Button>
                 </form>
               </TabsContent>
               
@@ -248,6 +285,28 @@ const Auth: React.FC = () => {
                           Create Account
                         </>
                       )}
+                    </Button>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          Or continue with
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleGoogleSignIn}
+                      disabled={loading}
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Sign up with Gmail
                     </Button>
                   </form>
                 )}
