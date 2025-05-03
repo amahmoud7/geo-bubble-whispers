@@ -16,6 +16,7 @@ const Auth: React.FC = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
   
@@ -80,14 +81,11 @@ const Auth: React.FC = () => {
         username: email.split('@')[0],
       });
       
+      setEmailSent(true);
+      
       toast({
         title: "Account created",
         description: "Please check your email to confirm your registration",
-      });
-      
-      toast({
-        title: "Note for development",
-        description: "You may want to disable email confirmation in your Supabase dashboard for easier testing",
       });
       
     } catch (error: any) {
@@ -175,65 +173,84 @@ const Auth: React.FC = () => {
               </TabsContent>
               
               <TabsContent value="register" className="p-6 pt-4">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      placeholder="Your Name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
+                {emailSent ? (
+                  <div className="space-y-4 text-center">
+                    <h3 className="text-lg font-medium">Verification Email Sent</h3>
+                    <p className="text-muted-foreground">
+                      We've sent a confirmation email to <span className="font-medium">{email}</span>.
+                    </p>
+                    <p className="text-muted-foreground">
+                      Please check your inbox and click the verification link to complete your registration.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      className="w-full mt-4"
+                      onClick={() => setEmailSent(false)}
+                    >
+                      Back to Register
+                    </Button>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
-                    <div className="relative">
-                      <AtSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <form onSubmit={handleSignUp} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Name</Label>
                       <Input
-                        id="register-email"
-                        type="email"
-                        placeholder="you@example.com"
-                        className="pl-10"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        id="name"
+                        placeholder="Your Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         required
                       />
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="register-password">Password</Label>
-                    <div className="relative">
-                      <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="register-password"
-                        type="password"
-                        placeholder="••••••••"
-                        className="pl-10"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="register-email">Email</Label>
+                      <div className="relative">
+                        <AtSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="register-email"
+                          type="email"
+                          placeholder="you@example.com"
+                          className="pl-10"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
-                  </div>
-                  
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      "Creating account..."
-                    ) : (
-                      <>
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Create Account
-                      </>
-                    )}
-                  </Button>
-                </form>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="register-password">Password</Label>
+                      <div className="relative">
+                        <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="register-password"
+                          type="password"
+                          placeholder="••••••••"
+                          className="pl-10"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        "Creating account..."
+                      ) : (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Create Account
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
