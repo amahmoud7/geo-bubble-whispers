@@ -1,102 +1,143 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MapPin, List, User, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Map, List, User, Menu, LogOut, LogIn } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
 
-const Navigation: React.FC = () => {
+const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>(
-    location.pathname === "/home" || location.pathname === "/" 
-      ? "map" 
-      : location.pathname === "/list" 
-        ? "list" 
-        : "map"
-  );
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    if (value === "map") {
-      navigate("/home");
-    } else if (value === "list") {
-      navigate("/list");
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out.",
+      });
+      navigate('/');
+    } catch (error: any) {
+      console.error('Sign out error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
-  const handleLogout = () => {
-    // Handle logout logic here
-    navigate("/");
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
-    <header className="w-full bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center">
-          <Link to="/home" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lo-purple to-lo-blue flex items-center justify-center">
-              <span className="text-white font-bold">Lo</span>
-            </div>
+    <div className="w-full bg-white border-b px-4 py-2 h-16">
+      <div className="flex justify-between items-center h-full">
+        {/* Logo */}
+        <Link to="/" className="font-bold text-xl text-purple-600 flex-shrink-0">
+          Lo
+        </Link>
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center space-x-4">
+          <Link to="/home">
+            <Button
+              variant={isActive('/home') ? "default" : "ghost"}
+              className="flex items-center"
+              size="sm"
+            >
+              <Map className="h-4 w-4 mr-2" />
+              Map
+            </Button>
+          </Link>
+          <Link to="/list">
+            <Button
+              variant={isActive('/list') ? "default" : "ghost"}
+              className="flex items-center"
+              size="sm"
+            >
+              <List className="h-4 w-4 mr-2" />
+              List
+            </Button>
           </Link>
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={handleTabChange}
-          className="w-[200px]"
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="map" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span>Map</span>
-            </TabsTrigger>
-            <TabsTrigger value="list" className="flex items-center gap-2">
-              <List className="h-4 w-4" />
-              <span>List</span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* Right Side - Profile/Auth */}
+        <div className="flex items-center space-x-2">
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/auth')}
+              className="flex items-center"
+            >
+              <LogIn className="h-4 w-4 mr-2" />
+              Sign In
+            </Button>
+          )}
 
-        <div className="flex items-center gap-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-                  <AvatarFallback>US</AvatarFallback>
-                </Avatar>
+          {/* Mobile Menu Button */}
+          <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <DropdownMenuTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">User</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    user@example.com
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/profile")}>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => {
+                navigate('/home');
+                setIsMenuOpen(false);
+              }}>
+                <Map className="mr-2 h-4 w-4" />
+                Map
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+              <DropdownMenuItem onClick={() => {
+                navigate('/list');
+                setIsMenuOpen(false);
+              }}>
+                <List className="mr-2 h-4 w-4" />
+                List
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                Log out
-              </DropdownMenuItem>
+              {!user && (
+                <DropdownMenuItem onClick={() => {
+                  navigate('/auth');
+                  setIsMenuOpen(false);
+                }}>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Sign In
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
-    </header>
+    </div>
   );
 };
 
