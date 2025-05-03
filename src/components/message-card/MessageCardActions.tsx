@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Heart, MessageSquare, Share2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useMessageInteractions } from '@/hooks/useMessageInteractions';
 
 interface MessageCardActionsProps {
   messageId: string;
@@ -25,30 +25,13 @@ const MessageCardActions: React.FC<MessageCardActionsProps> = ({
   onLike,
   onComment
 }) => {
-  const handleShare = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // Use Web Share API if available
-    if (navigator.share) {
-      navigator.share({
-        title: `Lo from ${userName}`,
-        text: content,
-        url: window.location.href,
-      }).catch(err => {
-        toast({
-          title: "Shared",
-          description: "Link copied to clipboard",
-        });
-      });
-    } else {
-      // Fallback to clipboard
-      navigator.clipboard.writeText(`${window.location.origin}/home?message=${messageId}`);
-      toast({
-        title: "Shared",
-        description: "Link copied to clipboard",
-      });
-    }
-  };
+  const { handleShare } = useMessageInteractions({
+    initialLiked: liked,
+    initialLikes: likes,
+    messageId,
+    userName,
+    content
+  });
 
   return (
     <div className="flex justify-between w-full border-t pt-2">

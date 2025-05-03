@@ -6,6 +6,7 @@ import MessageDetailHeader from './message/MessageDetailHeader';
 import MessageDetailContent from './message/MessageDetailContent';
 import MessageDetailActions from './message/MessageDetailActions';
 import CommentsSection from './message/CommentsSection';
+import { useMessageInteractions } from '@/hooks/useMessageInteractions';
 
 interface MessageDetailProps {
   message: {
@@ -73,33 +74,20 @@ const mockComments = [
 ];
 
 const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
-  const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(Math.floor(Math.random() * 20));
+  const { liked, likes, showCommentInput, handleLike, handleComment } = useMessageInteractions({
+    messageId: message.id,
+    userName: message.user.name,
+    content: message.content
+  });
+  
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState(mockComments);
-  const [showCommentInput, setShowCommentInput] = useState(false);
   
   const handleExtend = () => {
     toast({
       title: "Duration Extended",
       description: "Message will be available for another 24 hours.",
     });
-  };
-  
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikes(liked ? likes - 1 : likes + 1);
-    
-    if (!liked) {
-      toast({
-        title: "Post liked",
-        description: "You've liked this Lo",
-      });
-    }
-  };
-
-  const handleComment = () => {
-    setShowCommentInput(!showCommentInput);
   };
 
   const handleSubmitComment = () => {

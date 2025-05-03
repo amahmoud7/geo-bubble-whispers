@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
 import MessageCardHeader from './message-card/MessageCardHeader';
 import MessageCardContent from './message-card/MessageCardContent';
 import MessageCardFooter from './message-card/MessageCardFooter';
 import MessageCardActions from './message-card/MessageCardActions';
+import { useMessageInteractions } from '@/hooks/useMessageInteractions';
 
 interface MessageCardProps {
   message: {
@@ -29,35 +29,23 @@ interface MessageCardProps {
 }
 
 const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
-  const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(Math.floor(Math.random() * 20));
   const commentsCount = Math.floor(Math.random() * 5); // Mock comments count
+  
+  const { liked, likes, handleLike, handleComment } = useMessageInteractions({
+    messageId: message.id,
+    userName: message.user.name,
+    content: message.content
+  });
 
   const handleViewMessage = () => {
     // Navigate to the message and pass the ID to the onSelect handler
     onSelect(message.id);
   };
 
-  const handleLike = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setLiked(!liked);
-    setLikes(liked ? likes - 1 : likes + 1);
-    
-    if (!liked) {
-      toast({
-        title: "Post liked",
-        description: "You've liked this Lo",
-      });
-    }
-  };
-
-  const handleComment = (e: React.MouseEvent) => {
+  const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onSelect(message.id);
-    toast({
-      title: "Comment",
-      description: "Opening comments section",
-    });
+    handleComment(e);
   };
 
   return (
@@ -95,7 +83,7 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
             likes={likes}
             commentsCount={commentsCount}
             onLike={handleLike}
-            onComment={handleComment}
+            onComment={handleCommentClick}
           />
         </div>
       </CardFooter>
