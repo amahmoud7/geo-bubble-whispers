@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Heart, MessageSquareReply } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import CommentWithReplies from './comment/CommentWithReplies';
 
 interface Comment {
   id: string;
@@ -58,17 +57,27 @@ const CommentsList: React.FC<CommentsListProps> = ({ comments }) => {
     const newLikedComments = { ...likedComments, [commentId]: !isCurrentlyLiked };
     setLikedComments(newLikedComments);
     
-    // Find and update the likes count for this comment
-    const newComments = updatedComments.map(comment => {
-      if (comment.id === commentId) {
-        return {
-          ...comment,
-          likes: isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1
-        };
-      }
-      return comment;
-    });
+    // Find and update the likes count for this comment in the updatedComments array
+    const updateComment = (comments: Comment[]): Comment[] => {
+      return comments.map(comment => {
+        if (comment.id === commentId) {
+          return {
+            ...comment,
+            likes: isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1
+          };
+        }
+        // Check for the comment in replies if it exists
+        if (comment.replies && comment.replies.length > 0) {
+          return {
+            ...comment,
+            replies: updateComment(comment.replies)
+          };
+        }
+        return comment;
+      });
+    };
     
+    const newComments = updateComment(updatedComments);
     setUpdatedComments(newComments);
     
     // Show toast notification
@@ -128,106 +137,18 @@ const CommentsList: React.FC<CommentsListProps> = ({ comments }) => {
     <div className="space-y-1">
       <ScrollArea className="max-h-[240px] pr-4">
         {updatedComments.map((comment) => (
-          <div key={comment.id} className="mb-4">
-            <div className="flex items-start group">
-              <Avatar className="h-8 w-8 mr-2">
-                <AvatarImage src={comment.user.avatar} alt={comment.user.name} />
-                <AvatarFallback className="text-xs bg-purple-100 text-purple-500">
-                  {comment.user.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="flex-1">
-                <div className="text-sm">
-                  <span className="font-semibold mr-2">{comment.user.name}</span>
-                  <span className="text-neutral-700">{comment.content}</span>
-                </div>
-                
-                <div className="flex items-center mt-1 text-xs text-neutral-500">
-                  <span className="mr-3">{formatRelativeTime(comment.timestamp)}</span>
-                  {comment.likes > 0 && (
-                    <span className="mr-3">{comment.likes} likes</span>
-                  )}
-                  <button 
-                    className="text-xs font-medium mr-3 hover:text-neutral-800"
-                    onClick={() => handleReplyClick(comment.id)}
-                  >
-                    Reply
-                  </button>
-                </div>
-                
-                {/* Reply input field */}
-                {replyingTo === comment.id && (
-                  <div className="flex items-center mt-2">
-                    <input
-                      type="text"
-                      className="flex-1 text-xs border border-gray-300 rounded-full px-3 py-1.5"
-                      placeholder={`Reply to ${comment.user.name}...`}
-                      value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') handleSubmitReply(comment.id);
-                      }}
-                    />
-                    <button 
-                      className="ml-2 text-xs font-medium text-blue-500 hover:text-blue-700"
-                      onClick={() => handleSubmitReply(comment.id)}
-                    >
-                      Post
-                    </button>
-                  </div>
-                )}
-                
-                {/* Display replies */}
-                {comment.replies && comment.replies.length > 0 && (
-                  <div className="ml-6 mt-2">
-                    {comment.replies.map((reply) => (
-                      <div key={reply.id} className="flex items-start mb-2 group">
-                        <Avatar className="h-6 w-6 mr-2">
-                          <AvatarImage src={reply.user.avatar} alt={reply.user.name} />
-                          <AvatarFallback className="text-xs bg-purple-100 text-purple-500">
-                            {reply.user.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        <div className="flex-1">
-                          <div className="text-xs">
-                            <span className="font-semibold mr-2">{reply.user.name}</span>
-                            <span className="text-neutral-700">{reply.content}</span>
-                          </div>
-                          
-                          <div className="flex items-center mt-1 text-xs text-neutral-500">
-                            <span className="mr-3">{formatRelativeTime(reply.timestamp)}</span>
-                            {reply.likes > 0 && (
-                              <span className="mr-3">{reply.likes} likes</span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <button 
-                          className="h-5 w-5 text-neutral-500 hover:text-red-500 group-hover:opacity-100 opacity-0"
-                          onClick={() => handleLike(reply.id, reply.likes)}
-                        >
-                          <Heart 
-                            className={`h-3 w-3 ${likedComments[reply.id] ? 'fill-red-500 text-red-500' : ''}`} 
-                          />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              <button 
-                className="h-5 w-5 text-neutral-500 hover:text-red-500 group-hover:opacity-100 opacity-0"
-                onClick={() => handleLike(comment.id, comment.likes)}
-              >
-                <Heart 
-                  className={`h-3 w-3 ${likedComments[comment.id] ? 'fill-red-500 text-red-500' : ''}`} 
-                />
-              </button>
-            </div>
-          </div>
+          <CommentWithReplies
+            key={comment.id}
+            comment={comment}
+            likedComments={likedComments}
+            replyingTo={replyingTo}
+            replyText={replyText}
+            handleLike={handleLike}
+            handleReplyClick={handleReplyClick}
+            handleSubmitReply={handleSubmitReply}
+            setReplyText={setReplyText}
+            formatRelativeTime={formatRelativeTime}
+          />
         ))}
       </ScrollArea>
     </div>
