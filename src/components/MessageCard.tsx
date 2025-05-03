@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Clock } from 'lucide-react';
+import { MapPin, Clock, Heart, MessageSquare, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 interface MessageCardProps {
   message: {
@@ -30,6 +31,8 @@ interface MessageCardProps {
 
 const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
   const navigate = useNavigate();
+  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(Math.floor(Math.random() * 20));
 
   const getTimeRemaining = (expiresAt: string) => {
     const now = new Date();
@@ -61,6 +64,53 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
     
     // Also pass the message ID to the onSelect handler for any additional functionality
     onSelect(message.id);
+  };
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLiked(!liked);
+    setLikes(liked ? likes - 1 : likes + 1);
+    
+    if (!liked) {
+      toast({
+        title: "Post liked",
+        description: "You've liked this Lo",
+      });
+    }
+  };
+
+  const handleComment = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelect(message.id);
+    toast({
+      title: "Comment",
+      description: "Opening comments section",
+    });
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Use Web Share API if available
+    if (navigator.share) {
+      navigator.share({
+        title: `Lo from ${message.user.name}`,
+        text: message.content,
+        url: window.location.href,
+      }).catch(err => {
+        toast({
+          title: "Shared",
+          description: "Link copied to clipboard",
+        });
+      });
+    } else {
+      // Fallback to clipboard
+      navigator.clipboard.writeText(`${window.location.origin}/home?message=${message.id}`);
+      toast({
+        title: "Shared",
+        description: "Link copied to clipboard",
+      });
+    }
   };
 
   return (
@@ -107,25 +157,57 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
         )}
       </CardContent>
       
-      <CardFooter className="p-4 pt-0 flex justify-between items-center">
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Clock className="h-4 w-4 mr-1" />
-          <span>{getTimeRemaining(message.expiresAt)} left</span>
+      <CardFooter className="p-4 pt-0 flex flex-col gap-2">
+        <div className="flex items-center justify-between w-full text-sm text-muted-foreground">
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-1" />
+            <span>{getTimeRemaining(message.expiresAt)} left</span>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleViewMessage}
+            >
+              View
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleViewLocation}
+            >
+              <MapPin className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
+        
+        <div className="flex justify-between w-full border-t pt-2">
           <Button 
+            variant="ghost" 
             size="sm" 
-            variant="outline" 
-            onClick={handleViewMessage}
+            className={`flex-1 ${liked ? 'text-red-500' : ''}`} 
+            onClick={handleLike}
           >
-            View
+            <Heart className={`h-4 w-4 mr-1 ${liked ? 'fill-current' : ''}`} />
+            {likes > 0 && <span>{likes}</span>}
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleViewLocation}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex-1"
+            onClick={handleComment}
           >
-            <MapPin className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4 mr-1" />
+            Comment
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex-1"
+            onClick={handleShare}
+          >
+            <Share2 className="h-4 w-4 mr-1" />
+            Share
           </Button>
         </div>
       </CardFooter>

@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Clock, MapPin, X, Heart, MessageSquare, Share2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 interface MessageDetailProps {
   message: {
@@ -25,6 +26,11 @@ interface MessageDetailProps {
 }
 
 const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
+  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(Math.floor(Math.random() * 20));
+  const [comment, setComment] = useState('');
+  const [showCommentInput, setShowCommentInput] = useState(false);
+  
   // Calculate time remaining
   const getTimeRemaining = (expiresAt: string) => {
     const now = new Date();
@@ -52,6 +58,55 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
       title: "Duration Extended",
       description: "Message will be available for another 24 hours.",
     });
+  };
+  
+  const handleLike = () => {
+    setLiked(!liked);
+    setLikes(liked ? likes - 1 : likes + 1);
+    
+    if (!liked) {
+      toast({
+        title: "Post liked",
+        description: "You've liked this Lo",
+      });
+    }
+  };
+
+  const handleComment = () => {
+    setShowCommentInput(!showCommentInput);
+  };
+
+  const handleSubmitComment = () => {
+    if (comment.trim()) {
+      toast({
+        title: "Comment posted",
+        description: "Your comment has been added",
+      });
+      setComment('');
+    }
+  };
+
+  const handleShare = () => {
+    // Use Web Share API if available
+    if (navigator.share) {
+      navigator.share({
+        title: `Lo from ${message.user.name}`,
+        text: message.content,
+        url: window.location.href,
+      }).catch(err => {
+        toast({
+          title: "Shared",
+          description: "Link copied to clipboard",
+        });
+      });
+    } else {
+      // Fallback to clipboard
+      navigator.clipboard.writeText(`${window.location.origin}/home?message=${message.id}`);
+      toast({
+        title: "Shared",
+        description: "Link copied to clipboard",
+      });
+    }
   };
 
   return (
@@ -110,19 +165,56 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
         
         <CardFooter className="p-4 pt-0 flex-col gap-4">
           <div className="flex justify-between w-full border-t border-b py-2">
-            <Button variant="ghost" size="sm" className="flex-1">
-              <Heart className="h-4 w-4 mr-1" />
-              Like
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={`flex-1 ${liked ? 'text-red-500' : ''}`}
+              onClick={handleLike}
+            >
+              <Heart className={`h-4 w-4 mr-1 ${liked ? 'fill-current' : ''}`} />
+              {likes > 0 && <span>{likes}</span>}
             </Button>
-            <Button variant="ghost" size="sm" className="flex-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleComment}
+            >
               <MessageSquare className="h-4 w-4 mr-1" />
               Comment
             </Button>
-            <Button variant="ghost" size="sm" className="flex-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleShare}
+            >
               <Share2 className="h-4 w-4 mr-1" />
               Share
             </Button>
           </div>
+          
+          {showCommentInput && (
+            <div className="w-full space-y-2">
+              <Textarea 
+                placeholder="Write a comment..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="w-full resize-none"
+                rows={2}
+              />
+              <div className="flex justify-end">
+                <Button 
+                  size="sm" 
+                  onClick={handleSubmitComment}
+                  disabled={!comment.trim()}
+                >
+                  Post
+                </Button>
+              </div>
+            </div>
+          )}
+          
           <Button onClick={handleExtend} variant="outline" className="w-full">
             Extend for 24 More Hours
           </Button>
