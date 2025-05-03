@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Clock, MapPin, X, Heart, MessageSquare, Share2 } from 'lucide-react';
+import { Clock, MapPin, X, Heart, MessageSquare, Share2, Send } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import CommentsList from './CommentsList';
 
 interface MessageDetailProps {
   message: {
@@ -25,10 +26,45 @@ interface MessageDetailProps {
   onClose: () => void;
 }
 
+// Mock comments data - in a real app, this would come from a database
+const mockComments = [
+  {
+    id: '1',
+    user: {
+      name: 'Alex Johnson',
+      avatar: 'https://i.pravatar.cc/150?u=alex',
+    },
+    content: 'This is such a beautiful place! 😍',
+    timestamp: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+    likes: 5,
+  },
+  {
+    id: '2',
+    user: {
+      name: 'Sam Williams',
+      avatar: 'https://i.pravatar.cc/150?u=sam',
+    },
+    content: 'I was there last week! The atmosphere is amazing.',
+    timestamp: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 hours ago
+    likes: 2,
+  },
+  {
+    id: '3',
+    user: {
+      name: 'Taylor Chen',
+      avatar: 'https://i.pravatar.cc/150?u=taylor',
+    },
+    content: 'Great shot! 📸 What camera did you use?',
+    timestamp: new Date(Date.now() - 3600000 * 12).toISOString(), // 12 hours ago
+    likes: 0,
+  },
+];
+
 const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(Math.floor(Math.random() * 20));
   const [comment, setComment] = useState('');
+  const [comments, setComments] = useState(mockComments);
   const [showCommentInput, setShowCommentInput] = useState(false);
   
   // Calculate time remaining
@@ -78,11 +114,25 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
 
   const handleSubmitComment = () => {
     if (comment.trim()) {
+      // Add the new comment to the list
+      const newComment = {
+        id: `comment-${Date.now()}`,
+        user: {
+          name: 'You', // In a real app, this would be the current user's name
+          avatar: 'https://i.pravatar.cc/150?u=user', // In a real app, this would be the current user's avatar
+        },
+        content: comment.trim(),
+        timestamp: new Date().toISOString(),
+        likes: 0,
+      };
+      
+      setComments([newComment, ...comments]);
+      setComment('');
+      
       toast({
         title: "Comment posted",
         description: "Your comment has been added",
       });
-      setComment('');
     }
   };
 
@@ -111,7 +161,7 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md mx-auto bg-white fade-in">
+      <Card className="w-full max-w-md mx-auto bg-white fade-in flex flex-col max-h-[90vh]">
         <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between">
           <div className="flex items-center space-x-3">
             <Avatar className="h-12 w-12 border-2 border-white shadow-md">
@@ -142,7 +192,7 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
           </div>
         </CardHeader>
         
-        <CardContent className="p-4">
+        <CardContent className="p-4 overflow-auto flex-grow">
           <p className="mb-3 text-base">{message.content}</p>
           {message.mediaUrl && (
             <div className="w-full rounded-md overflow-hidden h-56 bg-gray-100 mb-3">
@@ -160,6 +210,11 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
               <Clock className="h-3 w-3 mr-1" />
               <span>{getTimeRemaining(message.expiresAt)} left</span>
             </div>
+          </div>
+
+          {/* Comments section */}
+          <div className="mt-4 border-t pt-3">
+            <CommentsList comments={comments} />
           </div>
         </CardContent>
         
@@ -194,26 +249,36 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
             </Button>
           </div>
           
-          {showCommentInput && (
-            <div className="w-full space-y-2">
-              <Textarea 
-                placeholder="Write a comment..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="w-full resize-none"
-                rows={2}
-              />
-              <div className="flex justify-end">
-                <Button 
-                  size="sm" 
-                  onClick={handleSubmitComment}
-                  disabled={!comment.trim()}
-                >
-                  Post
-                </Button>
+          {/* Comment input field */}
+          <div className="w-full space-y-2">
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="https://i.pravatar.cc/150?u=user" alt="You" />
+                <AvatarFallback className="text-xs bg-purple-100 text-purple-500">
+                  Y
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 relative">
+                <Textarea 
+                  placeholder="Add a comment..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="w-full resize-none py-2 min-h-0 h-10"
+                  rows={1}
+                />
+                {comment.trim() && (
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="absolute right-2 top-1 p-1 h-8 w-8"
+                    onClick={handleSubmitComment}
+                  >
+                    <Send className="h-4 w-4 text-primary" />
+                  </Button>
+                )}
               </div>
             </div>
-          )}
+          </div>
           
           <Button onClick={handleExtend} variant="outline" className="w-full">
             Extend for 24 More Hours

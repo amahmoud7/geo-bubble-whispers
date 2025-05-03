@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,6 +32,7 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(Math.floor(Math.random() * 20));
+  const commentsCount = Math.floor(Math.random() * 5); // Mock comments count
 
   const getTimeRemaining = (expiresAt: string) => {
     const now = new Date();
@@ -198,7 +198,7 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onSelect }) => {
             onClick={handleComment}
           >
             <MessageSquare className="h-4 w-4 mr-1" />
-            Comment
+            {commentsCount > 0 ? <span>{commentsCount}</span> : 'Comment'}
           </Button>
           <Button 
             variant="ghost" 
