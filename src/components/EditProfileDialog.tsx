@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, ChangeEvent } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Settings, Image } from "lucide-react";
+import { Settings, Image as ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProfileFormData {
@@ -33,11 +33,56 @@ const EditProfileDialog = ({
 }) => {
   const [formData, setFormData] = useState<ProfileFormData>(profile);
   const [open, setOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(profile.avatar);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file (JPEG, PNG, GIF, or WEBP)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setPreviewImage(result);
+      setFormData(prev => ({ ...prev, avatar: result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleClearImage = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent trigger of parent click handler
+    setPreviewImage(null);
+    setFormData(prev => ({ ...prev, avatar: '' }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -64,18 +109,35 @@ const EditProfileDialog = ({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex items-center justify-center pb-4">
-            <div className="relative">
+            <div className="relative cursor-pointer" onClick={handleImageClick}>
               <Avatar className="h-24 w-24">
-                <AvatarImage src={formData.avatar} />
-                <AvatarFallback>{formData.name.charAt(0)}</AvatarFallback>
+                {previewImage ? (
+                  <AvatarImage src={previewImage} />
+                ) : (
+                  <AvatarFallback>{formData.name.charAt(0)}</AvatarFallback>
+                )}
               </Avatar>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="absolute bottom-0 right-0 rounded-full p-1"
-              >
-                <Image className="h-4 w-4" />
-              </Button>
+              <div className="absolute bottom-0 right-0 rounded-full bg-primary p-1">
+                <ImageIcon className="h-4 w-4 text-white" />
+              </div>
+              
+              {previewImage && (
+                <button 
+                  type="button"
+                  className="absolute -top-2 -right-2 rounded-full bg-destructive p-1"
+                  onClick={handleClearImage}
+                >
+                  <X className="h-3 w-3 text-white" />
+                </button>
+              )}
+              
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden" 
+              />
             </div>
           </div>
           
