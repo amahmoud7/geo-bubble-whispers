@@ -1,22 +1,19 @@
 
 import React from 'react';
 import { Clock } from 'lucide-react';
-import CommentsList from '../CommentsList';
 
 interface MessageDetailContentProps {
   content: string;
   mediaUrl?: string;
   timestamp: string;
   expiresAt: string;
-  comments: any[]; // Using any[] for simplicity, but ideally should have proper type
 }
 
 const MessageDetailContent: React.FC<MessageDetailContentProps> = ({
   content,
   mediaUrl,
   timestamp,
-  expiresAt,
-  comments
+  expiresAt
 }) => {
   // Format timestamp
   const formatTimestamp = (timestamp: string) => {
@@ -59,11 +56,6 @@ const MessageDetailContent: React.FC<MessageDetailContentProps> = ({
           <Clock className="h-3 w-3 mr-1" />
           <span>{getTimeRemaining(expiresAt)} left</span>
         </div>
-      </div>
-
-      {/* Comments section */}
-      <div className="mt-4 border-t pt-3">
-        <CommentsList comments={comments} />
       </div>
     </div>
   );

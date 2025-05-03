@@ -5,7 +5,7 @@ import { toast } from '@/hooks/use-toast';
 import MessageDetailHeader from './message/MessageDetailHeader';
 import MessageDetailContent from './message/MessageDetailContent';
 import MessageDetailActions from './message/MessageDetailActions';
-import CommentInput from './message/CommentInput';
+import CommentsSection from './message/CommentsSection';
 
 interface MessageDetailProps {
   message: {
@@ -145,7 +145,14 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
             mediaUrl={message.mediaUrl}
             timestamp={message.timestamp}
             expiresAt={message.expiresAt}
+          />
+          
+          <CommentsSection 
             comments={comments}
+            comment={comment}
+            setComment={setComment}
+            onSubmitComment={handleSubmitComment}
+            showCommentInput={showCommentInput}
           />
         </CardContent>
         
@@ -159,15 +166,6 @@ const MessageDetail: React.FC<MessageDetailProps> = ({ message, onClose }) => {
             userName={message.user.name}
             messageContent={message.content}
           />
-          
-          {/* Comment input field */}
-          <div className="w-full space-y-2">
-            <CommentInput
-              comment={comment}
-              setComment={setComment}
-              onSubmit={handleSubmitComment}
-            />
-          </div>
           
           <Button onClick={handleExtend} variant="outline" className="w-full">
             Extend for 24 More Hours
