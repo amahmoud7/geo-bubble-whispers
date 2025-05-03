@@ -25,7 +25,8 @@ const App = () => {
     // Verify database connection
     const checkConnection = async () => {
       try {
-        const { data, error } = await supabase.from('messages').select('count').limit(1);
+        // Just check if we can connect to Supabase
+        const { error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
         
         if (error) {
           console.error('Supabase connection error:', error);

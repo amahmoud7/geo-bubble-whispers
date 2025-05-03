@@ -41,7 +41,7 @@ export const useMessages = () => {
       
       if (data) {
         // Transform data to match our app's expected format
-        const transformedMessages = data.map((message: Message) => ({
+        const transformedMessages = data.map((message: any) => ({
           id: message.id,
           content: message.content,
           mediaUrl: message.media_url,
