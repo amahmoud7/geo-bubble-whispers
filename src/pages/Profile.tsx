@@ -2,16 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
-import EditProfileDialog from '../components/profile/EditProfileDialog';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { MapPin, ArrowLeft, User, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import ProfileHeader from '../components/profile/ProfileHeader';
+import ProfileTabs from '../components/profile/ProfileTabs';
+import ProfileLoadingState from '../components/profile/ProfileLoadingState';
+import ProfileUnauthenticated from '../components/profile/ProfileUnauthenticated';
 
 // Interface for profile data
 interface ProfileData {
@@ -79,7 +79,6 @@ const Profile = () => {
       });
 
       // Fetch messages (in a real app, this would be a separate query)
-      // This just uses the mock data for now
       fetchUserMessages(userId);
 
     } catch (error: any) {
@@ -167,9 +166,7 @@ const Profile = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <div className="flex items-center justify-center flex-grow">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <ProfileLoadingState />
       </div>
     );
   }
@@ -178,11 +175,7 @@ const Profile = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <div className="container py-6 flex flex-col items-center justify-center flex-grow">
-          <h2 className="text-2xl font-bold mb-4">Please Sign In</h2>
-          <p className="text-muted-foreground mb-4">You need to be signed in to view your profile.</p>
-          <Button onClick={() => navigate('/')}>Go to Home</Button>
-        </div>
+        <ProfileUnauthenticated />
       </div>
     );
   }
@@ -204,113 +197,14 @@ const Profile = () => {
         
         <Card>
           <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={profile.avatar} />
-                <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <EditProfileDialog 
-                profile={{
-                  name: profile.name,
-                  username: profile.username,
-                  bio: profile.bio,
-                  location: profile.location,
-                  avatar: profile.avatar
-                }}
-                onSave={handleSaveProfile}
-              />
-            </div>
-            
-            <CardTitle className="mt-4">{profile.name}</CardTitle>
-            <CardDescription>@{profile.username}</CardDescription>
+            <ProfileHeader 
+              profile={profile} 
+              onSaveProfile={handleSaveProfile} 
+            />
           </CardHeader>
           
           <CardContent className="pb-4">
-            <p className="mb-4">{profile.bio}</p>
-            
-            {profile.location && (
-              <div className="flex items-center text-sm text-muted-foreground mb-4">
-                <MapPin className="h-4 w-4 mr-1" />
-                <span>{profile.location}</span>
-              </div>
-            )}
-            
-            <div className="flex gap-4 text-sm mb-6">
-              <div>
-                <span className="font-bold">{profile.following}</span> Following
-              </div>
-              <div>
-                <span className="font-bold">{profile.followers}</span> Followers
-              </div>
-            </div>
-            
-            <Tabs defaultValue="messages">
-              <TabsList className="w-full mb-6">
-                <TabsTrigger value="messages" className="flex-1">Messages</TabsTrigger>
-                <TabsTrigger value="expired" className="flex-1">Expired</TabsTrigger>
-                <TabsTrigger value="saved" className="flex-1">Saved</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="messages" className="space-y-4">
-                {profile.messages && profile.messages.length > 0 ? (
-                  profile.messages.map((message) => (
-                    <Card key={message.id} className="overflow-hidden">
-                      <CardContent className="p-0">
-                        {message.mediaUrl && (
-                          <div className="w-full h-48 bg-gray-100 relative">
-                            <img 
-                              src={message.mediaUrl} 
-                              alt={message.content}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute top-2 right-2">
-                              <Badge variant={message.isPublic ? "default" : "secondary"}>
-                                {message.isPublic ? 'Public' : 'Followers'}
-                              </Badge>
-                            </div>
-                          </div>
-                        )}
-                        <div className="p-4">
-                          <p className="mb-2">{message.content}</p>
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            <span>{message.location}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-10 text-center">
-                    <User className="h-10 w-10 text-muted-foreground mb-2" />
-                    <h3 className="font-medium mb-1">No messages yet</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Your messages will appear here
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="expired">
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <User className="h-10 w-10 text-muted-foreground mb-2" />
-                  <h3 className="font-medium mb-1">No expired messages</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Messages will appear here after they expire
-                  </p>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="saved">
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <User className="h-10 w-10 text-muted-foreground mb-2" />
-                  <h3 className="font-medium mb-1">No saved messages</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Messages you save will appear here
-                  </p>
-                </div>
-              </TabsContent>
-            </Tabs>
+            <ProfileTabs messages={profile.messages || []} />
           </CardContent>
         </Card>
       </div>
