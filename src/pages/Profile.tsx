@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, ArrowLeft, User, Loader2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 // Interface for profile data
 interface ProfileData {
@@ -41,37 +42,37 @@ const Profile = () => {
   const [profile, setProfile] = useState<ProfileData>(defaultProfile);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Fetch user profile on component mount
   useEffect(() => {
-    fetchUserProfile();
-  }, []);
+    if (user) {
+      fetchUserProfile(user.id);
+    } else {
+      setIsLoading(false);
+    }
+  }, [user]);
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = async (userId: string) => {
     try {
       setIsLoading(true);
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        // Not authenticated, redirect to login page
-        toast({
-          title: "Authentication required",
-          description: "Please login to view your profile",
-          variant: "destructive"
-        });
-        // If you have a login page, redirect here
-        // navigate('/login');
-        return;
-      }
+      // Fetch profile data from Supabase
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-      // For now, using user metadata since we don't have the profiles table yet
+      if (error) throw error;
+
+      // Format the profile data
       setProfile({
-        name: user.user_metadata?.name || user.email?.split('@')[0] || '',
-        username: user.email?.split('@')[0] || '',
-        avatar: user.user_metadata?.avatar_url || '',
-        bio: user.user_metadata?.bio || '',
-        location: user.user_metadata?.location || '',
+        name: profileData.name || '',
+        username: profileData.username || '',
+        avatar: profileData.avatar_url || '',
+        bio: profileData.bio || '',
+        location: profileData.location || '',
         followers: 0,
         following: 0,
         messages: [], // We'll fetch messages separately
@@ -79,7 +80,7 @@ const Profile = () => {
 
       // Fetch messages (in a real app, this would be a separate query)
       // This just uses the mock data for now
-      fetchUserMessages(user.id);
+      fetchUserMessages(userId);
 
     } catch (error: any) {
       console.error('Error fetching profile:', error);
@@ -119,16 +120,47 @@ const Profile = () => {
     }));
   };
 
-  const handleSaveProfile = (updatedProfileData: any) => {
-    // Update the local state
-    setProfile({
-      ...profile,
-      name: updatedProfileData.name,
-      username: updatedProfileData.username,
-      bio: updatedProfileData.bio,
-      location: updatedProfileData.location,
-      avatar: updatedProfileData.avatar,
-    });
+  const handleSaveProfile = async (updatedProfileData: any) => {
+    try {
+      if (!user) return;
+      
+      // Update the profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: updatedProfileData.name,
+          username: updatedProfileData.username,
+          bio: updatedProfileData.bio,
+          location: updatedProfileData.location,
+          avatar_url: updatedProfileData.avatar,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      // Update the local state
+      setProfile({
+        ...profile,
+        name: updatedProfileData.name,
+        username: updatedProfileData.username,
+        bio: updatedProfileData.bio,
+        location: updatedProfileData.location,
+        avatar: updatedProfileData.avatar,
+      });
+      
+      toast({
+        title: "Success",
+        description: "Profile has been updated successfully",
+      });
+    } catch (error: any) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile changes",
+        variant: "destructive"
+      });
+    }
   };
 
   if (isLoading) {
@@ -137,6 +169,19 @@ const Profile = () => {
         <Navigation />
         <div className="flex items-center justify-center flex-grow">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <div className="container py-6 flex flex-col items-center justify-center flex-grow">
+          <h2 className="text-2xl font-bold mb-4">Please Sign In</h2>
+          <p className="text-muted-foreground mb-4">You need to be signed in to view your profile.</p>
+          <Button onClick={() => navigate('/')}>Go to Home</Button>
         </div>
       </div>
     );

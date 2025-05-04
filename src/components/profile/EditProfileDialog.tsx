@@ -62,6 +62,21 @@ const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
         throw new Error('Not authenticated');
       }
       
+      // Update the avatar in the profiles table
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: formData.name,
+          username: formData.username,
+          bio: formData.bio,
+          location: formData.location,
+          avatar_url: formData.avatar,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      
       // Update the UI
       onSave(formData);
       
