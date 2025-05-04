@@ -1,14 +1,10 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
-import { useLocation } from 'react-router-dom';
-import MessageDetail from './MessageDetail';
-import CreateMessage from './CreateMessage';
-import MessageMarkers from './map/MessageMarkers';
 import MapControls from './map/MapControls';
-import StreetViewControls from './map/StreetViewControls';
-import CreateMessageButton from './map/CreateMessageButton';
-import PlacementIndicator from './map/PlacementIndicator';
+import StreetViewController from './map/StreetViewController';
+import MessageCreationController from './map/MessageCreationController';
+import MessageDisplayController from './map/MessageDisplayController';
 import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { useGoogleMap } from '@/hooks/useGoogleMap';
 import { useMessages } from '@/hooks/useMessages';
@@ -16,13 +12,11 @@ import { useMessageState } from '@/hooks/useMessageState';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { mockMessages } from '@/mock/messages';
-import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 const MapView: React.FC = () => {
   const { userLocation } = useUserLocation();
   const { filters, filteredMessages, handleFilterChange } = useMessages();
-  const location = useLocation();
   const { user } = useAuth();
   
   const {
@@ -35,15 +29,10 @@ const MapView: React.FC = () => {
 
   const {
     map,
-    searchBox,
-    isAttemptingStreetView,
     isInStreetView,
-    streetViewPosition,
     onLoad,
     onUnmount,
     onSearchBoxLoad,
-    handleCancelStreetView,
-    activateStreetView,
   } = useGoogleMap();
 
   const {
@@ -66,14 +55,16 @@ const MapView: React.FC = () => {
     startPinPlacement();
     setSelectedMessage(null);
 
-    if (isInStreetView && streetViewPosition) {
-      setNewPinPosition(streetViewPosition);
-      // In street view, we can immediately show the create message form
-      // since we already have the position
-      toast({
-        title: "Location selected",
-        description: "Now you can create your Lo at this location",
-      });
+    if (isInStreetView && map) {
+      const streetViewControl = map.getStreetView();
+      const position = streetViewControl.getPosition();
+      if (position) {
+        const newPos = {
+          lat: position.lat(),
+          lng: position.lng()
+        };
+        setNewPinPosition(newPos);
+      }
     }
   };
 
@@ -85,45 +76,11 @@ const MapView: React.FC = () => {
     }
   };
 
-  // Handle street view activation from navigation state
-  useEffect(() => {
-    if (location.state && location.state.activateStreetView && location.state.center && map) {
-      const { lat, lng } = location.state.center;
-      
-      // Set a small timeout to ensure map is fully loaded
-      setTimeout(() => {
-        activateStreetView({ lat, lng });
-        
-        if (location.state.messageId) {
-          setSelectedMessage(location.state.messageId);
-        }
-      }, 500);
-    }
-  }, [location.state, map, activateStreetView, setSelectedMessage]);
-
-  // Listen for street view clicks to place pins
-  useEffect(() => {
-    const handleStreetViewClick = (e: CustomEvent<{lat: number, lng: number}>) => {
-      if (isPlacingPin && isInStreetView && e.detail) {
-        setNewPinPosition(e.detail);
-        toast({
-          title: "Street View location selected",
-          description: "Now you can create your Lo at this location",
-        });
-      }
-    };
-
-    window.addEventListener('streetViewClick', handleStreetViewClick as EventListener);
-    
-    return () => {
-      window.removeEventListener('streetViewClick', handleStreetViewClick as EventListener);
-    };
-  }, [isPlacingPin, isInStreetView, setNewPinPosition]);
-
   if (!isLoaded) return <div>Loading...</div>;
 
   // Get the user avatar for the new pin
   const userAvatar = user?.user_metadata?.avatar_url || '/placeholder.svg';
+  const userName = user?.user_metadata?.name;
 
   return (
     <div className="map-container relative w-full h-[calc(100vh-4rem)]">
@@ -134,21 +91,12 @@ const MapView: React.FC = () => {
         onSearchBoxLoad={onSearchBoxLoad}
       />
 
-      {!isInStreetView && (
-        <CreateMessageButton onClick={handleCreateMessage} />
-      )}
-
-      {isAttemptingStreetView && (
-        <StreetViewControls
-          onCancelStreetView={handleCancelStreetView}
-          onCreateMessage={handleCreateMessage}
-          isInStreetView={isInStreetView}
-        />
-      )}
-
-      {isPlacingPin && !isInStreetView && (
-        <PlacementIndicator isPlacingPin={isPlacingPin} />
-      )}
+      <StreetViewController
+        map={map}
+        isPlacingPin={isPlacingPin}
+        setNewPinPosition={setNewPinPosition}
+        onCreateMessage={handleCreateMessage}
+      />
 
       <GoogleMap
         mapContainerClassName="w-full h-full"
@@ -159,42 +107,25 @@ const MapView: React.FC = () => {
         onClick={handleMapClick}
         options={defaultMapOptions}
       >
-        <MessageMarkers 
-          messages={filteredMessages}
+        <MessageDisplayController
+          selectedMessage={selectedMessage}
+          filteredMessages={filteredMessages}
+          mockMessages={mockMessages}
           onMessageClick={handleMessageClick}
+          onClose={handleClose}
         />
-
-        {isPlacingPin && newPinPosition && (
-          <MessageMarkers
-            messages={[
-              {
-                id: 'new-pin',
-                position: { x: newPinPosition.lat, y: newPinPosition.lng },
-                isPublic: true,
-                user: {
-                  avatar: userAvatar,
-                  name: user?.user_metadata?.name || 'New'
-                }
-              }
-            ]}
-            onMessageClick={() => {}}
-          />
-        )}
       </GoogleMap>
 
-      {selectedMessage && (
-        <MessageDetail 
-          message={mockMessages.find(m => m.id === selectedMessage)!}
-          onClose={handleClose}
-        />
-      )}
-      
-      {isCreating && newPinPosition && (
-        <CreateMessage 
-          onClose={handleClose}
-          initialPosition={newPinPosition}
-        />
-      )}
+      <MessageCreationController
+        isCreating={isCreating}
+        isInStreetView={isInStreetView}
+        isPlacingPin={isPlacingPin}
+        newPinPosition={newPinPosition}
+        userAvatar={userAvatar}
+        userName={userName}
+        handleClose={handleClose}
+        handleCreateMessage={handleCreateMessage}
+      />
     </div>
   );
 };
