@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { useLocation } from 'react-router-dom';
@@ -16,11 +17,14 @@ import { useUserLocation } from '@/hooks/useUserLocation';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { mockMessages } from '@/mock/messages';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const MapView: React.FC = () => {
   const { userLocation } = useUserLocation();
   const { filters, filteredMessages, handleFilterChange } = useMessages();
   const location = useLocation();
+  const { user } = useAuth();
+  
   const {
     selectedMessage,
     setSelectedMessage,
@@ -118,6 +122,9 @@ const MapView: React.FC = () => {
 
   if (!isLoaded) return <div>Loading...</div>;
 
+  // Get the user avatar for the new pin
+  const userAvatar = user?.user_metadata?.avatar_url || '/placeholder.svg';
+
   return (
     <div className="map-container relative w-full h-[calc(100vh-4rem)]">
       <MapControls
@@ -165,8 +172,8 @@ const MapView: React.FC = () => {
                 position: { x: newPinPosition.lat, y: newPinPosition.lng },
                 isPublic: true,
                 user: {
-                  avatar: '',
-                  name: 'New'
+                  avatar: userAvatar,
+                  name: user?.user_metadata?.name || 'New'
                 }
               }
             ]}
