@@ -41,9 +41,9 @@ const Navigation = () => {
         {/* Logo */}
         <Link to="/" className="flex-shrink-0">
           <img 
-            src="/lovable-uploads/855a9a4e-fd0c-453e-966d-45ca706aa257.png" 
+            src="/lovable-uploads/70fd8aa8-14a4-44c2-a2f8-de418d48b1d6.png" 
             alt="Lo Logo" 
-            className="h-8"
+            className="h-16" // Doubled from h-8 to h-16
           />
         </Link>
 

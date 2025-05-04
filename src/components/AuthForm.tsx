@@ -61,7 +61,13 @@ const AuthForm: React.FC = () => {
     <div className="auth-container">
       <Card className="w-[350px] bg-white/90 backdrop-blur-xl shadow-lg fade-in">
         <CardHeader className="text-center">
-          <CardTitle className="text-4xl font-bold text-lo-purple">Lo</CardTitle>
+          <CardTitle className="text-4xl font-bold text-lo-purple">
+            <img 
+              src="/lovable-uploads/70fd8aa8-14a4-44c2-a2f8-de418d48b1d6.png" 
+              alt="Lo Logo" 
+              className="h-24 mx-auto" // Added logo image with doubled size
+            />
+          </CardTitle>
           <CardDescription>
             Connect with places and people around you
           </CardDescription>
