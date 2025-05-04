@@ -21,6 +21,7 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
   return (
     <>
       {messages.map((message) => {
+        // Create a circular SVG avatar or use the avatar URL if it's not an SVG
         const avatarUrl = message.user?.avatar && !message.user.avatar.includes('data:image/svg+xml')
           ? message.user.avatar
           : 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
@@ -38,12 +39,8 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
             icon={{
               url: avatarUrl,
               anchor: new google.maps.Point(18, 18),
-              scaledSize: new google.maps.Size(36, 36),
-              // Apply circular mask to the avatar image
-              shape: {
-                coords: [18, 18, 18],
-                type: 'circle'
-              }
+              scaledSize: new google.maps.Size(36, 36)
+              // Removed the shape property as it's not supported
             }}
             visible={true}
             zIndex={2}
