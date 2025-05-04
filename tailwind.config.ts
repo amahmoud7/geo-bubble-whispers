@@ -64,8 +64,8 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				lo: {
-					purple: '#9b87f5',
-					'light-purple': '#E5DEFF',
+					teal: '#3CC7AD', // New teal color that matches the logo
+					'light-teal': '#E5FFFA', // Light teal replacing light-purple
 					blue: '#0EA5E9',
 					'light-blue': '#D3E4FD',
 					white: '#FFFFFF',

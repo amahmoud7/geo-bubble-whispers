@@ -22,7 +22,7 @@ const CreateMessageButton: React.FC<CreateMessageButtonProps> = ({
           : "absolute right-8 bottom-8"
         } 
         z-20 h-12 w-12 rounded-full shadow-lg text-center
-        ${variant === "street-view" ? "bg-purple-500 hover:bg-purple-600" : ""}
+        ${variant === "street-view" ? "bg-lo-teal hover:bg-lo-teal/90" : ""}
       `}
     >
       <MessageSquare className="h-6 w-6" />

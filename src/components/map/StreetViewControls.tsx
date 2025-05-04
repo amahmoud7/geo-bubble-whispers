@@ -27,7 +27,7 @@ const StreetViewControls: React.FC<StreetViewControlsProps> = ({
       {isInStreetView && (
         <Button
           onClick={onCreateMessage}
-          className="flex items-center gap-2 shadow-lg bg-purple-500 hover:bg-purple-600"
+          className="flex items-center gap-2 shadow-lg bg-lo-teal hover:bg-lo-teal/90"
           variant="default"
         >
           <MessageSquare className="h-4 w-4" />
