@@ -32,6 +32,7 @@ const MessageCardHeader: React.FC<MessageCardHeaderProps> = ({
           <AvatarImage 
             src={user.avatar} 
             alt={user.name.charAt(0)}
+            className="object-cover"
           />
           <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white">
             {user.name.charAt(0)}

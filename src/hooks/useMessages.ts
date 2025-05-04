@@ -67,8 +67,21 @@ export const useMessages = () => {
       }
     } catch (error: any) {
       console.error('Error fetching messages:', error);
-      // Fall back to mock data
-      setMessages(mockMessages);
+      
+      // Update mock messages to ensure they have the proper avatar URLs
+      const updatedMockMessages = mockMessages.map(message => {
+        const userAvatar = message.user?.avatar || user?.user_metadata?.avatar_url || '/placeholder.svg';
+        return {
+          ...message,
+          user: {
+            ...message.user,
+            avatar: userAvatar
+          }
+        };
+      });
+      
+      // Fall back to updated mock data
+      setMessages(updatedMockMessages);
       
       toast({
         title: "Error loading messages",
