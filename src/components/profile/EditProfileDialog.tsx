@@ -6,13 +6,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ProfileForm from "./ProfileForm";
+import ProfileFormSubmitter from "./ProfileFormSubmitter";
+import ProfileAvatarUploader from "./ProfileAvatarUploader";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileFormData {
@@ -31,7 +32,6 @@ interface EditProfileDialogProps {
 const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
   const [formData, setFormData] = useState<ProfileFormData>(profile);
   const [open, setOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(profile.avatar);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -41,12 +41,10 @@ const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
   };
 
   const handleImageUpload = (imageDataUrl: string) => {
-    setPreviewImage(imageDataUrl);
     setFormData(prev => ({ ...prev, avatar: imageDataUrl }));
   };
 
   const handleClearImage = () => {
-    setPreviewImage(null);
     setFormData(prev => ({ ...prev, avatar: '' }));
   };
 
@@ -114,22 +112,18 @@ const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <ProfileForm
-            formData={formData}
-            previewImage={previewImage}
-            onFormChange={handleChange}
-            onImageUpload={handleImageUpload}
+          <ProfileAvatarUploader 
+            initialImage={profile.avatar} 
+            onImageChange={handleImageUpload}
             onClearImage={handleClearImage}
           />
+          
+          <ProfileForm
+            formData={formData}
+            onFormChange={handleChange}
+          />
 
-          <div className="flex justify-end gap-2">
-            <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
+          <ProfileFormSubmitter isLoading={isLoading} />
         </form>
       </DialogContent>
     </Dialog>

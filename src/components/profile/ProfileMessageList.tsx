@@ -15,10 +15,10 @@ const ProfileMessageList = ({ messages }: ProfileMessageListProps) => {
       {messages.map((message) => (
         <Card key={message.id} className="overflow-hidden">
           <CardContent className="p-0">
-            {message.mediaUrl && (
+            {message.media_url && (
               <div className="w-full h-48 bg-gray-100 relative">
                 <img 
-                  src={message.mediaUrl} 
+                  src={message.media_url} 
                   alt={message.content}
                   className="w-full h-full object-cover"
                 />
