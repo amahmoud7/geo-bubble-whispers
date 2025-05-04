@@ -15,7 +15,11 @@ const AuthCard: React.FC = () => {
     <Card>
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl flex justify-center">
-          <span className="text-primary">Lo</span>
+          <img 
+            src="/lovable-uploads/855a9a4e-fd0c-453e-966d-45ca706aa257.png" 
+            alt="Lo Logo" 
+            className="h-12"
+          />
         </CardTitle>
         <CardDescription className="text-center">
           Sign in to your account or create a new one

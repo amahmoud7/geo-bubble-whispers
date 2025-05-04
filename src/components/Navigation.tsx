@@ -39,8 +39,12 @@ const Navigation = () => {
     <div className="w-full bg-white border-b px-4 py-2 h-16">
       <div className="flex justify-between items-center h-full">
         {/* Logo */}
-        <Link to="/" className="font-bold text-xl text-purple-600 flex-shrink-0">
-          Lo
+        <Link to="/" className="flex-shrink-0">
+          <img 
+            src="/lovable-uploads/855a9a4e-fd0c-453e-966d-45ca706aa257.png" 
+            alt="Lo Logo" 
+            className="h-8"
+          />
         </Link>
 
         {/* Desktop Navigation */}

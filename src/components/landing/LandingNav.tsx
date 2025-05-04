@@ -10,10 +10,11 @@ const LandingNav: React.FC = () => {
       <div className="container max-w-6xl mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lo-purple to-lo-blue flex items-center justify-center">
-              <span className="text-white font-bold">Lo</span>
-            </div>
-            <span className="text-xl font-semibold">Lo</span>
+            <img 
+              src="/lovable-uploads/855a9a4e-fd0c-453e-966d-45ca706aa257.png" 
+              alt="Lo Logo" 
+              className="h-8"
+            />
           </Link>
         </div>
         
