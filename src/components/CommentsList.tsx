@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import CommentWithReplies from './comment/CommentWithReplies';
 
@@ -135,22 +134,20 @@ const CommentsList: React.FC<CommentsListProps> = ({ comments }) => {
 
   return (
     <div className="space-y-1">
-      <ScrollArea className="max-h-[240px] pr-4">
-        {updatedComments.map((comment) => (
-          <CommentWithReplies
-            key={comment.id}
-            comment={comment}
-            likedComments={likedComments}
-            replyingTo={replyingTo}
-            replyText={replyText}
-            handleLike={handleLike}
-            handleReplyClick={handleReplyClick}
-            handleSubmitReply={handleSubmitReply}
-            setReplyText={setReplyText}
-            formatRelativeTime={formatRelativeTime}
-          />
-        ))}
-      </ScrollArea>
+      {updatedComments.map((comment) => (
+        <CommentWithReplies
+          key={comment.id}
+          comment={comment}
+          likedComments={likedComments}
+          replyingTo={replyingTo}
+          replyText={replyText}
+          handleLike={handleLike}
+          handleReplyClick={handleReplyClick}
+          handleSubmitReply={handleSubmitReply}
+          setReplyText={setReplyText}
+          formatRelativeTime={formatRelativeTime}
+        />
+      ))}
     </div>
   );
 };

@@ -26,8 +26,10 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
       {/* Comments list with scroll area */}
       {hasComments && (
         <div className="mt-4 border-t pt-3">
-          <ScrollArea className="max-h-[240px]">
-            <CommentsList comments={comments} />
+          <ScrollArea className="max-h-[320px]">
+            <div className="pr-4">
+              <CommentsList comments={comments} />
+            </div>
           </ScrollArea>
         </div>
       )}
