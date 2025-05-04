@@ -11,7 +11,7 @@ const LandingNav: React.FC = () => {
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
             <img 
-              src="/lovable-uploads/855a9a4e-fd0c-453e-966d-45ca706aa257.png" 
+              src="/lovable-uploads/df79c31c-82e5-46bc-a250-0fb4f46353d2.png" 
               alt="Lo Logo" 
               className="h-8"
             />
