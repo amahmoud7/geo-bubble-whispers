@@ -17,7 +17,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ setEmail, email }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, resetPassword } = useAuth();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +46,38 @@ const LoginForm: React.FC<LoginFormProps> = ({ setEmail, email }) => {
       toast({
         title: "Authentication failed",
         description: error.message || "Please check your credentials and try again",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address first",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await resetPassword(email);
+      
+      toast({
+        title: "Password reset email sent",
+        description: "Please check your email for instructions to reset your password"
+      });
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Password reset failed",
+        description: error.message || "Unable to send password reset email",
         variant: "destructive"
       });
     } finally {
@@ -90,6 +122,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ setEmail, email }) => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="password">Password</Label>
+          <Button 
+            variant="link" 
+            className="p-0 h-auto text-xs text-primary" 
+            onClick={handlePasswordReset}
+          >
+            Forgot password?
+          </Button>
         </div>
         <div className="relative">
           <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />

@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AtSign, Key, UserPlus, Mail } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AtSign, Key, UserPlus, Mail, User, MapPin, Phone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
@@ -15,6 +16,9 @@ interface RegisterFormProps {
 const RegisterForm: React.FC<RegisterFormProps> = ({ setEmail, email }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState('');
+  const [gender, setGender] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
@@ -25,7 +29,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setEmail, email }) => {
     if (!email || !password || !name) {
       toast({
         title: "Error",
-        description: "Please fill in all fields",
+        description: "Please fill in all required fields",
         variant: "destructive"
       });
       return;
@@ -37,6 +41,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setEmail, email }) => {
       await signUp(email, password, {
         name: name,
         username: email.split('@')[0],
+        phone: phone,
+        location: location,
+        gender: gender
       });
       
       setEmailSent(true);
@@ -98,18 +105,22 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setEmail, email }) => {
   return (
     <form onSubmit={handleSignUp} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Name</Label>
-        <Input
-          id="name"
-          placeholder="Your Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
+        <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
+        <div className="relative">
+          <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="name"
+            placeholder="Your Name"
+            className="pl-10"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </div>
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="register-email">Email</Label>
+        <Label htmlFor="register-email">Email <span className="text-red-500">*</span></Label>
         <div className="relative">
           <AtSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -125,7 +136,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setEmail, email }) => {
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="register-password">Password</Label>
+        <Label htmlFor="register-password">Password <span className="text-red-500">*</span></Label>
         <div className="relative">
           <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -138,6 +149,50 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setEmail, email }) => {
             required
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="phone">Phone Number</Label>
+        <div className="relative">
+          <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="+1 (555) 123-4567"
+            className="pl-10"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="location">Location</Label>
+        <div className="relative">
+          <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="location"
+            placeholder="City, Country"
+            className="pl-10"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="gender">Gender</Label>
+        <Select value={gender} onValueChange={setGender}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select your gender" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="male">Male</SelectItem>
+            <SelectItem value="female">Female</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+            <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       
       <Button
