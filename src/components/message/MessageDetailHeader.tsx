@@ -27,7 +27,7 @@ const MessageDetailHeader: React.FC<MessageDetailHeaderProps> = ({
         <Avatar className="h-12 w-12 border-2 border-white shadow-md">
           <AvatarImage 
             src={user.avatar} 
-            alt={user.name.charAt(0)}
+            alt={user.name}
             className="object-cover"
           />
           <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white text-lg">

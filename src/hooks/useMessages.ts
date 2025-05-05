@@ -70,7 +70,9 @@ export const useMessages = () => {
       
       // Update mock messages to ensure they have the proper avatar URLs
       const updatedMockMessages = mockMessages.map(message => {
+        // Ensure we have a valid avatar URL
         const userAvatar = message.user?.avatar || user?.user_metadata?.avatar_url || '/placeholder.svg';
+        
         return {
           ...message,
           user: {
