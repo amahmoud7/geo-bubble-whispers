@@ -26,7 +26,7 @@ serve(async (req) => {
 
     // Get the origin from the request
     const url = new URL(req.url);
-    const origin = url.origin;
+    const origin = url.origin.replace("/functions/v1/send-confirmation", "");
     
     // In a real implementation, you would send an email here
     // For now, we'll just log the details

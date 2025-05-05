@@ -27,12 +27,16 @@ const HeroSection: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      // Generate a confirmation token
+      const confirmationToken = crypto.randomUUID();
+      
       // Insert the subscriber into the Supabase database
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('subscribers')
         .insert([
-          { email, name: name || null }
-        ]);
+          { email, name: name || null, confirmation_token: confirmationToken }
+        ])
+        .select();
       
       if (error) {
         if (error.code === '23505') { // Unique violation error code
@@ -41,18 +45,36 @@ const HeroSection: React.FC = () => {
             description: "This email is already subscribed to our newsletter.",
           });
         } else {
+          console.error("Subscription error:", error);
           throw error;
         }
       } else {
+        // Send confirmation email via edge function
+        const response = await fetch(`https://siunjhiiaduktoqjxalv.supabase.co/functions/v1/send-confirmation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            name,
+            token: confirmationToken,
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to send confirmation email');
+        }
+        
         toast({
           title: "Thanks for subscribing!",
           description: "Please check your email to confirm your subscription.",
         });
+        
+        // Reset form
+        setEmail('');
+        setName('');
       }
-      
-      // Reset form
-      setEmail('');
-      setName('');
     } catch (error) {
       console.error("Subscription error:", error);
       toast({

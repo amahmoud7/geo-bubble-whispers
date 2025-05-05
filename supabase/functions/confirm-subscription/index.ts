@@ -63,7 +63,7 @@ serve(async (req) => {
       status: 302,
       headers: {
         ...corsHeaders,
-        "Location": `${url.origin}/subscription-confirmed`,
+        "Location": `${url.origin.replace('/functions/v1/confirm-subscription', '')}/subscription-confirmed`,
       },
     });
   } catch (error) {
