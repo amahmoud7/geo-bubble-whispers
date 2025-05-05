@@ -5,25 +5,30 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { X, Loader } from 'lucide-react';
+import { X, Loader, Image as ImageIcon, TextCursor } from 'lucide-react';
 import { mockMessages } from '@/mock/messages';
 import MediaUpload from './MediaUpload';
 import PrivacyToggle from './PrivacyToggle';
 import LocationInfo from './LocationInfo';
+import LocationPicker from './LocationPicker';
 
 interface CreateMessageFormProps {
   onClose: () => void;
   initialPosition?: { lat: number; lng: number };
 }
 
+const MAX_CONTENT_LENGTH = 500;
+
 const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialPosition }) => {
   const [content, setContent] = useState('');
+  const [caption, setCaption] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState(initialPosition);
   const [isPinPlaced, setIsPinPlaced] = useState(false);
+  const [remainingChars, setRemainingChars] = useState(MAX_CONTENT_LENGTH);
 
   useEffect(() => {
     if (initialPosition) {
@@ -31,6 +36,17 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
       setIsPinPlaced(true);
     }
   }, [initialPosition]);
+
+  useEffect(() => {
+    setRemainingChars(MAX_CONTENT_LENGTH - content.length);
+  }, [content]);
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    if (newContent.length <= MAX_CONTENT_LENGTH) {
+      setContent(newContent);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -48,6 +64,20 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
   const clearFileSelection = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
+    setCaption('');
+  };
+
+  const handleLocationChange = (newPosition: { lat: number; lng: number }) => {
+    setPosition(newPosition);
+    setIsPinPlaced(true);
+  };
+
+  const handleMovePinRequest = () => {
+    toast({
+      title: "Move pin mode",
+      description: "Click anywhere on the map to move your pin",
+    });
+    // This would typically integrate with a map component to enable pin movement
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,6 +107,7 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
       timestamp: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       mediaUrl: previewUrl || undefined,
+      caption: caption || undefined,
       position: {
         x: position.lat,
         y: position.lng
@@ -116,21 +147,37 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <LocationInfo isPinPlaced={isPinPlaced} />
-          
+          {/* Location Picker */}
           <div className="space-y-1">
-            <Label htmlFor="message">Message</Label>
+            <Label htmlFor="location">Location</Label>
+            <LocationPicker 
+              initialPosition={position}
+              onLocationChange={handleLocationChange}
+              isPinPlaced={isPinPlaced}
+            />
+          </div>
+          
+          {/* Message Content */}
+          <div className="space-y-1">
+            <div className="flex justify-between">
+              <Label htmlFor="message">Message</Label>
+              <div className={`text-xs ${remainingChars < 50 ? 'text-amber-500' : remainingChars < 20 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                <TextCursor className="h-3 w-3 inline mr-1" />
+                {remainingChars} characters left
+              </div>
+            </div>
             <Textarea
               id="message"
               placeholder="What's happening here?"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={handleContentChange}
               className="resize-none"
               rows={4}
               required
             />
           </div>
           
+          {/* Media Upload */}
           <MediaUpload
             selectedFile={selectedFile}
             previewUrl={previewUrl}
@@ -138,6 +185,28 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
             onClearSelection={clearFileSelection}
           />
           
+          {/* Image Caption (only shown when image is selected) */}
+          {previewUrl && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="caption">Image Caption (optional)</Label>
+                <div className="text-xs text-muted-foreground">
+                  <ImageIcon className="h-3 w-3 inline mr-1" />
+                  Add context to your image
+                </div>
+              </div>
+              <Textarea
+                id="caption"
+                placeholder="Add a caption to your image..."
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                className="resize-none"
+                rows={2}
+              />
+            </div>
+          )}
+          
+          {/* Privacy Toggle */}
           <PrivacyToggle isPublic={isPublic} onToggle={setIsPublic} />
         </CardContent>
         

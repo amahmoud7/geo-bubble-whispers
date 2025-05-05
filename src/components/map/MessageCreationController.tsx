@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import CreateMessageButton from './CreateMessageButton';
 import PlacementIndicator from './PlacementIndicator';
 import MessageMarkers from './MessageMarkers';
@@ -27,6 +27,9 @@ const MessageCreationController: React.FC<MessageCreationControllerProps> = ({
   handleClose,
   handleCreateMessage
 }) => {
+  // Track if we're in manual location selection mode
+  const [isManualLocationMode, setIsManualLocationMode] = useState(false);
+
   return (
     <>
       {!isInStreetView && (
@@ -34,7 +37,10 @@ const MessageCreationController: React.FC<MessageCreationControllerProps> = ({
       )}
 
       {isPlacingPin && !isInStreetView && (
-        <PlacementIndicator isPlacingPin={isPlacingPin} />
+        <PlacementIndicator 
+          isPlacingPin={isPlacingPin} 
+          isManualMode={isManualLocationMode}
+        />
       )}
 
       {isPlacingPin && newPinPosition && (
@@ -54,7 +60,7 @@ const MessageCreationController: React.FC<MessageCreationControllerProps> = ({
         />
       )}
       
-      {isCreating && newPinPosition && (
+      {isCreating && (
         <CreateMessage 
           onClose={handleClose}
           initialPosition={newPinPosition}
