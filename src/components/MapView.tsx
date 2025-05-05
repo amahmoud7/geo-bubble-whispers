@@ -82,6 +82,9 @@ const MapView: React.FC = () => {
   const userAvatar = user?.user_metadata?.avatar_url || '/placeholder.svg';
   const userName = user?.user_metadata?.name;
 
+  // Add cursor-pin class when in pin placement mode
+  const mapContainerClassName = `w-full h-full ${isPlacingPin ? 'cursor-pin' : ''}`;
+
   return (
     <div className="map-container relative w-full h-[calc(100vh-4rem)]">
       <MapControls
@@ -99,7 +102,7 @@ const MapView: React.FC = () => {
       />
 
       <GoogleMap
-        mapContainerClassName="w-full h-full"
+        mapContainerClassName={mapContainerClassName}
         center={userLocation}
         zoom={13}
         onLoad={onLoad}

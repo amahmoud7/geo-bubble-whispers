@@ -3,7 +3,7 @@ import React from 'react';
 import CreateMessageButton from './CreateMessageButton';
 import PlacementIndicator from './PlacementIndicator';
 import MessageMarkers from './MessageMarkers';
-import CreateMessage from '../CreateMessage';
+import CreateMessageModal from '../message/CreateMessageModal';
 import { PinPosition } from '@/hooks/usePinPlacement';
 
 interface MessageCreationControllerProps {
@@ -55,7 +55,7 @@ const MessageCreationController: React.FC<MessageCreationControllerProps> = ({
       )}
       
       {isCreating && newPinPosition && (
-        <CreateMessage 
+        <CreateMessageModal 
           onClose={handleClose}
           initialPosition={newPinPosition}
         />
