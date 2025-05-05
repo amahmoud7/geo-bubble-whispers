@@ -7,6 +7,7 @@ interface AuthContextProps {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isNewUser: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, metadata?: any) => Promise<void>;
   signOut: () => Promise<void>;
@@ -21,20 +22,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Check if this is a new user sign-up
+        if (event === 'SIGNED_IN' && session) {
+          try {
+            // Check if the user has a profile already
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('name, username, bio')
+              .eq('id', session.user.id)
+              .single();
+            
+            // If the profile exists but has no name/username/bio, consider it a new user
+            setIsNewUser(!data || (!data.name && !data.username && !data.bio));
+          } catch (err) {
+            console.error("Error checking user profile:", err);
+            setIsNewUser(false);
+          }
+        }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        setUser(session.user);
+        
+        try {
+          // Check if the user has a profile already
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('name, username, bio')
+            .eq('id', session.user.id)
+            .single();
+          
+          // If the profile exists but has no name/username/bio, consider it a new user
+          setIsNewUser(!data || (!data.name && !data.username && !data.bio));
+        } catch (err) {
+          console.error("Error checking user profile:", err);
+          setIsNewUser(false);
+        }
+      }
+      
       setLoading(false);
     });
 
@@ -83,6 +122,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     
     if (error) throw error;
+    
+    // Set isNewUser to true after successful signup
+    setIsNewUser(true);
   };
 
   const signOut = async () => {
@@ -103,6 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user,
       session,
       loading,
+      isNewUser,
       signIn,
       signUp,
       signOut,

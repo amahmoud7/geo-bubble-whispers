@@ -8,7 +8,7 @@ import { toast } from '@/hooks/use-toast';
 const Auth: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const { user, loading, isNewUser } = useAuth();
   
   // Check for authentication error in URL
   useEffect(() => {
@@ -28,9 +28,14 @@ const Auth: React.FC = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
-      navigate('/home');
+      // If it's a new user, redirect to profile setup page
+      if (isNewUser) {
+        navigate('/profile-setup');
+      } else {
+        navigate('/home');
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, isNewUser, navigate]);
 
   if (loading) {
     return (

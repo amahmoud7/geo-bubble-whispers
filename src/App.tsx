@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import DownloadApp from "./pages/DownloadApp";
 import Auth from "./pages/Auth";
+import ProfileSetup from "./pages/ProfileSetup";
 import SubscriptionConfirmed from "./pages/SubscriptionConfirmed";
 
 // Create a new client
@@ -53,6 +54,7 @@ const App = () => {
               <Route path="/home" element={<Home />} />
               <Route path="/list" element={<List />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="/download" element={<DownloadApp />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/subscription-confirmed" element={<SubscriptionConfirmed />} />
