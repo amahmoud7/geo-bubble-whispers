@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import DownloadApp from "./pages/DownloadApp";
 import Auth from "./pages/Auth";
+import SubscriptionConfirmed from "./pages/SubscriptionConfirmed";
 
 // Create a new client
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/download" element={<DownloadApp />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/subscription-confirmed" element={<SubscriptionConfirmed />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
