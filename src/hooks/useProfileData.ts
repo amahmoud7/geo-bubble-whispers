@@ -2,10 +2,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/hooks/use-toast';
-import { Profile, Message } from '@/types/database';
+import { Message } from '@/types/database';
 
 // Interface for profile data
-interface ProfileData {
+export interface ProfileData {
   name: string;
   username: string;
   avatar: string;
@@ -17,7 +17,7 @@ interface ProfileData {
 }
 
 // Initial profile data for new users
-const defaultProfile: ProfileData = {
+export const defaultProfile: ProfileData = {
   name: '',
   username: '',
   avatar: '',
@@ -162,6 +162,3 @@ export const useProfileData = (userId: string | undefined) => {
 
   return { profile, isLoading, saveProfile };
 };
-
-export type { ProfileData };
-export { defaultProfile };
