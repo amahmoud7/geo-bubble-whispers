@@ -14,23 +14,15 @@ import { useToast } from "@/hooks/use-toast";
 import ProfileForm from "./ProfileForm";
 import ProfileFormSubmitter from "./ProfileFormSubmitter";
 import ProfileAvatarUploader from "./ProfileAvatarUploader";
-import { supabase } from "@/integrations/supabase/client";
-
-interface ProfileFormData {
-  name: string;
-  username: string;
-  bio: string;
-  location: string;
-  avatar: string;
-}
+import { ProfileData } from '@/hooks/useProfileData';
 
 interface EditProfileDialogProps { 
-  profile: ProfileFormData;
-  onSave: (data: ProfileFormData) => void;
+  profile: ProfileData;
+  onSave: (data: ProfileData) => void;
 }
 
 const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
-  const [formData, setFormData] = useState<ProfileFormData>(profile);
+  const [formData, setFormData] = useState<ProfileData>(profile);
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -52,38 +44,18 @@ const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+    try {      
+      // Update the profile through the parent component
+      const success = await onSave(formData);
       
-      if (!user) {
-        throw new Error('Not authenticated');
-      }
-      
-      // Update the avatar in the profiles table
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: formData.name,
-          username: formData.username,
-          bio: formData.bio,
-          location: formData.location,
-          avatar_url: formData.avatar,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+      if (success) {
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been successfully updated.",
+        });
         
-      if (error) throw error;
-      
-      // Update the UI
-      onSave(formData);
-      
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated.",
-      });
-      
-      setOpen(false);
+        setOpen(false);
+      }
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
