@@ -16,7 +16,7 @@ const AuthCard: React.FC = () => {
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl flex justify-center">
           <img 
-            src="/lovable-uploads/70fd8aa8-14a4-44c2-a2f8-de418d48b1d6.png" 
+            src="/lovable-uploads/75b652b2-23ff-4231-8935-6f15e4221203.png" 
             alt="Lo Logo" 
             className="h-24" // Doubled from h-12 to h-24
           />
