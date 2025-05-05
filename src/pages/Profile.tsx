@@ -10,7 +10,7 @@ import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileTabs from '../components/profile/ProfileTabs';
 import ProfileLoadingState from '../components/profile/ProfileLoadingState';
 import ProfileUnauthenticated from '../components/profile/ProfileUnauthenticated';
-import { useProfileData } from '@/hooks/useProfileData';
+import { useProfileData, ProfileData } from '@/hooks/useProfileData';
 
 const Profile = () => {
   const navigate = useNavigate();

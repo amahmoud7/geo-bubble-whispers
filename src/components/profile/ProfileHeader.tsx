@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CardTitle, CardDescription } from '@/components/ui/card';
 import { MapPin } from 'lucide-react';
 import EditProfileDialog from './EditProfileDialog';
+import { ProfileData } from '@/hooks/useProfileData';
 
 interface ProfileHeaderProps {
   profile: {
@@ -15,7 +16,7 @@ interface ProfileHeaderProps {
     followers?: number;
     following?: number;
   };
-  onSaveProfile: (data: any) => void;
+  onSaveProfile: (data: ProfileData) => Promise<boolean>;
 }
 
 const ProfileHeader = ({ profile, onSaveProfile }: ProfileHeaderProps) => {
