@@ -42,12 +42,8 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
             icon={{
               url: avatarUrl,
               anchor: new google.maps.Point(18, 18),
-              scaledSize: new google.maps.Size(36, 36),
-              // Add rounded corners to the marker by using a circular image
-              shape: {
-                coords: [18, 18, 18],
-                type: 'circle'
-              }
+              scaledSize: new google.maps.Size(36, 36)
+              // Removed the shape property as it's not supported in the Google Maps API
             }}
             visible={true}
             zIndex={2}
