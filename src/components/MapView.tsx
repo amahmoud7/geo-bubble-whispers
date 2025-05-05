@@ -83,10 +83,10 @@ const MapView: React.FC = () => {
   const userName = user?.user_metadata?.name;
 
   // Add cursor-pin class when in pin placement mode
-  const mapContainerClassName = `w-full h-full ${isPlacingPin ? 'cursor-pin' : ''}`;
+  const mapContainerClassName = `map-container relative w-full h-[calc(100vh-4rem)] ${isPlacingPin ? 'cursor-pin' : ''}`;
 
   return (
-    <div className="map-container relative w-full h-[calc(100vh-4rem)]">
+    <div className={mapContainerClassName}>
       <MapControls
         onCreateMessage={handleCreateMessage}
         filters={filters}
@@ -102,7 +102,7 @@ const MapView: React.FC = () => {
       />
 
       <GoogleMap
-        mapContainerClassName={mapContainerClassName}
+        mapContainerClassName="w-full h-full"
         center={userLocation}
         zoom={13}
         onLoad={onLoad}
