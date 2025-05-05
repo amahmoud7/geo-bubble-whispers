@@ -10,7 +10,6 @@ export interface PinPosition {
 export const usePinPlacement = () => {
   const [newPinPosition, setNewPinPosition] = useState<PinPosition | null>(null);
   const [isPlacingPin, setIsPlacingPin] = useState(false);
-  const [isManualMode, setIsManualMode] = useState(false);
 
   const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
     if (isPlacingPin && e.latLng) {
@@ -23,12 +22,8 @@ export const usePinPlacement = () => {
         title: "Location selected",
         description: "Now you can create your Lo at this location",
       });
-      
-      if (isManualMode) {
-        setIsManualMode(false);
-      }
     }
-  }, [isPlacingPin, isManualMode]);
+  }, [isPlacingPin]);
 
   // Add handler for street view clicks
   useEffect(() => {
@@ -39,10 +34,6 @@ export const usePinPlacement = () => {
           title: "Street View location selected",
           description: "Now you can create your Lo at this street view location",
         });
-        
-        if (isManualMode) {
-          setIsManualMode(false);
-        }
       }
     };
 
@@ -51,16 +42,11 @@ export const usePinPlacement = () => {
     return () => {
       window.removeEventListener('streetViewClick', handleStreetViewClick as EventListener);
     };
-  }, [isPlacingPin, isManualMode]);
+  }, [isPlacingPin]);
 
-  const startPinPlacement = useCallback((manual: boolean = false) => {
+  const startPinPlacement = useCallback(() => {
     setIsPlacingPin(true);
-    setIsManualMode(manual);
-    
-    if (!manual) {
-      setNewPinPosition(null);
-    }
-    
+    setNewPinPosition(null);
     toast({
       title: "Place your Lo",
       description: "Click anywhere on the map or in Street View to select a location",
@@ -69,18 +55,15 @@ export const usePinPlacement = () => {
 
   const endPinPlacement = useCallback(() => {
     setIsPlacingPin(false);
-    setIsManualMode(false);
     setNewPinPosition(null);
   }, []);
 
   return {
     newPinPosition,
     isPlacingPin,
-    isManualMode,
     handleMapClick,
     startPinPlacement,
     endPinPlacement,
-    setNewPinPosition,
-    setIsManualMode
+    setNewPinPosition
   };
 };
