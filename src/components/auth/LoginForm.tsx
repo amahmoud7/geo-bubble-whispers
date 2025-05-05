@@ -126,6 +126,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ setEmail, email }) => {
             variant="link" 
             className="p-0 h-auto text-xs text-primary" 
             onClick={handlePasswordReset}
+            type="button"
           >
             Forgot password?
           </Button>
