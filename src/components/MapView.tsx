@@ -5,6 +5,7 @@ import MapControls from './map/MapControls';
 import StreetViewController from './map/StreetViewController';
 import MessageCreationController from './map/MessageCreationController';
 import MessageDisplayController from './map/MessageDisplayController';
+import CreateMessageModal from './message/CreateMessageModal'; // Updated import to use the correct path
 import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { useGoogleMap } from '@/hooks/useGoogleMap';
 import { useMessages } from '@/hooks/useMessages';
@@ -151,7 +152,7 @@ const MapView: React.FC = () => {
       />
 
       {isCreating && showCreateForm && (
-        <CreateMessage 
+        <CreateMessageModal 
           onClose={handleCloseWrapped}
           initialPosition={newPinPosition}
           onManualPinPlacement={handleManualPinPlacement}
