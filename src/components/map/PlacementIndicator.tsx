@@ -18,7 +18,7 @@ const PlacementIndicator: React.FC<PlacementIndicatorProps> = ({
       {isManualMode ? (
         <>
           <Search className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">Search for a location or click on the map</span>
+          <span className="text-sm font-medium">Click anywhere on the map to place your Lo</span>
         </>
       ) : (
         <>

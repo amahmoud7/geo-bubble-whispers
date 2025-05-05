@@ -9,17 +9,21 @@ import { X, Loader, Image as ImageIcon, TextCursor } from 'lucide-react';
 import { mockMessages } from '@/mock/messages';
 import MediaUpload from './MediaUpload';
 import PrivacyToggle from './PrivacyToggle';
-import LocationInfo from './LocationInfo';
 import LocationPicker from './LocationPicker';
 
 interface CreateMessageFormProps {
   onClose: () => void;
   initialPosition?: { lat: number; lng: number };
+  onManualPinPlacement?: () => void;
 }
 
 const MAX_CONTENT_LENGTH = 500;
 
-const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialPosition }) => {
+const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ 
+  onClose, 
+  initialPosition,
+  onManualPinPlacement
+}) => {
   const [content, setContent] = useState('');
   const [caption, setCaption] = useState('');
   const [isPublic, setIsPublic] = useState(true);
@@ -28,6 +32,7 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
   const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState(initialPosition);
   const [isPinPlaced, setIsPinPlaced] = useState(false);
+  const [isManualMode, setIsManualMode] = useState(false);
   const [remainingChars, setRemainingChars] = useState(MAX_CONTENT_LENGTH);
 
   useEffect(() => {
@@ -72,12 +77,11 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
     setIsPinPlaced(true);
   };
 
-  const handleMovePinRequest = () => {
-    toast({
-      title: "Move pin mode",
-      description: "Click anywhere on the map to move your pin",
-    });
-    // This would typically integrate with a map component to enable pin movement
+  const handleManualPlacement = () => {
+    if (onManualPinPlacement) {
+      setIsManualMode(true);
+      onManualPinPlacement();
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -154,6 +158,7 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
               initialPosition={position}
               onLocationChange={handleLocationChange}
               isPinPlaced={isPinPlaced}
+              onManualPlacement={handleManualPlacement}
             />
           </div>
           

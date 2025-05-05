@@ -4,21 +4,25 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, MapPin } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface LocationPickerProps {
   initialPosition?: { lat: number; lng: number };
   onLocationChange: (position: { lat: number; lng: number }) => void;
   isPinPlaced: boolean;
+  onManualPlacement?: () => void;
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({ 
   initialPosition, 
   onLocationChange,
-  isPinPlaced
+  isPinPlaced,
+  onManualPlacement
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<google.maps.places.PlaceResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const searchBoxRef = useRef<HTMLDivElement>(null);
   const [placesService, setPlacesService] = useState<google.maps.places.PlacesService | null>(null);
   
@@ -71,6 +75,20 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     });
   };
 
+  const handlePlaceOnMap = () => {
+    if (onManualPlacement) {
+      // Close the dialog if open
+      setIsDialogOpen(false);
+      
+      onManualPlacement();
+      
+      toast({
+        title: "Place pin on map",
+        description: "Click anywhere on the map to place your Lo",
+      });
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
@@ -99,6 +117,31 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         >
           {isSearching ? 'Searching...' : 'Search'}
         </Button>
+        
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <MapPin className="h-4 w-4" />
+              <span className="hidden sm:inline">Place on Map</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogTitle>Place Pin on Map</DialogTitle>
+            <DialogDescription>
+              This will temporarily hide the post form and allow you to click anywhere on the map to place your Lo.
+            </DialogDescription>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handlePlaceOnMap}>Continue</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
       
       {/* Invisible div for PlacesService */}

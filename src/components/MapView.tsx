@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import MapControls from './map/MapControls';
 import StreetViewController from './map/StreetViewController';
@@ -44,6 +44,8 @@ const MapView: React.FC = () => {
     setNewPinPosition,
   } = usePinPlacement();
 
+  const [showCreateForm, setShowCreateForm] = useState(true);
+
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: 'AIzaSyCja18mhM6OgcQPkZp7rCZM6C29SGz3S4U',
@@ -52,6 +54,7 @@ const MapView: React.FC = () => {
 
   const handleCreateMessage = () => {
     setIsCreating(true);
+    setShowCreateForm(true);
     startPinPlacement();
     setSelectedMessage(null);
 
@@ -68,12 +71,32 @@ const MapView: React.FC = () => {
     }
   };
 
+  const handleManualPinPlacement = () => {
+    setShowCreateForm(false);
+    if (!isPlacingPin) {
+      startPinPlacement();
+    }
+  };
+
+  const handleMapClickWithFormToggle = (e: google.maps.MapMouseEvent) => {
+    handleMapClick(e);
+    // After pin is placed, show the form again
+    if (isPlacingPin && e.latLng && !showCreateForm) {
+      setShowCreateForm(true);
+    }
+  };
+
   const handleMessageClick = (id: string) => {
     setSelectedMessage(id);
     if (isCreating) {
       setIsCreating(false);
       endPinPlacement();
     }
+  };
+
+  const handleCloseWrapped = () => {
+    handleClose();
+    setShowCreateForm(true);
   };
 
   if (!isLoaded) return <div>Loading...</div>;
@@ -104,7 +127,7 @@ const MapView: React.FC = () => {
         zoom={13}
         onLoad={onLoad}
         onUnmount={onUnmount}
-        onClick={handleMapClick}
+        onClick={handleMapClickWithFormToggle}
         options={defaultMapOptions}
       >
         <MessageDisplayController
@@ -112,7 +135,7 @@ const MapView: React.FC = () => {
           filteredMessages={filteredMessages}
           mockMessages={mockMessages}
           onMessageClick={handleMessageClick}
-          onClose={handleClose}
+          onClose={handleCloseWrapped}
         />
       </GoogleMap>
 
@@ -123,9 +146,17 @@ const MapView: React.FC = () => {
         newPinPosition={newPinPosition}
         userAvatar={userAvatar}
         userName={userName}
-        handleClose={handleClose}
+        handleClose={handleCloseWrapped}
         handleCreateMessage={handleCreateMessage}
       />
+
+      {isCreating && showCreateForm && (
+        <CreateMessage 
+          onClose={handleCloseWrapped}
+          initialPosition={newPinPosition}
+          onManualPinPlacement={handleManualPinPlacement}
+        />
+      )}
     </div>
   );
 };
