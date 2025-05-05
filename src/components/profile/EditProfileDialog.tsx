@@ -18,7 +18,7 @@ import { ProfileData } from '@/hooks/useProfileData';
 
 interface EditProfileDialogProps { 
   profile: ProfileData;
-  onSave: (data: ProfileData) => void;
+  onSave: (data: ProfileData) => Promise<boolean>;
 }
 
 const EditProfileDialog = ({ profile, onSave }: EditProfileDialogProps) => {

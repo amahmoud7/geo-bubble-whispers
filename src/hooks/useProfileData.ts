@@ -83,33 +83,45 @@ export const useProfileData = (userId: string | undefined) => {
 
   const fetchUserMessages = async (userId: string) => {
     // In a real app, we would fetch messages from the database
-    // For now, we'll use mock data
+    // For now, we'll use mock data that conforms to the Message type
+    const mockMessages: Message[] = [
+      {
+        id: '101',
+        user_id: userId,
+        content: 'Found this amazing food market today! Worth checking out.',
+        media_url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
+        is_public: true,
+        location: 'Ferry Building, San Francisco',
+        lat: 37.7955,
+        lng: -122.3937,
+        created_at: '2023-05-10T14:30:00Z',
+        expires_at: '2023-05-17T14:30:00Z',
+        updated_at: '2023-05-10T14:30:00Z',
+      },
+      {
+        id: '102',
+        user_id: userId,
+        content: 'Beautiful sunset over the Golden Gate Bridge today!',
+        media_url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+        is_public: true,
+        location: 'Crissy Field, San Francisco',
+        lat: 37.8039,
+        lng: -122.4640,
+        created_at: '2023-05-08T19:45:00Z',
+        expires_at: '2023-05-15T19:45:00Z',
+        updated_at: '2023-05-08T19:45:00Z',
+      },
+    ];
+    
     setProfile(prev => ({
       ...prev,
-      messages: [
-        {
-          id: '101',
-          content: 'Found this amazing food market today! Worth checking out.',
-          location: 'Ferry Building, San Francisco',
-          timestamp: '2023-05-10T14:30:00Z',
-          isPublic: true,
-          mediaUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
-        },
-        {
-          id: '102',
-          content: 'Beautiful sunset over the Golden Gate Bridge today!',
-          location: 'Crissy Field, San Francisco',
-          timestamp: '2023-05-08T19:45:00Z',
-          isPublic: true,
-          mediaUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-        },
-      ]
+      messages: mockMessages
     }));
   };
 
-  const saveProfile = async (updatedProfileData: any) => {
+  const saveProfile = async (updatedProfileData: ProfileData): Promise<boolean> => {
     try {
-      if (!userId) return;
+      if (!userId) return false;
       
       // Update the profile in Supabase
       const { error } = await supabase
@@ -134,11 +146,6 @@ export const useProfileData = (userId: string | undefined) => {
         bio: updatedProfileData.bio,
         location: updatedProfileData.location,
         avatar: updatedProfileData.avatar,
-      });
-      
-      toast({
-        title: "Success",
-        description: "Profile has been updated successfully",
       });
       
       return true;
