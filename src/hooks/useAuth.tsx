@@ -11,6 +11,7 @@ interface AuthContextProps {
   signUp: (email: string, password: string, metadata?: any) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
 
@@ -60,6 +61,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) throw error;
   };
 
+  const signInWithApple = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: window.location.origin + '/auth'
+      }
+    });
+    
+    if (error) throw error;
+  };
+
   const signUp = async (email: string, password: string, metadata?: any) => {
     const { error } = await supabase.auth.signUp({
       email,
@@ -95,6 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signUp,
       signOut,
       signInWithGoogle,
+      signInWithApple,
       resetPassword
     }}>
       {children}
