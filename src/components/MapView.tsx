@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import MapControls from './map/MapControls';
 import StreetViewController from './map/StreetViewController';
@@ -13,11 +13,15 @@ import { useUserLocation } from '@/hooks/useUserLocation';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { mockMessages } from '@/mock/messages';
 import { useAuth } from '@/hooks/useAuth';
+import MapViewList from './map/MapViewList';
+import { Button } from './ui/button';
+import { Map, List } from 'lucide-react';
 
 const MapView: React.FC = () => {
   const { userLocation } = useUserLocation();
   const { filters, filteredMessages, handleFilterChange } = useMessages();
   const { user } = useAuth();
+  const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('split');
   
   const {
     selectedMessage,
@@ -87,37 +91,96 @@ const MapView: React.FC = () => {
 
   return (
     <div className={mapContainerClassName}>
-      <MapControls
-        onCreateMessage={handleCreateMessage}
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onSearchBoxLoad={onSearchBoxLoad}
-      />
+      {/* View mode toggle */}
+      <div className="absolute top-4 right-4 z-50 bg-white rounded-lg shadow-md p-1 flex gap-1">
+        <Button 
+          variant={viewMode === 'map' ? "default" : "outline"} 
+          size="sm" 
+          onClick={() => setViewMode('map')}
+          className="h-8 w-8 p-0"
+        >
+          <Map size={16} />
+        </Button>
+        <Button 
+          variant={viewMode === 'split' ? "default" : "outline"} 
+          size="sm" 
+          onClick={() => setViewMode('split')}
+          className="h-8 w-8 p-0"
+        >
+          <div className="flex h-4 w-4">
+            <div className="w-1/2 bg-primary rounded-l-sm"></div>
+            <div className="w-1/2 border-l border-background"></div>
+          </div>
+        </Button>
+        <Button 
+          variant={viewMode === 'list' ? "default" : "outline"} 
+          size="sm" 
+          onClick={() => setViewMode('list')}
+          className="h-8 w-8 p-0"
+        >
+          <List size={16} />
+        </Button>
+      </div>
 
-      <StreetViewController
-        map={map}
-        isPlacingPin={isPlacingPin}
-        setNewPinPosition={setNewPinPosition}
-        onCreateMessage={handleCreateMessage}
-      />
+      <div className="flex h-full w-full">
+        {/* Map section - adjusts width based on view mode */}
+        <div 
+          className={`relative ${
+            viewMode === 'map' ? 'w-full' : 
+            viewMode === 'split' ? 'w-1/2' : 
+            'hidden'
+          }`}
+        >
+          <MapControls
+            onCreateMessage={handleCreateMessage}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onSearchBoxLoad={onSearchBoxLoad}
+          />
 
-      <GoogleMap
-        mapContainerClassName="w-full h-full"
-        center={userLocation}
-        zoom={13}
-        onLoad={onLoad}
-        onUnmount={onUnmount}
-        onClick={handleMapClick}
-        options={defaultMapOptions}
-      >
-        <MessageDisplayController
-          selectedMessage={selectedMessage}
-          filteredMessages={filteredMessages}
-          mockMessages={mockMessages}
-          onMessageClick={handleMessageClick}
-          onClose={handleClose}
-        />
-      </GoogleMap>
+          <StreetViewController
+            map={map}
+            isPlacingPin={isPlacingPin}
+            setNewPinPosition={setNewPinPosition}
+            onCreateMessage={handleCreateMessage}
+          />
+
+          <GoogleMap
+            mapContainerClassName="w-full h-full"
+            center={userLocation}
+            zoom={13}
+            onLoad={onLoad}
+            onUnmount={onUnmount}
+            onClick={handleMapClick}
+            options={defaultMapOptions}
+          >
+            <MessageDisplayController
+              selectedMessage={selectedMessage}
+              filteredMessages={filteredMessages}
+              mockMessages={mockMessages}
+              onMessageClick={handleMessageClick}
+              onClose={handleClose}
+            />
+          </GoogleMap>
+        </div>
+
+        {/* List section - adjusts width based on view mode */}
+        <div 
+          className={`bg-background ${
+            viewMode === 'list' ? 'w-full' : 
+            viewMode === 'split' ? 'w-1/2' : 
+            'hidden'
+          } overflow-y-auto`}
+        >
+          <MapViewList 
+            messages={filteredMessages}
+            onMessageClick={handleMessageClick}
+            selectedMessage={selectedMessage}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+          />
+        </div>
+      </div>
 
       <MessageCreationController
         isCreating={isCreating}
