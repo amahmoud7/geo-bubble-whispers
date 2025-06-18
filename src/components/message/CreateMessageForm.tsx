@@ -88,9 +88,15 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
     
     setTimeout(() => {
       setIsLoading(false);
+      
+      const mediaType = selectedFile?.type.startsWith('video/') ? 'video' : selectedFile ? 'image' : null;
+      const successMessage = mediaType 
+        ? `Your Lo with ${mediaType} has been posted successfully!`
+        : "Your Lo has been posted successfully!";
+      
       toast({
         title: "Lo dropped!",
-        description: "Your Lo has been posted successfully!",
+        description: successMessage,
       });
       onClose();
     }, 1000);

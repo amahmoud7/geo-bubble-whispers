@@ -69,6 +69,48 @@ export type Database = {
           },
         ]
       }
+      drops: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          expiresAt: string | null
+          id: number
+          lat: number | null
+          lng: number | null
+          name: string | null
+          source: string | null
+          start_date: string | null
+          url: string | null
+          venue: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          expiresAt?: string | null
+          id?: number
+          lat?: number | null
+          lng?: number | null
+          name?: string | null
+          source?: string | null
+          start_date?: string | null
+          url?: string | null
+          venue?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          expiresAt?: string | null
+          id?: number
+          lat?: number | null
+          lng?: number | null
+          name?: string | null
+          source?: string | null
+          start_date?: string | null
+          url?: string | null
+          venue?: string | null
+        }
+        Relationships: []
+      }
       followers: {
         Row: {
           created_at: string | null
