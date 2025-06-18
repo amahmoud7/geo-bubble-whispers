@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Image, X, Play } from 'lucide-react';
+import { Image, X, Play, Live } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import LiveStreamRecorder from './LiveStreamRecorder';
 
 interface MediaUploadProps {
   selectedFile: File | null;
@@ -19,6 +20,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
   onClearSelection,
 }) => {
   const [isValidating, setIsValidating] = useState(false);
+  const [showLiveStream, setShowLiveStream] = useState(false);
 
   const validateVideo = (file: File): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -87,7 +89,32 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
     }
   };
 
+  const handleLiveStreamVideo = (videoFile: File) => {
+    // Create a synthetic event to match the expected interface
+    const syntheticEvent = {
+      target: {
+        files: [videoFile],
+        value: ''
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    onFileChange(syntheticEvent);
+    setShowLiveStream(false);
+  };
+
   const isVideo = selectedFile?.type.startsWith('video/');
+
+  if (showLiveStream) {
+    return (
+      <div className="space-y-1">
+        <Label>Live Stream</Label>
+        <LiveStreamRecorder
+          onVideoRecorded={handleLiveStreamVideo}
+          onClose={() => setShowLiveStream(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-1">
@@ -125,35 +152,50 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
           </Button>
         </div>
       ) : (
-        <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center mt-2">
-          <label htmlFor="file-upload" className="cursor-pointer">
-            <div className="flex flex-col items-center">
-              {isValidating ? (
-                <div className="flex items-center">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-                  <span className="ml-2 text-sm">Validating video...</span>
-                </div>
-              ) : (
-                <>
-                  <Image className="h-6 w-6 text-gray-400" />
-                  <span className="mt-2 block text-sm font-medium">
-                    Click to upload an image or video
-                  </span>
-                  <span className="mt-1 block text-xs text-gray-500">
-                    Videos must be 10 seconds or shorter
-                  </span>
-                </>
-              )}
-            </div>
-            <input
-              id="file-upload"
-              type="file"
-              accept="image/*,video/*"
-              onChange={handleFileChange}
-              className="hidden"
+        <div className="space-y-2 mt-2">
+          <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
+            <label htmlFor="file-upload" className="cursor-pointer">
+              <div className="flex flex-col items-center">
+                {isValidating ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                    <span className="ml-2 text-sm">Validating video...</span>
+                  </div>
+                ) : (
+                  <>
+                    <Image className="h-6 w-6 text-gray-400" />
+                    <span className="mt-2 block text-sm font-medium">
+                      Click to upload an image or video
+                    </span>
+                    <span className="mt-1 block text-xs text-gray-500">
+                      Videos must be 10 seconds or shorter
+                    </span>
+                  </>
+                )}
+              </div>
+              <input
+                id="file-upload"
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleFileChange}
+                className="hidden"
+                disabled={isValidating}
+              />
+            </label>
+          </div>
+          
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              onClick={() => setShowLiveStream(true)}
+              variant="outline"
+              className="w-full"
               disabled={isValidating}
-            />
-          </label>
+            >
+              <Live className="h-4 w-4 mr-2" />
+              Live
+            </Button>
+          </div>
         </div>
       )}
     </div>
