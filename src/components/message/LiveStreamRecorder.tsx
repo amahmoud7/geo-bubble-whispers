@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Live, Square, Play, Download, Trash2, Upload } from 'lucide-react';
+import { Video, Square, Play, Download, Trash2, Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface LiveStreamRecorderProps {
@@ -247,7 +247,7 @@ const LiveStreamRecorder: React.FC<LiveStreamRecorderProps> = ({
           {!isRecording && !recordedVideo && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-white text-center">
-                <Live className="h-8 w-8 mx-auto mb-2" />
+                <Video className="h-8 w-8 mx-auto mb-2" />
                 <p className="text-sm">Ready to go live</p>
               </div>
             </div>
@@ -257,7 +257,7 @@ const LiveStreamRecorder: React.FC<LiveStreamRecorderProps> = ({
         <div className="flex justify-center space-x-4">
           {!isRecording ? (
             <Button onClick={startRecording} size="lg" className="bg-red-500 hover:bg-red-600">
-              <Live className="h-4 w-4 mr-2" />
+              <Video className="h-4 w-4 mr-2" />
               Start Live Stream
             </Button>
           ) : (

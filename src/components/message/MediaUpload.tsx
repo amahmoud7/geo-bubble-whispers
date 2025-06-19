@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Image, X, Play, Live } from 'lucide-react';
+import { Image, X, Play, Video } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import LiveStreamRecorder from './LiveStreamRecorder';
 
@@ -90,15 +90,23 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
   };
 
   const handleLiveStreamVideo = (videoFile: File) => {
-    // Create a synthetic event to match the expected interface
-    const syntheticEvent = {
-      target: {
-        files: [videoFile],
-        value: ''
-      }
-    } as React.ChangeEvent<HTMLInputElement>;
+    // Create a proper file input element and trigger change event
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
     
-    onFileChange(syntheticEvent);
+    // Create a DataTransfer object to simulate file selection
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(videoFile);
+    fileInput.files = dataTransfer.files;
+    
+    // Create the change event
+    const changeEvent = new Event('change', { bubbles: true });
+    Object.defineProperty(changeEvent, 'target', {
+      writable: false,
+      value: fileInput
+    });
+    
+    onFileChange(changeEvent as React.ChangeEvent<HTMLInputElement>);
     setShowLiveStream(false);
   };
 
@@ -192,7 +200,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
               className="w-full"
               disabled={isValidating}
             >
-              <Live className="h-4 w-4 mr-2" />
+              <Video className="h-4 w-4 mr-2" />
               Live
             </Button>
           </div>
