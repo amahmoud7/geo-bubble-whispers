@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Map, List, User, Menu, LogOut, LogIn } from 'lucide-react';
+import { Map, List, User, Menu, LogOut, LogIn, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
@@ -71,8 +71,13 @@ const Navigation = () => {
           </Link>
         </div>
 
-        {/* Right Side - Profile/Auth */}
+        {/* Right Side - Inbox/Profile/Auth */}
         <div className="flex items-center space-x-2">
+          {user && (
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <MessageCircle className="h-5 w-5" />
+            </Button>
+          )}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
