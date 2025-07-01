@@ -10,10 +10,10 @@ export const validateVideo = (file: File): Promise<boolean> => {
       window.URL.revokeObjectURL(video.src);
       const duration = video.duration;
       
-      if (duration > 10) {
+      if (duration > 30) {
         toast({
           title: "Video too long",
-          description: "Videos must be 10 seconds or shorter for Lo posts",
+          description: "Videos must be 30 seconds or shorter for Lo posts",
           variant: "destructive"
         });
         resolve(false);
