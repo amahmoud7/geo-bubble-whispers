@@ -10,6 +10,7 @@ interface Message {
   isPublic: boolean;
   mediaUrl?: string | null;
   isLivestream?: boolean;
+  isLive?: boolean; // Track if livestream is currently live
   user: {
     avatar: string;
     name?: string;
@@ -28,16 +29,18 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
         const messageType = getMessageType(message.mediaUrl, message.isLivestream);
         const userName = message.user?.name || 'Unknown';
         const isLivestream = message.isLivestream || false;
+        const isLive = message.isLive || false;
         
         const markerIcon = createCustomMarkerIcon({
           messageType,
           userName,
           mediaUrl: message.mediaUrl,
           isLivestream,
+          isLive,
           size: 36
         });
 
-        const markerSize = messageType === 'text' ? 36 : messageType === 'livestream' ? 48 : 44;
+        const markerSize = messageType === 'text' ? 36 : (messageType === 'livestream' && isLive) ? 48 : 44;
         const anchorPoint = markerSize / 2;
 
         return (
