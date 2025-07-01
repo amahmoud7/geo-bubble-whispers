@@ -171,6 +171,127 @@ export type Database = {
           },
         ]
       }
+      live_stream_locations: {
+        Row: {
+          id: string
+          lat: number
+          lng: number
+          stream_id: string
+          timestamp: string
+        }
+        Insert: {
+          id?: string
+          lat: number
+          lng: number
+          stream_id: string
+          timestamp?: string
+        }
+        Update: {
+          id?: string
+          lat?: number
+          lng?: number
+          stream_id?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_stream_locations_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_stream_viewers: {
+        Row: {
+          id: string
+          is_active: boolean
+          joined_at: string
+          left_at: string | null
+          stream_id: string
+          viewer_id: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          left_at?: string | null
+          stream_id: string
+          viewer_id: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          left_at?: string | null
+          stream_id?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_stream_viewers_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_streams: {
+        Row: {
+          created_at: string
+          current_lat: number
+          current_lng: number
+          description: string | null
+          ended_at: string | null
+          id: string
+          is_live: boolean
+          start_lat: number
+          start_lng: number
+          stream_url: string | null
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+          viewer_count: number
+        }
+        Insert: {
+          created_at?: string
+          current_lat: number
+          current_lng: number
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          is_live?: boolean
+          start_lat: number
+          start_lng: number
+          stream_url?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+          viewer_count?: number
+        }
+        Update: {
+          created_at?: string
+          current_lat?: number
+          current_lng?: number
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          is_live?: boolean
+          start_lat?: number
+          start_lng?: number
+          stream_url?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          viewer_count?: number
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -354,6 +475,14 @@ export type Database = {
     Functions: {
       deactivate_expired_stories: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      end_live_stream: {
+        Args: { stream_id_param: string }
+        Returns: undefined
+      }
+      update_live_stream_location: {
+        Args: { stream_id_param: string; new_lat: number; new_lng: number }
         Returns: undefined
       }
     }

@@ -5,23 +5,35 @@ import MapControls from './map/MapControls';
 import StreetViewController from './map/StreetViewController';
 import MessageCreationController from './map/MessageCreationController';
 import MessageDisplayController from './map/MessageDisplayController';
+import LiveStreamMarkers from './livestream/LiveStreamMarkers';
+import LiveStreamViewer from './livestream/LiveStreamViewer';
+import LiveStreamController from './livestream/LiveStreamController';
 import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { useGoogleMap } from '@/hooks/useGoogleMap';
 import { useMessages } from '@/hooks/useMessages';
 import { useMessageState } from '@/hooks/useMessageState';
 import { useUserLocation } from '@/hooks/useUserLocation';
+import { useLiveStreams } from '@/hooks/useLiveStreams';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { mockMessages } from '@/mock/messages';
 import { useAuth } from '@/hooks/useAuth';
 import MapViewList from './map/MapViewList';
 import { Button } from './ui/button';
 import { Map, List } from 'lucide-react';
+import { LiveStream } from '@/types/livestream';
 
 const MapView: React.FC = () => {
   const { userLocation } = useUserLocation();
   const { filters, filteredMessages, addMessage, updateMessage, handleFilterChange } = useMessages();
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('split');
+  
+  // Live streaming state
+  const { liveStreams } = useLiveStreams();
+  const [selectedStreamId, setSelectedStreamId] = useState<string | null>(null);
+  const [selectedStream, setSelectedStream] = useState<LiveStream | null>(null);
+  const [showStreamViewer, setShowStreamViewer] = useState(false);
+  const [showLiveStreamController, setShowLiveStreamController] = useState(false);
   
   const {
     selectedMessage,
@@ -80,6 +92,24 @@ const MapView: React.FC = () => {
     }
   };
 
+  const handleStreamSelect = (stream: LiveStream) => {
+    setSelectedStream(stream);
+    setShowStreamViewer(true);
+  };
+
+  const handleCloseStreamViewer = () => {
+    setShowStreamViewer(false);
+    setSelectedStream(null);
+  };
+
+  const handleStartLiveStream = () => {
+    setShowLiveStreamController(true);
+  };
+
+  const handleCloseLiveStreamController = () => {
+    setShowLiveStreamController(false);
+  };
+
   if (!isLoaded) return <div>Loading...</div>;
 
   // Get the user avatar for the new pin
@@ -133,6 +163,7 @@ const MapView: React.FC = () => {
         >
           <MapControls
             onCreateMessage={handleCreateMessage}
+            onStartLiveStream={handleStartLiveStream}
             filters={filters}
             onFilterChange={handleFilterChange}
             onSearchBoxLoad={onSearchBoxLoad}
@@ -159,6 +190,13 @@ const MapView: React.FC = () => {
               filteredMessages={filteredMessages}
               onMessageClick={handleMessageClick}
               onClose={handleClose}
+            />
+            
+            <LiveStreamMarkers
+              liveStreams={liveStreams}
+              onStreamSelect={handleStreamSelect}
+              selectedStreamId={selectedStreamId}
+              setSelectedStreamId={setSelectedStreamId}
             />
           </GoogleMap>
 
@@ -195,6 +233,18 @@ const MapView: React.FC = () => {
         </div>
       </div>
 
+      {/* Live Stream Viewer */}
+      <LiveStreamViewer
+        stream={selectedStream}
+        isOpen={showStreamViewer}
+        onClose={handleCloseStreamViewer}
+      />
+      
+      {/* Live Stream Controller */}
+      <LiveStreamController
+        isOpen={showLiveStreamController}
+        onClose={handleCloseLiveStreamController}
+      />
     </div>
   );
 };
