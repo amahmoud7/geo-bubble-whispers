@@ -31,7 +31,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
                   Click to upload an image or video
                 </span>
                 <span className="mt-1 block text-xs text-gray-500">
-                  Videos must be 10 seconds or shorter
+                  Supports .mp4, .webm, .mov, .avi (max 10 seconds)
                 </span>
               </>
             )}
@@ -39,7 +39,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
           <input
             id="file-upload"
             type="file"
-            accept="image/*,video/*"
+            accept="image/*,video/*,.webm,.mp4,.mov,.avi"
             onChange={onFileChange}
             className="hidden"
             disabled={isValidating}

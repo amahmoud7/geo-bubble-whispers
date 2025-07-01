@@ -14,9 +14,10 @@ export const getMessageType = (mediaUrl: string | null | undefined, isLivestream
     return 'livestream';
   }
   
-  // Check for video extensions
+  // Check for video extensions (including .webm for livestreams)
   if (url.includes('.mp4') || url.includes('.webm') || url.includes('.mov') || 
-      url.includes('.avi') || url.includes('.mkv') || url.includes('video')) {
+      url.includes('.avi') || url.includes('.mkv') || url.includes('video') ||
+      url.includes('.m4v') || url.includes('.3gp')) {
     return 'video';
   }
   
