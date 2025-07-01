@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Home from "./pages/Home";
 import List from "./pages/List";
 import Profile from "./pages/Profile";
+import Inbox from "./pages/Inbox";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import DownloadApp from "./pages/DownloadApp";
@@ -54,6 +55,7 @@ const App = () => {
               <Route path="/home" element={<Home />} />
               <Route path="/list" element={<List />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/inbox" element={<Inbox />} />
               <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="/download" element={<DownloadApp />} />
               <Route path="/auth" element={<Auth />} />

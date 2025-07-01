@@ -74,9 +74,11 @@ const Navigation = () => {
         {/* Right Side - Inbox/Profile/Auth */}
         <div className="flex items-center space-x-2">
           {user && (
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <MessageCircle className="h-5 w-5" />
-            </Button>
+            <Link to="/inbox">
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <MessageCircle className="h-5 w-5" />
+              </Button>
+            </Link>
           )}
           {user ? (
             <DropdownMenu>
