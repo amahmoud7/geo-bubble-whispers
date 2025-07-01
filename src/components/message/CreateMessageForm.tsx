@@ -88,12 +88,12 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
     // Add the new message using the reactive state
     addMessage(newMessage);
     
-    // Stop the bounce animation after 3 seconds
+    // Stop the bounce animation after 2 seconds by removing the 'new-' prefix
     setTimeout(() => {
       updateMessage(newMessage.id, {
         id: newMessage.id.replace('new-', 'posted-')
       });
-    }, 3000);
+    }, 2000);
     
     setTimeout(() => {
       setIsLoading(false);
