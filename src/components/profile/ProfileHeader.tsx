@@ -25,7 +25,7 @@ const ProfileHeader = ({ profile, onSaveProfile }: ProfileHeaderProps) => {
       <div className="flex justify-between items-start">
         <Avatar className="h-20 w-20">
           <AvatarImage src={profile.avatar} />
-          <AvatarFallback>{profile.name?.charAt(0) || profile.username?.charAt(0) || '?'}</AvatarFallback>
+          <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
         </Avatar>
         <EditProfileDialog 
           profile={{
