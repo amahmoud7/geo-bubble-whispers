@@ -8,8 +8,9 @@ export const getMessageType = (mediaUrl: string | null | undefined, isLivestream
   
   const url = mediaUrl.toLowerCase();
   
-  // Check for livestream indicators
-  if (url.includes('livestream') || url.includes('live-stream') || url.includes('rtmp') || url.includes('webrtc')) {
+  // Check for livestream indicators (be very specific to avoid false positives)
+  if (url.includes('rtmp://') || url.includes('webrtc') || url.includes('/live/') || 
+      url.includes('livestream') || url.includes('live-stream')) {
     return 'livestream';
   }
   

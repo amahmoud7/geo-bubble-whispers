@@ -11,7 +11,7 @@ const MessageCardContent: React.FC<MessageCardContentProps> = ({
   content,
   mediaUrl
 }) => {
-  const messageType = getMessageType(mediaUrl);
+  const messageType = getMessageType(mediaUrl, false); // Explicitly pass false for isLivestream
 
   return (
     <div className="p-4 pt-3">

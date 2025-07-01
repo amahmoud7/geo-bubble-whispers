@@ -38,7 +38,7 @@ const MessageDetailContent: React.FC<MessageDetailContentProps> = ({
     return `${diffHours}h ${diffMinutes}m`;
   };
 
-  const messageType = getMessageType(mediaUrl);
+  const messageType = getMessageType(mediaUrl, false); // Explicitly pass false for isLivestream
 
   return (
     <div className="p-4 overflow-auto flex-grow">
