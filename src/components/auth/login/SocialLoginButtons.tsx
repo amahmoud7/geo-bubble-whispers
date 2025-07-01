@@ -13,13 +13,15 @@ const SocialLoginButtons: React.FC<SocialLoginButtonsProps> = ({ loading }) => {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('Attempting Google sign in...');
       await signInWithGoogle();
+      console.log('Google sign in initiated successfully');
       // Auth state change will handle navigation
     } catch (error: any) {
       console.error('Google login error:', error);
       toast({
         title: "Google authentication failed",
-        description: error.message || "Unable to sign in with Google",
+        description: error.message || "Unable to sign in with Google. Please check if Google OAuth is configured in Supabase.",
         variant: "destructive"
       });
     }
