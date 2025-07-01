@@ -9,6 +9,7 @@ interface Message {
   position: { x: number; y: number };
   isPublic: boolean;
   mediaUrl?: string | null;
+  isLivestream?: boolean;
   user: {
     avatar: string;
     name?: string;
@@ -24,18 +25,19 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
   return (
     <>
       {messages.map((message) => {
-        const messageType = getMessageType(message.mediaUrl);
+        const messageType = getMessageType(message.mediaUrl, message.isLivestream);
         const userName = message.user?.name || 'Unknown';
+        const isLivestream = message.isLivestream || false;
         
-        // Create custom marker icon based on message type
         const markerIcon = createCustomMarkerIcon({
           messageType,
           userName,
           mediaUrl: message.mediaUrl,
+          isLivestream,
           size: 36
         });
 
-        const markerSize = messageType === 'text' ? 36 : 44;
+        const markerSize = messageType === 'text' ? 36 : messageType === 'livestream' ? 48 : 44;
         const anchorPoint = markerSize / 2;
 
         return (

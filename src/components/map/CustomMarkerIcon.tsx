@@ -4,6 +4,7 @@ interface CustomMarkerIconProps {
   messageType: MessageType;
   userName: string;
   mediaUrl?: string | null;
+  isLivestream?: boolean;
   size?: number;
 }
 
@@ -11,6 +12,7 @@ export const createCustomMarkerIcon = ({
   messageType,
   userName,
   mediaUrl,
+  isLivestream = false,
   size = 36
 }: CustomMarkerIconProps): string => {
   const color = getMarkerColor(messageType);
@@ -23,6 +25,23 @@ export const createCustomMarkerIcon = ({
       return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
         <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 2}" fill="${color}" stroke="white" stroke-width="2"/>
         <text x="${size/2}" y="${size/2 + 4}" font-family="Arial" font-size="${size/3}" fill="white" text-anchor="middle">${initial}</text>
+      </svg>`;
+    }
+
+    if (messageType === 'livestream') {
+      // Special pulsing marker for livestreams
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${size + 12}" height="${size + 12}" viewBox="0 0 ${size + 12} ${size + 12}">
+        <!-- Pulsing outer ring -->
+        <circle cx="${(size + 12)/2}" cy="${(size + 12)/2}" r="${(size + 12)/2 - 1}" fill="${color}" opacity="0.3">
+          <animate attributeName="r" values="${(size + 12)/2 - 8};${(size + 12)/2 - 1};${(size + 12)/2 - 8}" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.7;0.2;0.7" dur="2s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Main marker -->
+        <circle cx="${(size + 12)/2}" cy="${(size + 12)/2}" r="${size/2 - 1}" fill="${color}" stroke="white" stroke-width="2"/>
+        <!-- Live indicator -->
+        <circle cx="${(size + 12)/2}" cy="${(size + 12)/2}" r="${size/2 - 8}" fill="white" opacity="0.9"/>
+        <text x="${(size + 12)/2}" y="${(size + 12)/2 + 2}" font-family="Arial" font-size="8" fill="${color}" text-anchor="middle">●</text>
+        <text x="${(size + 12)/2}" y="${(size + 12)/2 - 6}" font-family="Arial" font-size="6" fill="${color}" text-anchor="middle">LIVE</text>
       </svg>`;
     }
 

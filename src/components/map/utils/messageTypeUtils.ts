@@ -1,9 +1,17 @@
-export type MessageType = 'text' | 'image' | 'video';
+export type MessageType = 'text' | 'image' | 'video' | 'livestream';
 
-export const getMessageType = (mediaUrl: string | null | undefined): MessageType => {
+export const getMessageType = (mediaUrl: string | null | undefined, isLivestream?: boolean): MessageType => {
+  // Check if this is a livestream first
+  if (isLivestream) return 'livestream';
+  
   if (!mediaUrl) return 'text';
   
   const url = mediaUrl.toLowerCase();
+  
+  // Check for livestream indicators
+  if (url.includes('livestream') || url.includes('live-stream') || url.includes('rtmp') || url.includes('webrtc')) {
+    return 'livestream';
+  }
   
   // Check for video extensions
   if (url.includes('.mp4') || url.includes('.webm') || url.includes('.mov') || 
@@ -30,6 +38,8 @@ export const getMarkerColor = (messageType: MessageType): string => {
       return '#16A34A'; // Green
     case 'video':
       return '#9333EA'; // Purple
+    case 'livestream':
+      return '#0EA5E9'; // Blue
     default:
       return '#0EA5E9'; // Default blue
   }
