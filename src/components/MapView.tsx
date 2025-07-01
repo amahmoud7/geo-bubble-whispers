@@ -182,16 +182,27 @@ const MapView: React.FC = () => {
         </div>
       </div>
 
-      <MessageCreationController
-        isCreating={isCreating}
-        isInStreetView={isInStreetView}
-        isPlacingPin={isPlacingPin}
-        newPinPosition={newPinPosition}
-        userAvatar={userAvatar}
-        userName={userName}
-        handleClose={handleClose}
-        handleCreateMessage={handleCreateMessage}
-      />
+      {/* Message Creation Controller - positioned relative to map section */}
+      <div 
+        className={`absolute ${
+          viewMode === 'map' ? 'inset-0' : 
+          viewMode === 'split' ? 'left-0 w-1/2 h-full' : 
+          'hidden'
+        } pointer-events-none z-10`}
+      >
+        <div className="relative w-full h-full pointer-events-auto">
+          <MessageCreationController
+            isCreating={isCreating}
+            isInStreetView={isInStreetView}
+            isPlacingPin={isPlacingPin}
+            newPinPosition={newPinPosition}
+            userAvatar={userAvatar}
+            userName={userName}
+            handleClose={handleClose}
+            handleCreateMessage={handleCreateMessage}
+          />
+        </div>
+      </div>
     </div>
   );
 };

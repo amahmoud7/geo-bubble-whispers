@@ -18,7 +18,7 @@ const CreateMessageButton: React.FC<CreateMessageButtonProps> = ({
       variant="default" 
       className={`
         ${variant === "default" 
-          ? "absolute right-8 top-1/2 transform -translate-y-1/2" 
+          ? "absolute bottom-8 left-1/2 transform -translate-x-1/2" 
           : "absolute right-8 bottom-8"
         } 
         z-20 h-12 w-12 rounded-full shadow-lg text-center
