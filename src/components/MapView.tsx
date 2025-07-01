@@ -19,7 +19,7 @@ import { Map, List } from 'lucide-react';
 
 const MapView: React.FC = () => {
   const { userLocation } = useUserLocation();
-  const { filters, filteredMessages, handleFilterChange } = useMessages();
+  const { filters, filteredMessages, addMessage, updateMessage, handleFilterChange } = useMessages();
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('split');
   
@@ -173,6 +173,8 @@ const MapView: React.FC = () => {
             userName={userName}
             handleClose={handleClose}
             handleCreateMessage={handleCreateMessage}
+            addMessage={addMessage}
+            updateMessage={updateMessage}
           />
         </div>
 

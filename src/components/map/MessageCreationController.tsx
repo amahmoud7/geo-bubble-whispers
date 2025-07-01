@@ -15,6 +15,8 @@ interface MessageCreationControllerProps {
   userName: string | undefined;
   handleClose: () => void;
   handleCreateMessage: () => void;
+  addMessage: (newMessage: any) => void;
+  updateMessage: (id: string, updates: any) => void;
 }
 
 const MessageCreationController: React.FC<MessageCreationControllerProps> = ({ 
@@ -25,7 +27,9 @@ const MessageCreationController: React.FC<MessageCreationControllerProps> = ({
   userAvatar,
   userName,
   handleClose,
-  handleCreateMessage
+  handleCreateMessage,
+  addMessage,
+  updateMessage
 }) => {
   return (
     <>
@@ -58,6 +62,8 @@ const MessageCreationController: React.FC<MessageCreationControllerProps> = ({
         <CreateMessageModal 
           onClose={handleClose}
           initialPosition={newPinPosition}
+          addMessage={addMessage}
+          updateMessage={updateMessage}
         />
       )}
     </>

@@ -20,6 +20,16 @@ export const useMessages = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
+  const addMessage = (newMessage: any) => {
+    setMessages(prev => [newMessage, ...prev]);
+  };
+
+  const updateMessage = (id: string, updates: any) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === id ? { ...msg, ...updates } : msg
+    ));
+  };
+
   const fetchMessages = async () => {
     try {
       setLoading(true);
@@ -128,6 +138,9 @@ export const useMessages = () => {
   return {
     filters,
     filteredMessages,
+    messages,
+    addMessage,
+    updateMessage,
     handleFilterChange,
     loading,
     refreshMessages: fetchMessages

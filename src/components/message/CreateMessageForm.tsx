@@ -14,9 +14,11 @@ import LocationInfo from './LocationInfo';
 interface CreateMessageFormProps {
   onClose: () => void;
   initialPosition?: { lat: number; lng: number };
+  addMessage: (newMessage: any) => void;
+  updateMessage: (id: string, updates: any) => void;
 }
 
-const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialPosition }) => {
+const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialPosition, addMessage, updateMessage }) => {
   const [content, setContent] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -83,18 +85,14 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
       }
     };
     
-    // Add the new message to mockMessages
-    mockMessages.unshift(newMessage);
+    // Add the new message using the reactive state
+    addMessage(newMessage);
     
     // Stop the bounce animation after 3 seconds
     setTimeout(() => {
-      const messageIndex = mockMessages.findIndex(m => m.id === newMessage.id);
-      if (messageIndex !== -1) {
-        mockMessages[messageIndex] = {
-          ...mockMessages[messageIndex],
-          id: mockMessages[messageIndex].id.replace('new-', 'posted-')
-        };
-      }
+      updateMessage(newMessage.id, {
+        id: newMessage.id.replace('new-', 'posted-')
+      });
     }, 3000);
     
     setTimeout(() => {
