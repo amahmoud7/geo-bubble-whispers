@@ -26,12 +26,15 @@ const MessageDisplayController: React.FC<MessageDisplayControllerProps> = ({
         onMessageClick={onMessageClick}
       />
       
-      {selectedMessage && (
-        <MessageDetail 
-          message={mockMessages.find(m => m.id === selectedMessage)!}
-          onClose={onClose}
-        />
-      )}
+      {selectedMessage && (() => {
+        const foundMessage = mockMessages.find(m => m.id === selectedMessage);
+        return foundMessage ? (
+          <MessageDetail 
+            message={foundMessage}
+            onClose={onClose}
+          />
+        ) : null;
+      })()}
     </>
   );
 };

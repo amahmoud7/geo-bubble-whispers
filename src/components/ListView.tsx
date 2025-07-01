@@ -75,12 +75,15 @@ const ListView: React.FC = () => {
         </div>
       )}
       
-      {selectedMessage && (
-        <MessageDetail 
-          message={mockMessages.find(m => m.id === selectedMessage)!}
-          onClose={handleClose}
-        />
-      )}
+      {selectedMessage && (() => {
+        const foundMessage = mockMessages.find(m => m.id === selectedMessage);
+        return foundMessage ? (
+          <MessageDetail 
+            message={foundMessage}
+            onClose={handleClose}
+          />
+        ) : null;
+      })()}
     </div>
   );
 };
