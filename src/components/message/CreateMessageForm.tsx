@@ -86,6 +86,17 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
     // Add the new message to mockMessages
     mockMessages.unshift(newMessage);
     
+    // Stop the bounce animation after 3 seconds
+    setTimeout(() => {
+      const messageIndex = mockMessages.findIndex(m => m.id === newMessage.id);
+      if (messageIndex !== -1) {
+        mockMessages[messageIndex] = {
+          ...mockMessages[messageIndex],
+          id: mockMessages[messageIndex].id.replace('new-', 'posted-')
+        };
+      }
+    }, 3000);
+    
     setTimeout(() => {
       setIsLoading(false);
       

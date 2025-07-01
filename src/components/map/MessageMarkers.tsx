@@ -54,8 +54,8 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
               scaledSize: new google.maps.Size(markerSize, markerSize)
             }}
             visible={true}
-            zIndex={2}
-            animation={google.maps.Animation.DROP}
+            zIndex={message.id.startsWith('new-') ? 100 : 2}
+            animation={message.id.startsWith('new-') ? google.maps.Animation.BOUNCE : google.maps.Animation.DROP}
           />
         );
       })}
