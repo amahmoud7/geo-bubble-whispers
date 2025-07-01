@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Clock } from 'lucide-react';
+import { getMessageType } from '../map/utils/messageTypeUtils';
 
 interface MessageDetailContentProps {
   content: string;
@@ -37,16 +38,29 @@ const MessageDetailContent: React.FC<MessageDetailContentProps> = ({
     return `${diffHours}h ${diffMinutes}m`;
   };
 
+  const messageType = getMessageType(mediaUrl);
+
   return (
     <div className="p-4 overflow-auto flex-grow">
       <p className="mb-3 text-base">{content}</p>
       {mediaUrl && (
         <div className="w-full rounded-md overflow-hidden h-56 bg-gray-100 mb-3">
-          <img
-            src={mediaUrl}
-            alt="Message media"
-            className="w-full h-full object-cover"
-          />
+          {messageType === 'video' ? (
+            <video
+              src={mediaUrl}
+              controls
+              className="w-full h-full object-cover"
+              preload="metadata"
+            >
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <img
+              src={mediaUrl}
+              alt="Message media"
+              className="w-full h-full object-cover"
+            />
+          )}
         </div>
       )}
       
