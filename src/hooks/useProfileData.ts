@@ -50,9 +50,16 @@ export const useProfileData = (userId: string | undefined) => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+
+      // If no profile exists, use default values
+      if (!profileData) {
+        setProfile(defaultProfile);
+        setIsLoading(false);
+        return;
+      }
 
       // Format the profile data
       setProfile({
