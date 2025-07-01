@@ -4,24 +4,11 @@ import MessageDetail from './MessageDetail';
 import FilterControls from './FilterControls';
 import MessageCard from './MessageCard';
 import { useMessageFilter } from '@/hooks/useMessageFilter';
-import { mockMessages } from '@/mock/messages';
+import { useMessages } from '@/hooks/useMessages';
 
 const ListView: React.FC = () => {
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
-  const [, setForceUpdate] = useState({});
-  
-  // Use useEffect to force a re-render when the component mounts
-  useEffect(() => {
-    // Force update to reflect any changes in mockMessages
-    setForceUpdate({});
-    
-    // Set up an interval to check for updates (simulates real-time updates)
-    const intervalId = setInterval(() => {
-      setForceUpdate({});
-    }, 2000);
-    
-    return () => clearInterval(intervalId);
-  }, []);
+  const { filteredMessages } = useMessages();
   
   const {
     filters,
@@ -31,7 +18,7 @@ const ListView: React.FC = () => {
     searchQuery,
     setSearchQuery,
     filteredAndSortedMessages,
-  } = useMessageFilter(mockMessages);
+  } = useMessageFilter(filteredMessages);
 
   const handleSelect = (id: string) => {
     setSelectedMessage(id);
@@ -76,7 +63,7 @@ const ListView: React.FC = () => {
       )}
       
       {selectedMessage && (() => {
-        const foundMessage = mockMessages.find(m => m.id === selectedMessage);
+        const foundMessage = filteredMessages.find(m => m.id === selectedMessage);
         return foundMessage ? (
           <MessageDetail 
             message={foundMessage}

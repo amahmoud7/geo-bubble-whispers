@@ -157,7 +157,6 @@ const MapView: React.FC = () => {
             <MessageDisplayController
               selectedMessage={selectedMessage}
               filteredMessages={filteredMessages}
-              mockMessages={mockMessages}
               onMessageClick={handleMessageClick}
               onClose={handleClose}
             />
