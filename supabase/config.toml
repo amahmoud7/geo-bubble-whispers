@@ -6,3 +6,9 @@ verify_jwt = false
 
 [functions.send-confirmation]
 verify_jwt = false
+
+[functions.fetch-events]
+verify_jwt = false
+
+[functions.setup-cron]
+verify_jwt = false

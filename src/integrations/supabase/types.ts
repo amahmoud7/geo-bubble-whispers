@@ -111,6 +111,69 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          event_url: string | null
+          external_id: string
+          id: string
+          image_url: string | null
+          lat: number | null
+          lng: number | null
+          message_id: string | null
+          price_max: number | null
+          price_min: number | null
+          source: string
+          start_date: string
+          title: string
+          updated_at: string | null
+          venue_address: string | null
+          venue_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_url?: string | null
+          external_id: string
+          id?: string
+          image_url?: string | null
+          lat?: number | null
+          lng?: number | null
+          message_id?: string | null
+          price_max?: number | null
+          price_min?: number | null
+          source: string
+          start_date: string
+          title: string
+          updated_at?: string | null
+          venue_address?: string | null
+          venue_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_url?: string | null
+          external_id?: string
+          id?: string
+          image_url?: string | null
+          lat?: number | null
+          lng?: number | null
+          message_id?: string | null
+          price_max?: number | null
+          price_min?: number | null
+          source?: string
+          start_date?: string
+          title?: string
+          updated_at?: string | null
+          venue_address?: string | null
+          venue_name?: string | null
+        }
+        Relationships: []
+      }
       followers: {
         Row: {
           created_at: string | null
