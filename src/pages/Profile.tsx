@@ -10,6 +10,7 @@ import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileTabs from '../components/profile/ProfileTabs';
 import ProfileLoadingState from '../components/profile/ProfileLoadingState';
 import ProfileUnauthenticated from '../components/profile/ProfileUnauthenticated';
+import EventsManager from '../components/EventsManager';
 import { useProfileData, ProfileData } from '@/hooks/useProfileData';
 
 const Profile = () => {
@@ -39,7 +40,7 @@ const Profile = () => {
     <div className="min-h-screen flex flex-col">
       <Navigation />
       
-      <div className="container py-6">
+      <div className="container py-6 space-y-6">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -62,6 +63,9 @@ const Profile = () => {
             <ProfileTabs messages={profile.messages || []} />
           </CardContent>
         </Card>
+
+        {/* Events Management Section */}
+        <EventsManager />
       </div>
     </div>
   );
