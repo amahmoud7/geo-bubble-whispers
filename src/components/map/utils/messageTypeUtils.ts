@@ -46,7 +46,7 @@ export const getMarkerColor = (messageType: MessageType): string => {
     case 'livestream':
       return '#0EA5E9'; // Blue
     case 'event':
-      return '#F59E0B'; // Amber/Gold for events
+      return '#EAB308'; // Yellow for events
     default:
       return '#0EA5E9'; // Default blue
   }
