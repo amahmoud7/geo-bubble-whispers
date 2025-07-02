@@ -49,8 +49,18 @@ const HeroSection: React.FC = () => {
           throw error;
         }
       } else {
-        // Send confirmation email via edge function
-        const response = await fetch(`https://siunjhiiaduktoqjxalv.supabase.co/functions/v1/send-confirmation`, {
+        // Show success message immediately after database insert
+        toast({
+          title: "Thanks for subscribing!",
+          description: "You'll receive a confirmation email shortly.",
+        });
+        
+        // Reset form immediately
+        setEmail('');
+        setName('');
+
+        // Send confirmation email in the background (non-blocking)
+        fetch(`https://siunjhiiaduktoqjxalv.supabase.co/functions/v1/send-confirmation`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -60,20 +70,10 @@ const HeroSection: React.FC = () => {
             name,
             token: confirmationToken,
           }),
+        }).catch(emailError => {
+          console.error('Email sending failed:', emailError);
+          // Could show a secondary toast about email failure if needed
         });
-        
-        if (!response.ok) {
-          throw new Error('Failed to send confirmation email');
-        }
-        
-        toast({
-          title: "Thanks for subscribing!",
-          description: "Please check your email to confirm your subscription.",
-        });
-        
-        // Reset form
-        setEmail('');
-        setName('');
       }
     } catch (error) {
       console.error("Subscription error:", error);
