@@ -5,6 +5,7 @@ import MapView from '../components/MapView';
 import StoriesBar from '../components/stories/StoriesBar';
 import CreateStoryModal from '../components/stories/CreateStoryModal';
 import StoryViewer from '../components/stories/StoryViewer';
+import EventFetcher from '../components/EventFetcher';
 import { useStories } from '@/hooks/useStories';
 import { toast } from '@/hooks/use-toast';
 
@@ -68,6 +69,9 @@ const Home = () => {
         onDeleteStory={deleteStory}
         fetchStoriesByUser={fetchStoriesByUser}
       />
+
+      {/* Event Fetcher - triggers automatically on page load */}
+      <EventFetcher />
     </div>
   );
 };
