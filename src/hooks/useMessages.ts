@@ -78,28 +78,35 @@ export const useMessages = () => {
 
       // Process regular messages
       if (messagesData) {
-        const transformedMessages = messagesData.map((message: any) => ({
-          id: message.id,
-          content: message.content,
-          mediaUrl: message.media_url,
-          isPublic: message.is_public,
-          location: message.location,
-          timestamp: message.created_at,
-          expiresAt: message.expires_at,
-          user: {
-            name: message.profiles?.name || 'Unknown User',
-            avatar: message.profiles?.avatar_url || '/placeholder.svg'
-          },
-          position: {
-            x: message.lat,
-            y: message.lng
-          },
-          // Check if current user has liked this message
-          liked: user ? message.likes?.some((like: any) => like.user_id === user.id) : false,
-          // Count of likes
-          likes: message.likes?.length || 0,
-          isEvent: false
-        }));
+        const transformedMessages = messagesData.map((message: any) => {
+          // Check if this is an event post based on content patterns
+          const isEvent = message.content?.includes('🎫') || 
+                         message.content?.includes('#Events') ||
+                         (message.content?.includes('📅') && message.content?.includes('📍'));
+
+          return {
+            id: message.id,
+            content: message.content,
+            mediaUrl: message.media_url,
+            isPublic: message.is_public,
+            location: message.location,
+            timestamp: message.created_at,
+            expiresAt: message.expires_at,
+            user: {
+              name: message.profiles?.name || 'Unknown User',
+              avatar: message.profiles?.avatar_url || '/placeholder.svg'
+            },
+            position: {
+              x: message.lat,
+              y: message.lng
+            },
+            // Check if current user has liked this message
+            liked: user ? message.likes?.some((like: any) => like.user_id === user.id) : false,
+            // Count of likes
+            likes: message.likes?.length || 0,
+            isEvent: isEvent
+          };
+        });
         allMessages.push(...transformedMessages);
       }
 
