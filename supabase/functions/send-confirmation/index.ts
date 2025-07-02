@@ -1,6 +1,9 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "npm:resend@2.0.0";
 import { corsHeaders } from "../_shared/cors.ts";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -24,23 +27,57 @@ serve(async (req) => {
       );
     }
 
-    // Get the origin from the request
-    const url = new URL(req.url);
-    const origin = url.origin.replace("/functions/v1/send-confirmation", "");
-    
-    // In a real implementation, you would send an email here
-    // For now, we'll just log the details
-    console.log({
-      to: email,
-      subject: "Confirm your subscription to Lo",
-      body: `Hello ${name || "there"},\n\nPlease confirm your subscription by clicking the link below:\n\n${origin}/functions/v1/confirm-subscription?token=${token}\n\nThank you,\nThe Lo Team`,
+    console.log(`Sending confirmation email to: ${email}`);
+
+    const emailResponse = await resend.emails.send({
+      from: "Lo <onboarding@resend.dev>",
+      to: [email],
+      subject: "Thank you for subscribing to Lo!",
+      html: `
+        <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #333; font-size: 28px; margin-bottom: 10px;">Thank you for subscribing to Lo!</h1>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+            <p style="font-size: 18px; color: #333; margin-bottom: 20px;">
+              ${name ? `Hi ${name},` : 'Hi there,'}
+            </p>
+            
+            <p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+              We appreciate your interest in Lo! You're now subscribed to receive updates about our platform where people connect with each other.
+            </p>
+            
+            <p style="font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 20px;">
+              We'll be sharing exciting updates about Lo very soon, including:
+            </p>
+            
+            <ul style="font-size: 16px; color: #555; line-height: 1.8; margin-bottom: 20px;">
+              <li>App launch announcements</li>
+              <li>New features and improvements</li>
+              <li>Community updates</li>
+              <li>Early access opportunities</li>
+            </ul>
+            
+            <p style="font-size: 16px; color: #555; line-height: 1.6;">
+              Stay tuned for more updates from the Lo team!
+            </p>
+          </div>
+          
+          <div style="text-align: center; color: #888; font-size: 14px;">
+            <p>Best regards,<br><strong>The Lo Team</strong></p>
+            <p style="margin-top: 20px;">
+              If you didn't subscribe to Lo, you can safely ignore this email.
+            </p>
+          </div>
+        </div>
+      `,
     });
 
+    console.log("Confirmation email sent successfully:", emailResponse);
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Confirmation email would be sent (simulated for development)",
-      }),
+      JSON.stringify({ success: true }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
