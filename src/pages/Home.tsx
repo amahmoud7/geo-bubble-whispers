@@ -6,6 +6,7 @@ import StoriesBar from '../components/stories/StoriesBar';
 import CreateStoryModal from '../components/stories/CreateStoryModal';
 import StoryViewer from '../components/stories/StoryViewer';
 import EventFetcher from '../components/EventFetcher';
+import CreateEventPost from '../components/CreateEventPost';
 import { useStories } from '@/hooks/useStories';
 import { toast } from '@/hooks/use-toast';
 
@@ -72,6 +73,9 @@ const Home = () => {
 
       {/* Event Fetcher - triggers automatically on page load */}
       <EventFetcher />
+      
+      {/* Create Event Post Button */}
+      <CreateEventPost />
     </div>
   );
 };
