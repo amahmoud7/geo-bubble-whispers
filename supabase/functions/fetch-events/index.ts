@@ -128,10 +128,10 @@ Deno.serve(async (req) => {
 })
 
 async function fetchEventbriteEvents(token: string): Promise<EventData[]> {
-  // Los Angeles area coordinates (approximate bounding box)
-  const lat = 34.0522
-  const lng = -118.2437
-  const radius = '50km' // Cover entire LA metro area
+  // Culver City coordinates
+  const lat = 34.0261
+  const lng = -118.3959
+  const radius = '3mi' // 3 mile radius around Culver City
 
   const url = `https://www.eventbriteapi.com/v3/events/search/?location.latitude=${lat}&location.longitude=${lng}&location.within=${radius}&start_date.range_start=${new Date().toISOString()}&expand=venue,category&sort_by=distance`
 
@@ -169,11 +169,13 @@ async function fetchEventbriteEvents(token: string): Promise<EventData[]> {
 }
 
 async function fetchTicketmasterEvents(apiKey: string): Promise<EventData[]> {
-  // Los Angeles DMA (Designated Market Area) code
-  const dmaId = '324'
+  // Culver City coordinates and 3 mile radius
+  const lat = 34.0261
+  const lng = -118.3959
+  const radius = 3 // 3 miles
   const today = new Date().toISOString().split('T')[0]
   
-  const url = `https://app.ticketmaster.com/discovery/v2/events.json?dmaId=${dmaId}&startDateTime=${today}T00:00:00Z&apikey=${apiKey}&size=200`
+  const url = `https://app.ticketmaster.com/discovery/v2/events.json?geoPoint=${lat},${lng}&radius=${radius}&unit=miles&startDateTime=${today}T00:00:00Z&apikey=${apiKey}&size=200`
 
   const response = await fetch(url)
 
