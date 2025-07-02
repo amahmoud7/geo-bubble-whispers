@@ -6,6 +6,7 @@ interface CustomMarkerIconProps {
   mediaUrl?: string | null;
   isLivestream?: boolean;
   isLive?: boolean; // Only pulse when actually live
+  isEvent?: boolean; // Whether this is an event
   size?: number;
 }
 
@@ -15,6 +16,7 @@ export const createCustomMarkerIcon = ({
   mediaUrl,
   isLivestream = false,
   isLive = false,
+  isEvent = false,
   size = 36
 }: CustomMarkerIconProps): string => {
   const color = getMarkerColor(messageType);
@@ -58,7 +60,27 @@ export const createCustomMarkerIcon = ({
       }
     }
 
-    // For image/video posts, create a marker with preview area
+    if (messageType === 'event') {
+      // Special marker for events with calendar icon
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${size + 8}" height="${size + 8}" viewBox="0 0 ${size + 8} ${size + 8}">
+        <!-- Outer border with slight glow effect -->
+        <circle cx="${(size + 8)/2}" cy="${(size + 8)/2}" r="${(size + 8)/2 - 1}" fill="white" stroke="${color}" stroke-width="3" opacity="0.9"/>
+        <!-- Main marker background -->
+        <circle cx="${(size + 8)/2}" cy="${(size + 8)/2}" r="${size/2 - 1}" fill="${color}" opacity="0.95"/>
+        <!-- Calendar icon background -->
+        <rect x="${(size + 8)/2 - 8}" y="${(size + 8)/2 - 8}" width="16" height="16" rx="2" fill="white" opacity="0.9"/>
+        <!-- Calendar top -->
+        <rect x="${(size + 8)/2 - 6}" y="${(size + 8)/2 - 7}" width="12" height="2" fill="${color}"/>
+        <!-- Calendar body -->
+        <rect x="${(size + 8)/2 - 6}" y="${(size + 8)/2 - 4}" width="12" height="10" fill="white" stroke="${color}" stroke-width="0.5"/>
+        <!-- Calendar dots -->
+        <circle cx="${(size + 8)/2 - 3}" cy="${(size + 8)/2 - 1}" r="1" fill="${color}"/>
+        <circle cx="${(size + 8)/2}" cy="${(size + 8)/2 - 1}" r="1" fill="${color}"/>
+        <circle cx="${(size + 8)/2 + 3}" cy="${(size + 8)/2 - 1}" r="1" fill="${color}"/>
+        <circle cx="${(size + 8)/2 - 3}" cy="${(size + 8)/2 + 2}" r="1" fill="${color}"/>
+        <circle cx="${(size + 8)/2}" cy="${(size + 8)/2 + 2}" r="1" fill="${color}"/>
+      </svg>`;
+    }
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${size + 8}" height="${size + 8}" viewBox="0 0 ${size + 8} ${size + 8}">
       <!-- Outer border -->
       <circle cx="${(size + 8)/2}" cy="${(size + 8)/2}" r="${(size + 8)/2 - 1}" fill="white" stroke="${color}" stroke-width="2"/>

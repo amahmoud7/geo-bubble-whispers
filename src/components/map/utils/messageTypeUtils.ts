@@ -1,7 +1,10 @@
-export type MessageType = 'text' | 'image' | 'video' | 'livestream';
+export type MessageType = 'text' | 'image' | 'video' | 'livestream' | 'event';
 
-export const getMessageType = (mediaUrl: string | null | undefined, isLivestream?: boolean): MessageType => {
-  // Check if this is a livestream first
+export const getMessageType = (mediaUrl: string | null | undefined, isLivestream?: boolean, isEvent?: boolean): MessageType => {
+  // Check if this is an event first
+  if (isEvent) return 'event';
+  
+  // Check if this is a livestream
   if (isLivestream) return 'livestream';
   
   if (!mediaUrl) return 'text';
@@ -42,6 +45,8 @@ export const getMarkerColor = (messageType: MessageType): string => {
       return '#9333EA'; // Purple
     case 'livestream':
       return '#0EA5E9'; // Blue
+    case 'event':
+      return '#F59E0B'; // Amber/Gold for events
     default:
       return '#0EA5E9'; // Default blue
   }

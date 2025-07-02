@@ -11,6 +11,7 @@ interface Message {
   mediaUrl?: string | null;
   isLivestream?: boolean;
   isLive?: boolean; // Track if livestream is currently live
+  isEvent?: boolean; // Track if this is an event
   user: {
     avatar: string;
     name?: string;
@@ -26,7 +27,8 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
   return (
     <>
       {messages.map((message) => {
-        const messageType = getMessageType(message.mediaUrl, message.isLivestream);
+        const isEvent = message.isEvent || false;
+        const messageType = getMessageType(message.mediaUrl, message.isLivestream, isEvent);
         const userName = message.user?.name || 'Unknown';
         const isLivestream = message.isLivestream || false;
         const isLive = message.isLive || false;
@@ -37,10 +39,13 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
           mediaUrl: message.mediaUrl,
           isLivestream,
           isLive,
+          isEvent,
           size: 36
         });
 
-        const markerSize = messageType === 'text' ? 36 : (messageType === 'livestream' && isLive) ? 48 : 44;
+        const markerSize = messageType === 'text' ? 36 : 
+                          (messageType === 'livestream' && isLive) ? 48 : 
+                          messageType === 'event' ? 48 : 44;
         const anchorPoint = markerSize / 2;
 
         return (
