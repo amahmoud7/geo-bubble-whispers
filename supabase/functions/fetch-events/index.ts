@@ -66,16 +66,36 @@ Deno.serve(async (req) => {
 
     console.log(`Total events found: ${events.length}`)
 
-    // Process and store events
-    let createdCount = 0
+    // Group events by venue + title to consolidate time slots
+    const groupedEvents = new Map<string, EventData>()
+    
     for (const event of events) {
+      const key = `${event.venue_name}-${event.title}`.toLowerCase()
+      
+      if (!groupedEvents.has(key)) {
+        groupedEvents.set(key, event)
+      } else {
+        // Keep the earliest start time for the grouped event
+        const existing = groupedEvents.get(key)!
+        if (new Date(event.start_date) < new Date(existing.start_date)) {
+          groupedEvents.set(key, { ...existing, start_date: event.start_date })
+        }
+      }
+    }
+
+    const consolidatedEvents = Array.from(groupedEvents.values())
+    console.log(`Consolidated ${events.length} events into ${consolidatedEvents.length} unique events`)
+
+    // Process and store consolidated events
+    let createdCount = 0
+    for (const event of consolidatedEvents) {
       try {
-        // Check if event already exists
+        // Check if event already exists by venue + title combination
         const { data: existingEvent } = await supabase
           .from('events')
           .select('id')
-          .eq('external_id', event.external_id)
-          .eq('source', event.source)
+          .eq('venue_name', event.venue_name)
+          .eq('title', event.title)
           .single()
 
         if (!existingEvent) {
@@ -94,7 +114,7 @@ Deno.serve(async (req) => {
             console.error('Error storing event:', insertError)
           } else {
             createdCount++
-            console.log(`Created Lo message for event: ${event.title}`)
+            console.log(`Created Lo message for event: ${event.title} at ${event.venue_name}`)
           }
         }
       } catch (error) {
@@ -106,8 +126,9 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         totalEvents: events.length,
+        consolidatedEvents: consolidatedEvents.length,
         newEvents: createdCount,
-        message: `Processed ${events.length} events, created ${createdCount} new Lo messages`
+        message: `Processed ${events.length} events, consolidated to ${consolidatedEvents.length} unique events, created ${createdCount} new Lo messages`
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -216,14 +237,12 @@ async function createLoMessage(supabase: any, event: EventData): Promise<string>
   
 📍 ${event.venue_name}${event.venue_address ? `\n${event.venue_address}` : ''}
 
-📅 ${new Date(event.start_date).toLocaleDateString('en-US', {
+📅 Starting ${new Date(event.start_date).toLocaleDateString('en-US', {
   weekday: 'long',
   year: 'numeric',
   month: 'long',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit'
-})}
+  day: 'numeric'
+})} - Multiple time slots available
 
 ${event.description ? `\n${event.description.slice(0, 200)}${event.description.length > 200 ? '...' : ''}` : ''}
 
