@@ -2,6 +2,7 @@
 import React from 'react';
 import Globe from '../components/Globe';
 import AuthForm from '../components/AuthForm';
+import EventsFetcher from '../components/EventsFetcher';
 
 const Index = () => {
   return (
@@ -15,6 +16,7 @@ const Index = () => {
       </div>
       <Globe />
       <AuthForm />
+      <EventsFetcher />
     </div>
   );
 };
