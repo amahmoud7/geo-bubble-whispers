@@ -35,6 +35,10 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Get request body to check for testing mode
+    const body = await req.json().catch(() => ({}))
+    const isTestMode = body.testMode || body.limit === 1
+
     const eventbriteToken = Deno.env.get('EVENTBRITE_OAUTH_TOKEN')
     const ticketmasterKey = Deno.env.get('TICKETMASTER_API_KEY')
 
@@ -83,7 +87,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    const consolidatedEvents = Array.from(groupedEvents.values())
+    let consolidatedEvents = Array.from(groupedEvents.values())
+    
+    // Limit to 1 event for testing if requested
+    if (isTestMode) {
+      consolidatedEvents = consolidatedEvents.slice(0, 1)
+      console.log(`Test mode: Limited to 1 event for testing`)
+    }
+    
     console.log(`Consolidated ${events.length} events into ${consolidatedEvents.length} unique events`)
 
     // Process and store consolidated events
