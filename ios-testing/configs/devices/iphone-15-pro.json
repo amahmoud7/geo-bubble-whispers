@@ -1,0 +1,57 @@
+{
+  "name": "iPhone 15 Pro",
+  "identifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro",
+  "runtime": "iOS-17-2",
+  "display": {
+    "width": 393,
+    "height": 852,
+    "scale": 3,
+    "safeArea": {
+      "top": 59,
+      "bottom": 34,
+      "left": 0,
+      "right": 0
+    }
+  },
+  "characteristics": {
+    "screenSize": "standard",
+    "homeButton": false,
+    "faceId": true,
+    "touchId": false,
+    "notch": false,
+    "dynamicIsland": true
+  },
+  "testScenarios": [
+    {
+      "name": "dynamic_island_layout",
+      "description": "Test UI layout compatibility with Dynamic Island",
+      "priority": "high"
+    },
+    {
+      "name": "safe_area_handling",
+      "description": "Verify proper safe area insets for notched devices",
+      "priority": "critical"
+    },
+    {
+      "name": "face_id_integration",
+      "description": "Test Face ID authentication flows",
+      "priority": "high"
+    },
+    {
+      "name": "standard_interactions",
+      "description": "Test all app interactions on standard screen size",
+      "priority": "high"
+    },
+    {
+      "name": "gesture_navigation",
+      "description": "Test iOS gesture navigation (swipe up, edge swipes)",
+      "priority": "medium"
+    }
+  ],
+  "automationConfig": {
+    "bootTimeout": 120,
+    "shutdownTimeout": 30,
+    "screenshotPath": "./reports/screenshots/iphone-15-pro/",
+    "videoRecording": true
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "app_info": {
+    "app_name": "Geo Bubble Whispers",
+    "bundle_id": "com.geobubblewhispers.app",
+    "version": "1.0.0",
+    "build_number": "1",
+    "category": "Social Networking",
+    "content_rating": "12+",
+    "price": "Free",
+    "in_app_purchases": false
+  },
+  "app_description": {
+    "title": "Geo Bubble Whispers - Location-Based Social Messages",
+    "subtitle": "Share messages and stories with people around you",
+    "description": "Discover and share location-based messages in your neighborhood. Geo Bubble Whispers lets you:\n\n🗺️ Place messages on an interactive map\n📍 See what people are saying in your area\n📱 Share photos, videos, and live streams\n👥 Connect with your local community\n🔒 Control your privacy with public and private messages\n📖 Create and view stories from nearby locations\n\nWhether you're looking to meet new people, share local events, or just see what's happening around you, Geo Bubble Whispers brings your neighborhood to life through location-based social interaction.\n\nKey Features:\n• Interactive Google Maps integration\n• Real-time messaging and notifications\n• Photo and video sharing\n• Live streaming capabilities\n• Story creation and viewing\n• Privacy controls\n• User profiles and authentication\n• Street View integration\n• Filter messages by type and privacy\n\nJoin your local community today and start discovering the stories around you!",
+    "keywords": "social,location,map,messages,community,local,nearby,geo,stories,chat,neighborhood"
+  },
+  "app_store_info": {
+    "promotional_text": "Connect with your neighborhood through location-based messages and stories!",
+    "whats_new": "🎉 Initial release of Geo Bubble Whispers!\n\n• Share messages on an interactive map\n• Discover what's happening nearby\n• Create and view location-based stories\n• Connect with your local community\n• Privacy controls for all your content\n• Real-time notifications and updates",
+    "marketing_url": "",
+    "support_url": "https://geobubblewhispers.com/support",
+    "privacy_policy_url": "https://geobubblewhispers.com/privacy"
+  },
+  "technical_info": {
+    "minimum_os_version": "13.0",
+    "device_requirements": ["location_services", "camera", "microphone"],
+    "languages": ["English"],
+    "app_uses_idfa": false,
+    "app_uses_non_exempt_encryption": false
+  },
+  "review_info": {
+    "notes": "This app uses location services to provide location-based messaging functionality. Users can place messages on a map and see messages from other users in their vicinity. The app includes privacy controls allowing users to make messages public or private.",
+    "contact_email": "support@geobubblewhispers.com",
+    "contact_phone": "",
+    "demo_account": {
+      "username": "demo@geobubblewhispers.com",
+      "password": "DemoPassword123!"
+    }
+  },
+  "age_rating": {
+    "rating": "12+",
+    "reasons": [
+      "Infrequent/Mild Profanity or Crude Humor",
+      "Infrequent/Mild Mature/Suggestive Themes",
+      "Users Can Interact Online"
+    ]
+  }
+}

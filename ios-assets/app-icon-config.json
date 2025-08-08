@@ -1,0 +1,134 @@
+{
+  "app_icon_sets": [
+    {
+      "name": "AppIcon",
+      "platform": "ios",
+      "sizes": [
+        {
+          "size": "20x20",
+          "scale": "2x",
+          "filename": "icon-20@2x.png",
+          "expected_size": "40x40"
+        },
+        {
+          "size": "20x20",
+          "scale": "3x",
+          "filename": "icon-20@3x.png",
+          "expected_size": "60x60"
+        },
+        {
+          "size": "29x29",
+          "scale": "2x",
+          "filename": "icon-29@2x.png",
+          "expected_size": "58x58"
+        },
+        {
+          "size": "29x29",
+          "scale": "3x",
+          "filename": "icon-29@3x.png",
+          "expected_size": "87x87"
+        },
+        {
+          "size": "40x40",
+          "scale": "2x",
+          "filename": "icon-40@2x.png",
+          "expected_size": "80x80"
+        },
+        {
+          "size": "40x40",
+          "scale": "3x",
+          "filename": "icon-40@3x.png",
+          "expected_size": "120x120"
+        },
+        {
+          "size": "60x60",
+          "scale": "2x",
+          "filename": "icon-60@2x.png",
+          "expected_size": "120x120"
+        },
+        {
+          "size": "60x60",
+          "scale": "3x",
+          "filename": "icon-60@3x.png",
+          "expected_size": "180x180"
+        },
+        {
+          "size": "1024x1024",
+          "scale": "1x",
+          "filename": "icon-1024.png",
+          "expected_size": "1024x1024"
+        }
+      ]
+    },
+    {
+      "name": "AppIcon-iPad",
+      "platform": "ios",
+      "sizes": [
+        {
+          "size": "20x20",
+          "scale": "1x",
+          "filename": "icon-20.png",
+          "expected_size": "20x20"
+        },
+        {
+          "size": "20x20",
+          "scale": "2x",
+          "filename": "icon-20@2x.png",
+          "expected_size": "40x40"
+        },
+        {
+          "size": "29x29",
+          "scale": "1x",
+          "filename": "icon-29.png",
+          "expected_size": "29x29"
+        },
+        {
+          "size": "29x29",
+          "scale": "2x",
+          "filename": "icon-29@2x.png",
+          "expected_size": "58x58"
+        },
+        {
+          "size": "40x40",
+          "scale": "1x",
+          "filename": "icon-40.png",
+          "expected_size": "40x40"
+        },
+        {
+          "size": "40x40",
+          "scale": "2x",
+          "filename": "icon-40@2x.png",
+          "expected_size": "80x80"
+        },
+        {
+          "size": "76x76",
+          "scale": "1x",
+          "filename": "icon-76.png",
+          "expected_size": "76x76"
+        },
+        {
+          "size": "76x76",
+          "scale": "2x",
+          "filename": "icon-76@2x.png",
+          "expected_size": "152x152"
+        },
+        {
+          "size": "83.5x83.5",
+          "scale": "2x",
+          "filename": "icon-83.5@2x.png",
+          "expected_size": "167x167"
+        }
+      ]
+    }
+  ],
+  "design_guidelines": {
+    "background_color": "#6366f1",
+    "primary_color": "#ffffff",
+    "accent_color": "#8b5cf6",
+    "style": "modern_gradient",
+    "content": "location_pin_with_chat_bubble",
+    "corner_radius": "22%",
+    "shadow": true,
+    "gradient_direction": "diagonal"
+  }
+}

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, OverlayView } from '@react-google-maps/api';
 import MapControls from './map/MapControls';
 import StreetViewController from './map/StreetViewController';
 import MessageCreationController from './map/MessageCreationController';
@@ -17,6 +17,9 @@ import { useLiveStreams } from '@/hooks/useLiveStreams';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { mockMessages } from '@/mock/messages';
 import { useAuth } from '@/hooks/useAuth';
+import { useEventMessages } from '@/hooks/useEventMessages';
+import EventMarkerIcon from './map/EventMarkerIcon';
+import EventDetailModal from './message/EventDetailModal';
 import MapViewList from './map/MapViewList';
 import { Button } from './ui/button';
 import { Map, List } from 'lucide-react';
@@ -25,8 +28,11 @@ import { LiveStream } from '@/types/livestream';
 const MapView: React.FC = () => {
   const { userLocation } = useUserLocation();
   const { filters, filteredMessages, addMessage, updateMessage, handleFilterChange } = useMessages();
+  const { events, eventsStartingSoon } = useEventMessages();
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<'split' | 'map' | 'list'>('split');
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [showEventModal, setShowEventModal] = useState(false);
   
   // Live streaming state
   const { liveStreams } = useLiveStreams();
@@ -108,6 +114,16 @@ const MapView: React.FC = () => {
 
   const handleCloseLiveStreamController = () => {
     setShowLiveStreamController(false);
+  };
+
+  const handleEventClick = (event: any) => {
+    setSelectedEvent(event);
+    setShowEventModal(true);
+  };
+
+  const handleCloseEventModal = () => {
+    setShowEventModal(false);
+    setSelectedEvent(null);
   };
 
   if (!isLoaded) return <div>Loading...</div>;
@@ -198,6 +214,34 @@ const MapView: React.FC = () => {
               selectedStreamId={selectedStreamId}
               setSelectedStreamId={setSelectedStreamId}
             />
+
+            {/* Event Markers */}
+            {events.map((event) => {
+              if (!event.lat || !event.lng) return null;
+              
+              const isStartingSoon = eventsStartingSoon.some(e => e.id === event.id);
+              
+              return (
+                <OverlayView
+                  key={event.id}
+                  position={{ lat: event.lat, lng: event.lng }}
+                  mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      transform: 'translate(-50%, -100%)',
+                      zIndex: 40,
+                    }}
+                  >
+                    <EventMarkerIcon
+                      isStartingSoon={isStartingSoon}
+                      onClick={() => handleEventClick(event)}
+                    />
+                  </div>
+                </OverlayView>
+              );
+            })}
           </GoogleMap>
 
           {/* Message Creation Controller positioned within map section */}
@@ -244,6 +288,13 @@ const MapView: React.FC = () => {
       <LiveStreamController
         isOpen={showLiveStreamController}
         onClose={handleCloseLiveStreamController}
+      />
+
+      {/* Event Detail Modal */}
+      <EventDetailModal
+        event={selectedEvent}
+        isOpen={showEventModal}
+        onClose={handleCloseEventModal}
       />
     </div>
   );

@@ -5,8 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import LoadingSplash from "@/components/splash/LoadingSplash";
 import Index from "./pages/Index";
 import Home from "./pages/Home";
 import List from "./pages/List";
@@ -23,10 +24,12 @@ import SubscriptionConfirmed from "./pages/SubscriptionConfirmed";
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Log Supabase connection status on mount
+  const [showSplash, setShowSplash] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize app services and connections on mount
   useEffect(() => {
-    // Verify database connection
-    const checkConnection = async () => {
+    const initializeApp = async () => {
       try {
         // Just check if we can connect to Supabase
         const { error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
@@ -39,10 +42,22 @@ const App = () => {
       } catch (err) {
         console.error('Failed to check Supabase connection:', err);
       }
+
+      // Mark as initialized
+      setIsInitialized(true);
     };
     
-    checkConnection();
+    initializeApp();
   }, []);
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
+
+  // Show loading splash while initializing or when explicitly showing splash
+  if (!isInitialized || showSplash) {
+    return <LoadingSplash onComplete={handleSplashComplete} />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -50,12 +65,13 @@ const App = () => {
         <TooltipProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/app" element={<Index />} />
+              <Route path="/" element={<Home />} />
               <Route path="/home" element={<Home />} />
               <Route path="/list" element={<List />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/inbox" element={<Inbox />} />
+              <Route path="/landing" element={<Landing />} />
+              <Route path="/app" element={<Index />} />
               <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="/download" element={<DownloadApp />} />
               <Route path="/auth" element={<Auth />} />

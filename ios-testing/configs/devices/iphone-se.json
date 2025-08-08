@@ -1,0 +1,51 @@
+{
+  "name": "iPhone SE (3rd generation)",
+  "identifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation",
+  "runtime": "iOS-17-2",
+  "display": {
+    "width": 375,
+    "height": 667,
+    "scale": 2,
+    "safeArea": {
+      "top": 20,
+      "bottom": 0,
+      "left": 0,
+      "right": 0
+    }
+  },
+  "characteristics": {
+    "screenSize": "small",
+    "homeButton": true,
+    "faceId": false,
+    "touchId": true,
+    "notch": false
+  },
+  "testScenarios": [
+    {
+      "name": "small_screen_layout",
+      "description": "Test UI components on small screen layout",
+      "priority": "high"
+    },
+    {
+      "name": "touch_targets",
+      "description": "Verify touch targets meet iOS accessibility guidelines (44pt minimum)",
+      "priority": "critical"
+    },
+    {
+      "name": "map_interactions",
+      "description": "Test map gestures and interactions on small screen",
+      "priority": "high"
+    },
+    {
+      "name": "modal_presentations",
+      "description": "Test modal and sheet presentations on compact display",
+      "priority": "medium"
+    }
+  ],
+  "automationConfig": {
+    "bootTimeout": 120,
+    "shutdownTimeout": 30,
+    "screenshotPath": "./reports/screenshots/iphone-se/",
+    "videoRecording": true
+  }
+}

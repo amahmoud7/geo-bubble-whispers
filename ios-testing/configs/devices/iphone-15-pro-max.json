@@ -1,0 +1,57 @@
+{
+  "name": "iPhone 15 Pro Max",
+  "identifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro-Max",
+  "runtime": "iOS-17-2",
+  "display": {
+    "width": 430,
+    "height": 932,
+    "scale": 3,
+    "safeArea": {
+      "top": 59,
+      "bottom": 34,
+      "left": 0,
+      "right": 0
+    }
+  },
+  "characteristics": {
+    "screenSize": "large",
+    "homeButton": false,
+    "faceId": true,
+    "touchId": false,
+    "notch": false,
+    "dynamicIsland": true
+  },
+  "testScenarios": [
+    {
+      "name": "large_screen_layout",
+      "description": "Test UI components on large screen layout",
+      "priority": "high"
+    },
+    {
+      "name": "reachability",
+      "description": "Test one-handed operation and reachability features",
+      "priority": "medium"
+    },
+    {
+      "name": "map_zoom_levels",
+      "description": "Test map interactions on large screen with various zoom levels",
+      "priority": "high"
+    },
+    {
+      "name": "content_scaling",
+      "description": "Verify content scales appropriately for large displays",
+      "priority": "medium"
+    },
+    {
+      "name": "edge_gestures",
+      "description": "Test edge gesture recognition on large screen",
+      "priority": "medium"
+    }
+  ],
+  "automationConfig": {
+    "bootTimeout": 120,
+    "shutdownTimeout": 30,
+    "screenshotPath": "./reports/screenshots/iphone-15-pro-max/",
+    "videoRecording": true
+  }
+}

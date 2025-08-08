@@ -1,0 +1,113 @@
+{
+  "launch_screen_config": {
+    "type": "storyboard",
+    "background_color": "#6366f1",
+    "logo_config": {
+      "show_logo": true,
+      "logo_size": "medium",
+      "logo_position": "center",
+      "logo_color": "#ffffff"
+    },
+    "text_config": {
+      "show_app_name": true,
+      "app_name": "Geo Bubble Whispers",
+      "font_size": "large",
+      "font_weight": "bold",
+      "text_color": "#ffffff",
+      "text_position": "below_logo"
+    },
+    "animation": {
+      "type": "fade_in",
+      "duration": 1.5,
+      "delay": 0.5
+    }
+  },
+  "splash_images": [
+    {
+      "name": "Default",
+      "width": 320,
+      "height": 480,
+      "scale": "1x",
+      "filename": "Default.png"
+    },
+    {
+      "name": "Default@2x",
+      "width": 640,
+      "height": 960,
+      "scale": "2x",
+      "filename": "Default@2x.png"
+    },
+    {
+      "name": "Default-568h@2x",
+      "width": 640,
+      "height": 1136,
+      "scale": "2x",
+      "filename": "Default-568h@2x.png"
+    },
+    {
+      "name": "Default-667h@2x",
+      "width": 750,
+      "height": 1334,
+      "scale": "2x",
+      "filename": "Default-667h@2x.png"
+    },
+    {
+      "name": "Default-736h@3x",
+      "width": 1242,
+      "height": 2208,
+      "scale": "3x",
+      "filename": "Default-736h@3x.png"
+    },
+    {
+      "name": "Default-812h@3x",
+      "width": 1125,
+      "height": 2436,
+      "scale": "3x",
+      "filename": "Default-812h@3x.png"
+    },
+    {
+      "name": "Default-896h@2x",
+      "width": 828,
+      "height": 1792,
+      "scale": "2x",
+      "filename": "Default-896h@2x.png"
+    },
+    {
+      "name": "Default-896h@3x",
+      "width": 1242,
+      "height": 2688,
+      "scale": "3x",
+      "filename": "Default-896h@3x.png"
+    }
+  ],
+  "ipad_splash_images": [
+    {
+      "name": "Default-Portrait~ipad",
+      "width": 768,
+      "height": 1024,
+      "scale": "1x",
+      "filename": "Default-Portrait~ipad.png"
+    },
+    {
+      "name": "Default-Portrait@2x~ipad",
+      "width": 1536,
+      "height": 2048,
+      "scale": "2x",
+      "filename": "Default-Portrait@2x~ipad.png"
+    },
+    {
+      "name": "Default-Landscape~ipad",
+      "width": 1024,
+      "height": 768,
+      "scale": "1x",
+      "filename": "Default-Landscape~ipad.png"
+    },
+    {
+      "name": "Default-Landscape@2x~ipad",
+      "width": 2048,
+      "height": 1536,
+      "scale": "2x",
+      "filename": "Default-Landscape@2x~ipad.png"
+    }
+  ]
+}

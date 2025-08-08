@@ -1,0 +1,64 @@
+{
+  "name": "iPad Air (5th generation)",
+  "identifier": "com.apple.CoreSimulator.SimDeviceType.iPad-Air-5th-generation",
+  "runtime": "iOS-17-2",
+  "display": {
+    "width": 820,
+    "height": 1180,
+    "scale": 2,
+    "safeArea": {
+      "top": 24,
+      "bottom": 20,
+      "left": 0,
+      "right": 0
+    }
+  },
+  "characteristics": {
+    "screenSize": "tablet",
+    "homeButton": false,
+    "faceId": true,
+    "touchId": false,
+    "notch": false,
+    "multitasking": true,
+    "splitView": true
+  },
+  "testScenarios": [
+    {
+      "name": "tablet_layout",
+      "description": "Test tablet-optimized layouts and components",
+      "priority": "high"
+    },
+    {
+      "name": "landscape_portrait",
+      "description": "Test orientation handling in both landscape and portrait",
+      "priority": "critical"
+    },
+    {
+      "name": "multitasking_support",
+      "description": "Test app behavior in multitasking environments",
+      "priority": "medium"
+    },
+    {
+      "name": "split_view_compatibility",
+      "description": "Test app functionality in iPad Split View",
+      "priority": "medium"
+    },
+    {
+      "name": "map_tablet_interactions",
+      "description": "Test map gestures optimized for tablet use",
+      "priority": "high"
+    },
+    {
+      "name": "keyboard_shortcuts",
+      "description": "Test external keyboard shortcuts and navigation",
+      "priority": "low"
+    }
+  ],
+  "automationConfig": {
+    "bootTimeout": 180,
+    "shutdownTimeout": 45,
+    "screenshotPath": "./reports/screenshots/ipad-air/",
+    "videoRecording": true,
+    "orientationTesting": true
+  }
+}

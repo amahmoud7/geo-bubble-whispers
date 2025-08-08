@@ -20,8 +20,8 @@ const EventFetcher: React.FC = () => {
     try {
       console.log('Fetching current LA events and creating Lo posts...');
       
-      const { data, error } = await supabase.functions.invoke('fetch-events', {
-        body: { manual: true, immediate: true }
+      const { data, error } = await supabase.functions.invoke('fetch-events-24h', {
+        body: { source: 'ticketmaster' }
       });
 
       if (error) {
