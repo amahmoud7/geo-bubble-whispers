@@ -15,7 +15,14 @@
     "version:compare": "scripts/version-manager.sh compare",
     "version:build": "scripts/version-manager.sh build",
     "version:current": "scripts/version-manager.sh current",
-    "deploy:ios": "npm run build && npx cap sync ios && npx cap run ios"
+    "deploy:ios": "npm run build && npx cap sync ios && npx cap run ios",
+    "prompt:start": "scripts/prompt-manager.sh start",
+    "prompt:log": "scripts/prompt-manager.sh log",
+    "prompt:update": "scripts/prompt-manager.sh update",
+    "prompt:list": "scripts/prompt-manager.sh list",
+    "prompt:search": "scripts/prompt-manager.sh search",
+    "prompt:replay": "scripts/prompt-manager.sh replay",
+    "prompt:export": "scripts/prompt-manager.sh export"
   },
   "dependencies": {
     "@capacitor/cli": "^7.2.0",
