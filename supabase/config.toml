@@ -12,3 +12,9 @@ verify_jwt = false
 
 [functions.setup-cron]
 verify_jwt = false
+
+[functions.fetch-events-24h]
+verify_jwt = false
+
+[functions.fetch-events-realtime]
+verify_jwt = false

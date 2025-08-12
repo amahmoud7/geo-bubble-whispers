@@ -34,7 +34,7 @@ export const useMessages = () => {
     try {
       setLoading(true);
       
-      // Fetch regular messages
+      // Fetch regular messages including events
       let messageQuery = supabase
         .from('messages')
         .select(`
@@ -79,10 +79,44 @@ export const useMessages = () => {
       // Process regular messages
       if (messagesData) {
         const transformedMessages = messagesData.map((message: any) => {
-          // Check if this is an event post based on content patterns
-          const isEvent = message.content?.includes('🎫') || 
+          // Check if this is an event post - use message_type field or content patterns
+          const isEvent = message.message_type === 'event' || 
+                         message.content?.includes('🎫') || 
                          message.content?.includes('#Events') ||
                          (message.content?.includes('📅') && message.content?.includes('📍'));
+
+          // For Ticketmaster events, use special display properties
+          if (message.message_type === 'event' && message.event_source === 'ticketmaster') {
+            return {
+              id: message.id,
+              content: message.content,
+              mediaUrl: message.media_url,
+              isPublic: message.is_public,
+              location: message.location,
+              timestamp: message.created_at,
+              expiresAt: message.expires_at,
+              user: {
+                name: '🎫 Ticketmaster Events',
+                avatar: 'https://s1.ticketm.net/dam/a/66e/b68b8edc-ff0e-43a5-8cb8-a4ad0b56c66e_RETINA_PORTRAIT_3_2.jpg'
+              },
+              position: {
+                x: message.lat,
+                y: message.lng
+              },
+              liked: user ? message.likes?.some((like: any) => like.user_id === user.id) : false,
+              likes: message.likes?.length || 0,
+              isEvent: true,
+              eventData: {
+                title: message.event_title,
+                venue: message.event_venue,
+                url: message.event_url,
+                startDate: message.event_start_date,
+                priceMin: message.event_price_min,
+                priceMax: message.event_price_max,
+                source: message.event_source
+              }
+            };
+          }
 
           return {
             id: message.id,
