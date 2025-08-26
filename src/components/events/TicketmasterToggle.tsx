@@ -71,7 +71,7 @@ const TicketmasterToggle: React.FC<TicketmasterToggleProps> = ({ className = '' 
       console.log(`🎫 EVENTS DEBUG: Loading Ticketmaster events for ${currentCity.displayName} (${currentCity.id})`);
       console.log(`🎫 EVENTS DEBUG: Request parameters:`, {
         source: 'ticketmaster',
-        location: currentCity.id,
+        center: currentCity.coordinates,
         radius: currentCity.radius,
         timeframe: '24h'
       });
@@ -79,7 +79,7 @@ const TicketmasterToggle: React.FC<TicketmasterToggleProps> = ({ className = '' 
       const { data, error } = await supabase.functions.invoke('fetch-events-realtime', {
         body: { 
           source: 'ticketmaster',
-          location: currentCity.id,
+          center: currentCity.coordinates,
           radius: currentCity.radius,
           timeframe: '24h'
         }

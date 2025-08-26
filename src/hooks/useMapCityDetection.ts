@@ -2,12 +2,14 @@
 // This allows users to navigate the map and get events for different cities
 
 import { useState, useEffect, useCallback } from 'react';
-import { detectNearestCity, isWithinEventRadius, type City } from '@/utils/cityDetection';
+import { detectNearestCity, isWithinEventRadius, getOptimalSearchRadius, type City } from '@/utils/cityDetection';
 
 export const useMapCityDetection = (map: google.maps.Map | null) => {
   const [currentCity, setCurrentCity] = useState<City | null>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [isWithinRange, setIsWithinRange] = useState(true);
+  const [searchRadius, setSearchRadius] = useState<number>(50);
+  const [detectionOptions, setDetectionOptions] = useState({ preferLargeMetros: true });
 
   // Function to detect city from current map center
   const detectCityFromMapCenter = useCallback(() => {
@@ -22,21 +24,41 @@ export const useMapCityDetection = (map: google.maps.Map | null) => {
     console.log(`🗺️ MAP CENTER: Detecting city from map center: ${centerLat}, ${centerLng}`);
     setMapCenter({ lat: centerLat, lng: centerLng });
 
-    // Check if map center is within range of any major city
-    const withinRange = isWithinEventRadius(centerLat, centerLng, 100); // Larger radius for map-based detection
+    // Calculate optimal search radius based on location
+    const optimalRadius = getOptimalSearchRadius(centerLat, centerLng);
+    setSearchRadius(optimalRadius);
+    
+    // Check if map center is within range of any major city (expanded coverage)
+    const withinRange = isWithinEventRadius(centerLat, centerLng, 150); // Expanded radius for nationwide coverage
     setIsWithinRange(withinRange);
-    console.log(`🗺️ MAP CENTER: Within range of major cities: ${withinRange}`);
+    console.log(`🗺️ MAP CENTER: Within range of major cities: ${withinRange} (optimal radius: ${optimalRadius} miles)`);
 
     if (withinRange) {
-      // Detect nearest major city from map center
-      const nearestCity = detectNearestCity(centerLat, centerLng);
+      // Detect nearest major city from map center with intelligent fallback
+      const nearestCity = detectNearestCity(centerLat, centerLng, {
+        maxDistance: 200, // Expanded search distance
+        preferLargeMetros: detectionOptions.preferLargeMetros
+      });
       setCurrentCity(nearestCity);
+      const distance = Math.round(calculateDistance(centerLat, centerLng, nearestCity.coordinates.lat, nearestCity.coordinates.lng));
       console.log(`🎯 MAP CITY: Detected ${nearestCity.displayName} (${nearestCity.id}) from map position`);
-      console.log(`🎯 MAP CITY: Distance to ${nearestCity.displayName}: ${Math.round(calculateDistance(centerLat, centerLng, nearestCity.coordinates.lat, nearestCity.coordinates.lng))} miles`);
+      console.log(`🎯 MAP CITY: Distance to ${nearestCity.displayName}: ${distance} miles (metro: ${nearestCity.metroArea})`);
+      console.log(`🎯 MAP CITY: Using radius: ${nearestCity.radius} miles, TM Market: ${nearestCity.ticketmasterMarketId || 'N/A'}`);
     } else {
-      // No fallback - if user is outside major cities, don't show events
-      setCurrentCity(null);
-      console.log(`🗺️ MAP CENTER: Outside major cities - no events available`);
+      // Enhanced fallback - try to find the nearest city even if outside normal range
+      const nearestCity = detectNearestCity(centerLat, centerLng, {
+        maxDistance: 500, // Very large fallback radius
+        preferLargeMetros: true
+      });
+      const distance = calculateDistance(centerLat, centerLng, nearestCity.coordinates.lat, nearestCity.coordinates.lng);
+      
+      if (distance <= 300) { // Still provide limited service for remote areas
+        setCurrentCity(nearestCity);
+        console.log(`🗺️ FALLBACK CITY: Using ${nearestCity.displayName} (${Math.round(distance)} miles away) for remote location`);
+      } else {
+        setCurrentCity(null);
+        console.log(`🗺️ MAP CENTER: Location too remote - no events available (nearest: ${nearestCity.displayName} at ${Math.round(distance)} miles)`);
+      }
     }
   }, [map]);
 
@@ -100,10 +122,20 @@ export const useMapCityDetection = (map: google.maps.Map | null) => {
     detectCityFromMapCenter();
   }, [detectCityFromMapCenter]);
 
+  // Method to update detection preferences
+  const updateDetectionOptions = useCallback((options: { preferLargeMetros?: boolean }) => {
+    setDetectionOptions(prev => ({ ...prev, ...options }));
+    // Re-run detection with new options
+    setTimeout(() => detectCityFromMapCenter(), 100);
+  }, [detectCityFromMapCenter]);
+
   return {
     currentCity,
     mapCenter,
     isWithinRange,
-    updateCityDetection
+    searchRadius,
+    updateCityDetection,
+    updateDetectionOptions,
+    detectionOptions
   };
 };
