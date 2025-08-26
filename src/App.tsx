@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { MapProvider } from "@/contexts/MapContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSplash from "@/components/splash/LoadingSplash";
@@ -62,8 +63,9 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <BrowserRouter>
+        <MapProvider>
+          <TooltipProvider>
+            <BrowserRouter>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/home" element={<Home />} />
@@ -79,10 +81,11 @@ const App = () => {
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <Toaster />
-            <Sonner />
-          </BrowserRouter>
-        </TooltipProvider>
+              <Toaster />
+              <Sonner />
+            </BrowserRouter>
+          </TooltipProvider>
+        </MapProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

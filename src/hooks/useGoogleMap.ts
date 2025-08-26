@@ -130,18 +130,31 @@ export const useGoogleMap = () => {
   }, []);
 
   const onSearchBoxLoad = useCallback((ref: google.maps.places.SearchBox) => {
+    console.log('🔍 Search box loaded:', ref);
     setSearchBox(ref);
 
     // Add search box event listener
     ref.addListener('places_changed', () => {
+      console.log('🔍 Places changed event triggered');
       const places = ref.getPlaces();
+      console.log('🔍 Places found:', places?.length || 0);
+      
       if (!places || places.length === 0) {
+        console.log('🔍 No places returned from search');
+        toast({
+          title: "No results found",
+          description: "Please try a different search term",
+          variant: "destructive"
+        });
         return;
       }
 
       // Get the first place and update map
       const place = places[0];
+      console.log('🔍 Selected place:', place.name, place.geometry?.location?.toString());
+      
       if (!place.geometry || !place.geometry.location) {
+        console.log('🔍 Place has no geometry/location');
         toast({
           title: "No location found",
           description: "Please try a different search term",
@@ -152,6 +165,7 @@ export const useGoogleMap = () => {
 
       // Update map to show the selected location
       if (map) {
+        console.log('🔍 Updating map to show location');
         if (place.geometry.viewport) {
           map.fitBounds(place.geometry.viewport);
         } else {
@@ -164,6 +178,8 @@ export const useGoogleMap = () => {
           title: "Location found",
           description: `Showing results for ${place.name || 'selected location'}`
         });
+      } else {
+        console.log('🔍 Map not available for location update');
       }
     });
   }, [map]);

@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -20,237 +21,159 @@ interface EventData {
   end_date?: string
   price_min?: number
   price_max?: number
+  genre?: string
+  classification?: string
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
+  // CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    console.log('Starting event fetch process...')
+    const body = await req.json().catch(() => ({}))
+    console.log('🎯 Fetch events request:', body)
+
+    // Require map center or bounds (prevents silent LA fallback)
+    if (!hasCenter(body) && !hasBounds(body)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Missing center/bounds: send map center or bounds after pan/zoom.',
+          example: {
+            center: { lat: 40.7128, lng: -74.0060 },
+            bounds: { north: 40.92, south: 40.53, east: -73.68, west: -74.26 },
+            timeframe: '48h'
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const eventbriteToken = Deno.env.get('EVENTBRITE_OAUTH_TOKEN')
     const ticketmasterKey = Deno.env.get('TICKETMASTER_API_KEY')
+    const eventbriteToken = Deno.env.get('EVENTBRITE_OAUTH_TOKEN') // optional
 
-    if (!eventbriteToken || !ticketmasterKey) {
-      throw new Error('Missing required API credentials')
+    if (!ticketmasterKey) {
+      throw new Error('Missing TICKETMASTER_API_KEY')
     }
 
-    const events: EventData[] = []
+    const timeframe = body.timeframe || '48h' // wider default improves smaller markets
+    const { center, radius } = computeCenterAndRadius(body) // radius floor applied inside
+    console.log(`🗺️ Center ${center.lat},${center.lng} • radius ${radius}mi • timeframe ${timeframe}`)
 
-    // Fetch Eventbrite events
-    console.log('Fetching Eventbrite events...')
-    try {
-      const eventbriteEvents = await fetchEventbriteEvents(eventbriteToken)
-      events.push(...eventbriteEvents)
-      console.log(`Found ${eventbriteEvents.length} Eventbrite events`)
-    } catch (error) {
-      console.error('Error fetching Eventbrite events:', error)
+    // Optional: cleanup expired messages
+    await supabase
+      .from('messages')
+      .delete()
+      .lt('expires_at', new Date().toISOString())
+      .eq('message_type', 'event')
+
+    const all: EventData[] = []
+
+    // ---- Ticketmaster (primary) ----
+    console.log('📡 Ticketmaster fetch…')
+    let tmEvents = await fetchTicketmasterEvents(ticketmasterKey, { center, radius, timeframe })
+    // resilience: widen search if 24h window is too tight
+    if (tmEvents.length === 0 && timeframe === '24h') {
+      tmEvents = await fetchTicketmasterEvents(ticketmasterKey, {
+        center,
+        radius: Math.max(radius, 15),
+        timeframe: '48h'
+      })
     }
+    console.log(`✅ Ticketmaster events: ${tmEvents.length}`)
+    all.push(...tmEvents)
 
-    // Fetch Ticketmaster events
-    console.log('Fetching Ticketmaster events...')
-    try {
-      const ticketmasterEvents = await fetchTicketmasterEvents(ticketmasterKey)
-      events.push(...ticketmasterEvents)
-      console.log(`Found ${ticketmasterEvents.length} Ticketmaster events`)
-    } catch (error) {
-      console.error('Error fetching Ticketmaster events:', error)
-    }
-
-    console.log(`Total events found: ${events.length}`)
-
-    // Process and store events
-    let createdCount = 0
-    for (const event of events) {
+    // ---- Eventbrite (optional) ----
+    if (eventbriteToken) {
       try {
-        // Check if event already exists
-        const { data: existingEvent } = await supabase
+        console.log('📡 Eventbrite fetch…')
+        const ebEvents = await fetchEventbriteEvents(eventbriteToken, { center, radius, timeframe })
+        console.log(`✅ Eventbrite events: ${ebEvents.length}`)
+        all.push(...(ebEvents as EventData[]))
+      } catch (e) {
+        console.warn('⚠️ Eventbrite fetch warning:', e)
+      }
+    }
+
+    console.log(`📦 Total fetched: ${all.length}`)
+
+    // De-dup by (source, external_id)
+    const byId = new Map<string, EventData>()
+    for (const ev of all) {
+      const key = `${ev.source}:${ev.external_id}`
+      const existing = byId.get(key)
+      if (!existing) byId.set(key, ev)
+      else if (dateOrInfinity(ev.start_date) < dateOrInfinity(existing.start_date)) {
+        byId.set(key, { ...existing, start_date: ev.start_date })
+      }
+    }
+    const unique = Array.from(byId.values())
+    console.log(`🧮 Unique events: ${unique.length}`)
+
+    // Store messages and event rows
+    let created = 0
+    for (const ev of unique) {
+      try {
+        const { data: existing } = await supabase
           .from('events')
-          .select('id')
-          .eq('external_id', event.external_id)
-          .eq('source', event.source)
-          .single()
+          .select('id, message_id')
+          .eq('source', ev.source)
+          .eq('external_id', ev.external_id)
+          .maybeSingle()
 
-        if (!existingEvent) {
-          // Create Lo message for the event
-          const messageId = await createLoMessage(supabase, event)
-          
-          // Store event record
-          const { error: insertError } = await supabase
+        if (!existing) {
+          const messageId = await createLoMessage(supabase, ev)
+          const { error } = await supabase.from('events').insert({ ...ev, message_id: messageId })
+          if (error) console.error('❌ Error storing event:', error)
+          else created++
+        } else {
+          // Optional update for freshness
+          await supabase
             .from('events')
-            .insert({
-              ...event,
-              message_id: messageId
+            .update({
+              title: ev.title,
+              description: ev.description,
+              event_url: ev.event_url,
+              image_url: ev.image_url,
+              venue_name: ev.venue_name,
+              venue_address: ev.venue_address,
+              lat: ev.lat,
+              lng: ev.lng,
+              start_date: ev.start_date,
+              end_date: ev.end_date,
+              price_min: ev.price_min,
+              price_max: ev.price_max,
+              genre: ev.genre,
+              classification: ev.classification
             })
-
-          if (insertError) {
-            console.error('Error storing event:', insertError)
-          } else {
-            createdCount++
-            console.log(`Created Lo message for event: ${event.title}`)
-          }
+            .eq('id', existing.id)
+            .select('id')
         }
-      } catch (error) {
-        console.error(`Error processing event ${event.title}:`, error)
+      } catch (err) {
+        console.error(`❌ Persist error for ${ev.title}:`, err)
       }
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        totalEvents: events.length,
-        newEvents: createdCount,
-        message: `Processed ${events.length} events, created ${createdCount} new Lo messages`
+      JSON.stringify({
+        success: true,
+        timestamp: new Date().toISOString(),
+        center,
+        radius,
+        timeframe,
+        fetched: all.length,
+        unique: unique.length,
+        created
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
-
-  } catch (error) {
-    console.error('Error in fetch-events function:', error)
+  } catch (error: any) {
+    console.error('💥 Handler error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
-      }
-    )
-  }
-})
-
-async function fetchEventbriteEvents(token: string): Promise<EventData[]> {
-  // Culver City coordinates
-  const lat = 34.0261
-  const lng = -118.3959
-  const radius = '5mi' // 5 mile radius around Culver City
-
-  const url = `https://www.eventbriteapi.com/v3/events/search/?location.latitude=${lat}&location.longitude=${lng}&location.within=${radius}&start_date.range_start=${new Date().toISOString()}&expand=venue,category&sort_by=distance`
-
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  })
-
-  if (!response.ok) {
-    throw new Error(`Eventbrite API error: ${response.status} ${response.statusText}`)
-  }
-
-  const data = await response.json()
-  
-  return data.events?.map((event: any) => ({
-    external_id: event.id,
-    source: 'eventbrite' as const,
-    title: event.name?.text || 'Untitled Event',
-    description: event.description?.text,
-    event_url: event.url,
-    image_url: event.logo?.url,
-    venue_name: event.venue?.name,
-    venue_address: event.venue?.address ? 
-      `${event.venue.address.address_1}, ${event.venue.address.city}, ${event.venue.address.region} ${event.venue.address.postal_code}` : 
-      undefined,
-    lat: event.venue?.latitude ? parseFloat(event.venue.latitude) : undefined,
-    lng: event.venue?.longitude ? parseFloat(event.venue.longitude) : undefined,
-    start_date: event.start?.utc,
-    end_date: event.end?.utc,
-    price_min: event.ticket_availability?.minimum_ticket_price?.major_value,
-    price_max: event.ticket_availability?.maximum_ticket_price?.major_value
-  })) || []
-}
-
-async function fetchTicketmasterEvents(apiKey: string): Promise<EventData[]> {
-  // Culver City coordinates and 5 mile radius
-  const lat = 34.0261
-  const lng = -118.3959
-  const radius = 5 // 5 miles
-  const today = new Date().toISOString().split('T')[0]
-  
-  const url = `https://app.ticketmaster.com/discovery/v2/events.json?geoPoint=${lat},${lng}&radius=${radius}&unit=miles&startDateTime=${today}T00:00:00Z&apikey=${apiKey}&size=200`
-
-  const response = await fetch(url)
-
-  if (!response.ok) {
-    throw new Error(`Ticketmaster API error: ${response.status} ${response.statusText}`)
-  }
-
-  const data = await response.json()
-  
-  return data._embedded?.events?.map((event: any) => {
-    const venue = event._embedded?.venues?.[0]
-    const priceRanges = event.priceRanges?.[0]
-    
-    return {
-      external_id: event.id,
-      source: 'ticketmaster' as const,
-      title: event.name || 'Untitled Event',
-      description: event.info || event.pleaseNote,
-      event_url: event.url,
-      image_url: event.images?.[0]?.url,
-      venue_name: venue?.name,
-      venue_address: venue?.address ? 
-        `${venue.address.line1}, ${venue.city.name}, ${venue.state.stateCode} ${venue.postalCode}` : 
-        undefined,
-      lat: venue?.location?.latitude ? parseFloat(venue.location.latitude) : undefined,
-      lng: venue?.location?.longitude ? parseFloat(venue.location.longitude) : undefined,
-      start_date: event.dates?.start?.dateTime,
-      end_date: event.dates?.end?.dateTime,
-      price_min: priceRanges?.min,
-      price_max: priceRanges?.max
-    }
-  }) || []
-}
-
-async function createLoMessage(supabase: any, event: EventData): Promise<string> {
-  // Create a Lo message for the event
-  const messageContent = `🎫 ${event.title}
-  
-📍 ${event.venue_name}${event.venue_address ? `\n${event.venue_address}` : ''}
-
-📅 ${new Date(event.start_date).toLocaleDateString('en-US', {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit'
-})}
-
-${event.description ? `\n${event.description.slice(0, 200)}${event.description.length > 200 ? '...' : ''}` : ''}
-
-${event.price_min ? `💰 From $${event.price_min}` : ''}
-
-🔗 Get tickets: ${event.event_url}
-
-#Events #LA #${event.source === 'eventbrite' ? 'Eventbrite' : 'Ticketmaster'}`
-
-  const { data: message, error } = await supabase
-    .from('messages')
-    .insert({
-      content: messageContent,
-      media_url: event.image_url,
-      is_public: true,
-      location: event.venue_address || event.venue_name,
-      lat: event.lat,
-      lng: event.lng,
-      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-      user_id: null // System-generated message
-    })
-    .select('id')
-    .single()
-
-  if (error) {
-    throw new Error(`Failed to create message: ${error.message}`)
-  }
-
-  return message.id
-}
+      JSON.stringify({

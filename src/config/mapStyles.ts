@@ -69,4 +69,10 @@ export const defaultMapOptions = {
   streetViewControl: true,
   fullscreenControl: true,
   scaleControl: true,
+  // Ensure map interaction is fully enabled
+  draggable: true,
+  scrollwheel: true,
+  disableDoubleClickZoom: false,
+  keyboardShortcuts: true,
+  gestureHandling: 'greedy', // Allow single-finger/cursor dragging without restrictions
 };

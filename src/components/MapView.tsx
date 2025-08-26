@@ -13,6 +13,7 @@ import { useMessages } from '@/hooks/useMessages';
 import { useMessageState } from '@/hooks/useMessageState';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useLiveStreams } from '@/hooks/useLiveStreams';
+import { useMapContext } from '@/contexts/MapContext';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { mockMessages } from '@/mock/messages';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,7 +28,21 @@ const MapView: React.FC = () => {
   const { userLocation } = useUserLocation();
   const { filters, filteredMessages, addMessage, updateMessage, handleFilterChange } = useMessages();
   const { events, eventsStartingSoon } = useEventMessages();
+  
+  // Debug events in MapView
+  useEffect(() => {
+    console.log(`🗺️ MAP VIEW: Received ${events.length} events for map display`);
+    if (events.length > 0) {
+      console.log('🗺️ MAP VIEW: Events to render:', events.map(e => ({
+        title: e.event_title,
+        venue: e.event_venue,
+        coordinates: { lat: e.lat, lng: e.lng },
+        hasCoordinates: !!(e.lat && e.lng)
+      })));
+    }
+  }, [events]);
   const { user } = useAuth();
+  const { setMap: setMapInContext } = useMapContext();
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   
@@ -55,10 +70,45 @@ const MapView: React.FC = () => {
   const {
     map,
     isInStreetView,
-    onLoad,
+    onLoad: originalOnLoad,
     onUnmount,
     onSearchBoxLoad,
   } = useGoogleMap();
+
+  // Enhanced onLoad that also sets the map in context
+  const onLoad = useCallback((mapInstance: google.maps.Map) => {
+    console.log('🗺️ Map loaded with options:', defaultMapOptions);
+    console.log('🗺️ Map draggable:', mapInstance.get('draggable'));
+    console.log('🗺️ Map scrollwheel:', mapInstance.get('scrollwheel'));
+    console.log('🗺️ Map gesture handling:', mapInstance.get('gestureHandling'));
+    
+    // Force set gesture handling to greedy to avoid "two fingers" message
+    mapInstance.setOptions({
+      gestureHandling: 'greedy',
+      draggable: true,
+      scrollwheel: true
+    });
+    console.log('🗺️ FORCED gestureHandling to greedy');
+    
+    // Add event listeners to debug map interaction
+    mapInstance.addListener('dragstart', () => {
+      console.log('🗺️ Map drag started');
+    });
+    
+    mapInstance.addListener('drag', () => {
+      console.log('🗺️ Map is being dragged');
+    });
+    
+    mapInstance.addListener('dragend', () => {
+      console.log('🗺️ Map drag ended');
+    });
+
+    originalOnLoad(mapInstance);
+    setMapInContext(mapInstance);
+    // Also set globally for debugging
+    (window as any).currentGoogleMap = mapInstance;
+    console.log('🗺️ MAP CONTEXT: Map instance registered in context and globally');
+  }, [originalOnLoad, setMapInContext]);
 
   const {
     newPinPosition,
@@ -261,9 +311,16 @@ const MapView: React.FC = () => {
 
           {/* Event Markers */}
           {events.map((event) => {
-            if (!event.lat || !event.lng) return null;
+            console.log(`🎯 RENDERING EVENT: ${event.event_title} at ${event.lat}, ${event.lng}`);
+            
+            if (!event.lat || !event.lng) {
+              console.log(`❌ SKIPPING EVENT: ${event.event_title} - missing coordinates`);
+              return null;
+            }
             
             const isStartingSoon = eventsStartingSoon.some(e => e.id === event.id);
+            
+            console.log(`✅ CREATING OVERLAY: ${event.event_title} at ${event.lat}, ${event.lng}`);
             
             return (
               <OverlayView

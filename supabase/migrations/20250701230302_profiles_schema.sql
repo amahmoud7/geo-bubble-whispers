@@ -1,0 +1,2 @@
+-- This migration file is cleaned up to avoid duplicates
+-- Stories table creation moved to messages_schema.sql

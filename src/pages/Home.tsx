@@ -26,23 +26,7 @@ const Home = () => {
         <TicketmasterToggle className="animate-fade-in" />
       </div>
 
-      {/* Events Info Card */}
-      <div className="absolute top-20 left-4 z-40 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg max-w-xs">
-        <div className="flex items-center mb-2">
-          <Sparkles className="w-5 h-5 text-teal-600 mr-2" />
-          <h3 className="font-bold text-gray-800">LA Events</h3>
-        </div>
-        <p className="text-sm text-gray-600">
-          Toggle the button below to show all Ticketmaster events happening in Los Angeles in the next 24 hours. 
-          Events appear as Lo messages at venue locations!
-        </p>
-        <div className="mt-3 flex items-center text-xs text-gray-500">
-          <MapPin className="w-3 h-3 mr-1" />
-          <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-medium">
-            🎫 24-Hour Events
-          </span>
-        </div>
-      </div>
+
     </div>
   );
 };

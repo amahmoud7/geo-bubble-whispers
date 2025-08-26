@@ -52,7 +52,8 @@ export const useEventMessages = () => {
         `)
         .eq('message_type', 'event')
         .gt('expires_at', new Date().toISOString())
-        .gt('event_start_date', new Date().toISOString())
+        // Allow events that started up to 4 hours ago (for testing)
+        .gte('event_start_date', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
         .order('event_start_date', { ascending: true });
 
       if (error) {
@@ -74,7 +75,7 @@ export const useEventMessages = () => {
   const fetchTicketmasterEvents = async () => {
     try {
       console.log('🎫 Starting Ticketmaster event fetch (top 10 events)...');
-      const { data, error } = await supabase.functions.invoke('fetch-events-24h', {
+      const { data, error } = await supabase.functions.invoke('fetch-events-realtime', {
         body: { source: 'ticketmaster' }
       });
 

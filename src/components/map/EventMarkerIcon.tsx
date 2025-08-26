@@ -42,7 +42,7 @@ const EventMarkerIcon: React.FC<EventMarkerIconProps> = ({
       {/* Marker tail */}
       <div className={`
         absolute left-1/2 transform -translate-x-1/2 top-5
-        w-0 h-0 border-l-2 border-r-2 border-t-3 border-transparent
+        w-0 h-0 border-l-[4px] border-r-[4px] border-t-[6px] border-transparent
         ${isStartingSoon 
           ? 'border-t-red-600' 
           : 'border-t-yellow-600'

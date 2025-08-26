@@ -136,14 +136,9 @@ class TicketmasterEventsService {
     try {
       console.log('🎫 Fetching Ticketmaster events...');
       
-      const { data, error } = await supabase.functions.invoke('fetch-events-realtime', {
-        body: { 
-          source: 'ticketmaster',
-          location: 'los-angeles',
-          radius: 25,
-          timeframe: '24h'
-        }
-      });
+      // This service should not be used - it hardcodes location
+      // Use TicketmasterToggle component instead for location-aware events
+      throw new Error('This service uses hardcoded location. Use TicketmasterToggle component for dynamic city-based events.');
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -245,7 +240,7 @@ class TicketmasterEventsService {
     }
     
     content += `🎟️ Get tickets →\n\n`;
-    content += `#Events #LA #Ticketmaster #Live`;
+    content += `#Events #Ticketmaster #Live`;
     
     return content;
   }

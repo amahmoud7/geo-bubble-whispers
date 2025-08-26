@@ -155,7 +155,7 @@ export const useMessages = () => {
             day: 'numeric',
             hour: 'numeric',
             minute: '2-digit'
-          })}\n\n${event.description ? `${event.description.slice(0, 200)}${event.description.length > 200 ? '...' : ''}\n\n` : ''}${event.price_min ? `💰 From $${event.price_min}\n\n` : ''}🔗 ${event.event_url}\n\n#Events #LA #${event.source === 'eventbrite' ? 'Eventbrite' : 'Ticketmaster'}`,
+          })}\n\n${event.description ? `${event.description.slice(0, 200)}${event.description.length > 200 ? '...' : ''}\n\n` : ''}${event.price_min ? `💰 From $${event.price_min}\n\n` : ''}🔗 ${event.event_url}\n\n#Events #${event.source === 'eventbrite' ? 'Eventbrite' : 'Ticketmaster'}`,
           mediaUrl: event.image_url,
           isPublic: true,
           location: event.venue_address || event.venue_name,

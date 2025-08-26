@@ -4,6 +4,9 @@ import { Calendar, Loader2, MapPin, ExternalLink, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useEventMessages } from '@/hooks/useEventMessages';
+import { useMapContext } from '@/contexts/MapContext';
+import { useMapCityDetection } from '@/hooks/useMapCityDetection';
+import { formatCityDisplay, type City } from '@/utils/cityDetection';
 
 interface TicketmasterToggleProps {
   className?: string;
@@ -14,6 +17,11 @@ const TicketmasterToggle: React.FC<TicketmasterToggleProps> = ({ className = '' 
   const [eventsVisible, setEventsVisible] = useState(false);
   const [eventCount, setEventCount] = useState(0);
   const { events, refetch } = useEventMessages();
+  const { map } = useMapContext();
+  const { currentCity, isWithinRange, mapCenter } = useMapCityDetection(map);
+
+  // City detection now handled by useMapCityDetection hook
+  // This automatically detects the city based on map center position
 
   // Check if events are currently displayed on map
   useEffect(() => {
@@ -29,26 +37,50 @@ const TicketmasterToggle: React.FC<TicketmasterToggleProps> = ({ className = '' 
   }, [events]);
 
   const handleToggleEvents = async () => {
+    console.log('🎫 BUTTON CLICKED: Toggle events button pressed');
+    console.log('🎫 BUTTON STATE: eventsVisible =', eventsVisible);
+    console.log('🎫 BUTTON STATE: currentCity =', currentCity);
+    console.log('🎫 BUTTON STATE: mapCenter =', mapCenter);
+    
     if (eventsVisible) {
-      // Hide events by clearing them
+      // Always clear existing events first, then load new ones for current city
+      console.log('🎫 BUTTON ACTION: Clearing existing events and loading for current city');
       await clearEvents();
+      // After clearing, always load events for the current city location
+      setTimeout(() => loadEvents(), 500); // Small delay to ensure clearing completes
     } else {
       // Show events by fetching from Ticketmaster
+      console.log('🎫 BUTTON ACTION: Loading new events');
       await loadEvents();
     }
   };
 
   const loadEvents = async () => {
+    if (!currentCity) {
+      toast({
+        title: "📍 Location Required",
+        description: "Detecting your location to find nearby events...",
+        duration: 3000,
+      });
+      return;
+    }
+
     setIsLoading(true);
     
     try {
-      console.log('🎫 Loading Ticketmaster events for next 24 hours...');
+      console.log(`🎫 EVENTS DEBUG: Loading Ticketmaster events for ${currentCity.displayName} (${currentCity.id})`);
+      console.log(`🎫 EVENTS DEBUG: Request parameters:`, {
+        source: 'ticketmaster',
+        location: currentCity.id,
+        radius: currentCity.radius,
+        timeframe: '24h'
+      });
       
       const { data, error } = await supabase.functions.invoke('fetch-events-realtime', {
         body: { 
           source: 'ticketmaster',
-          location: 'los-angeles',
-          radius: 25,
+          location: currentCity.id,
+          radius: currentCity.radius,
           timeframe: '24h'
         }
       });
@@ -63,8 +95,8 @@ const TicketmasterToggle: React.FC<TicketmasterToggleProps> = ({ className = '' 
       await refetch();
       
       toast({
-        title: "🎫 Events Loaded!",
-        description: `Found ${data?.totalEvents || 0} Ticketmaster events in LA for the next 24 hours`,
+        title: `🎫 ${formatCityDisplay(currentCity)} Events Loaded!`,
+        description: `Found ${data?.totalEvents || 0} Ticketmaster events in ${currentCity.displayName} for the next 24 hours`,
         duration: 3000,
       });
 
@@ -177,10 +209,15 @@ See REALTIME_EVENTS_SETUP.md for detailed instructions.
           
           <div className="flex flex-col items-start">
             <span className="text-base leading-tight">
-              {isLoading ? 'Loading...' : eventsVisible ? 'Hide Events' : 'Show Events'}
+              {isLoading ? 'Loading...' : eventsVisible ? 'Refresh Events' : 'Show Events'}
             </span>
             <span className="text-sm opacity-90 leading-tight">
-              {eventsVisible ? `${eventCount} Live Events` : 'Next 24 Hours'}
+              {eventsVisible 
+                ? `${eventCount} Live Events` 
+                : currentCity 
+                  ? `${currentCity.displayName} • 24h`
+                  : 'Next 24 Hours'
+              }
             </span>
           </div>
           
@@ -203,15 +240,29 @@ See REALTIME_EVENTS_SETUP.md for detailed instructions.
           
           <div className="flex items-center space-x-1 text-gray-600">
             <MapPin className="w-4 h-4" />
-            <span>LA Area</span>
+            <span>{currentCity?.displayName || 'No City'}</span>
           </div>
         </div>
       )}
 
+      {/* Location Detection Status */}
+      {!isWithinRange && currentCity && (
+        <div className="text-xs text-amber-600 text-center max-w-xs">
+          📍 You're outside major cities - showing {currentCity.displayName} events</div>
+      )}
+
+      {/* City Detection Loading */}
+      {!currentCity && map && (
+        <div className="flex items-center space-x-1 text-xs text-gray-500">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          <span>Detecting city from map...</span>
+        </div>
+      )}
+
       {/* Instructions */}
-      {!eventsVisible && !isLoading && (
+      {!eventsVisible && !isLoading && currentCity && (
         <p className="text-xs text-gray-500 text-center max-w-xs">
-          Click to load all Ticketmaster events happening in Los Angeles in the next 24 hours
+          Move map to any major city • Tap to show live events for {formatCityDisplay(currentCity)}
         </p>
       )}
     </div>
