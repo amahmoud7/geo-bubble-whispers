@@ -24,7 +24,11 @@ import MapViewList from './map/MapViewList';
 import { GripHorizontal } from 'lucide-react';
 import { LiveStream } from '@/types/livestream';
 
-const MapView: React.FC = () => {
+interface MapViewProps {
+  isEventsOnlyMode?: boolean;
+}
+
+const MapView: React.FC<MapViewProps> = ({ isEventsOnlyMode = false }) => {
   const { userLocation } = useUserLocation();
   const { filters, filteredMessages, addMessage, updateMessage, handleFilterChange } = useMessages();
   const { events, eventsStartingSoon } = useEventMessages();
@@ -32,6 +36,7 @@ const MapView: React.FC = () => {
   // Debug events in MapView
   useEffect(() => {
     console.log(`🗺️ MAP VIEW: Received ${events.length} events for map display`);
+    console.log(`🗺️ MAP VIEW: Events-only mode: ${isEventsOnlyMode}`);
     if (events.length > 0) {
       console.log('🗺️ MAP VIEW: Events to render:', events.map(e => ({
         title: e.event_title,
@@ -40,7 +45,8 @@ const MapView: React.FC = () => {
         hasCoordinates: !!(e.lat && e.lng)
       })));
     }
-  }, [events]);
+  }, [events, isEventsOnlyMode]);
+  
   const { user } = useAuth();
   const { setMap: setMapInContext } = useMapContext();
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
@@ -125,7 +131,7 @@ const MapView: React.FC = () => {
     libraries: ['places']
   });
 
-  const handleCreateMessage = () => {
+  const handleCreateMessage = useCallback(() => {
     setIsCreating(true);
     startPinPlacement();
     setSelectedMessage(null);
@@ -141,7 +147,20 @@ const MapView: React.FC = () => {
         setNewPinPosition(newPos);
       }
     }
-  };
+  }, [isInStreetView, map, startPinPlacement]);
+
+  // Listen for external create message events (e.g., from bottom navigation)
+  useEffect(() => {
+    const handleExternalCreateMessage = () => {
+      handleCreateMessage();
+    };
+
+    window.addEventListener('createMessage', handleExternalCreateMessage);
+
+    return () => {
+      window.removeEventListener('createMessage', handleExternalCreateMessage);
+    };
+  }, [handleCreateMessage]);
 
   const handleMessageClick = (id: string) => {
     setSelectedMessage(id);
@@ -295,19 +314,24 @@ const MapView: React.FC = () => {
           onClick={handleMapClick}
           options={defaultMapOptions}
         >
-          <MessageDisplayController
-            selectedMessage={selectedMessage}
-            filteredMessages={filteredMessages}
-            onMessageClick={handleMessageClick}
-            onClose={handleClose}
-          />
-          
-          <LiveStreamMarkers
-            liveStreams={liveStreams}
-            onStreamSelect={handleStreamSelect}
-            selectedStreamId={selectedStreamId}
-            setSelectedStreamId={setSelectedStreamId}
-          />
+          {/* Hide user messages and live streams when in events-only mode */}
+          {!isEventsOnlyMode && (
+            <>
+              <MessageDisplayController
+                selectedMessage={selectedMessage}
+                filteredMessages={filteredMessages}
+                onMessageClick={handleMessageClick}
+                onClose={handleClose}
+              />
+              
+              <LiveStreamMarkers
+                liveStreams={liveStreams}
+                onStreamSelect={handleStreamSelect}
+                selectedStreamId={selectedStreamId}
+                setSelectedStreamId={setSelectedStreamId}
+              />
+            </>
+          )}
 
           {/* Event Markers */}
           {events.map((event) => {
@@ -345,26 +369,29 @@ const MapView: React.FC = () => {
           })}
         </GoogleMap>
 
-        {/* Message Creation Controller positioned within map section */}
-        <MessageCreationController
-          isCreating={isCreating}
-          isInStreetView={isInStreetView}
-          isPlacingPin={isPlacingPin}
-          newPinPosition={newPinPosition}
-          userAvatar={userAvatar}
-          userName={userName}
-          handleClose={handleClose}
-          handleCreateMessage={handleCreateMessage}
-          addMessage={addMessage}
-          updateMessage={updateMessage}
-        />
+        {/* Hide message creation when in events-only mode */}
+        {!isEventsOnlyMode && (
+          <MessageCreationController
+            isCreating={isCreating}
+            isInStreetView={isInStreetView}
+            isPlacingPin={isPlacingPin}
+            newPinPosition={newPinPosition}
+            userAvatar={userAvatar}
+            userName={userName}
+            handleClose={handleClose}
+            handleCreateMessage={handleCreateMessage}
+            addMessage={addMessage}
+            updateMessage={updateMessage}
+          />
+        )}
       </div>
 
-      {/* Draggable List Overlay */}
-      <div 
-        className={`absolute left-0 right-0 list-overlay-blur border-t border-gray-200/50 shadow-2xl list-panel ${
-          isDragging ? 'dragging' : ''
-        }`}
+      {/* Hide draggable list when in events-only mode */}
+      {!isEventsOnlyMode && (
+        <div 
+          className={`absolute left-0 right-0 list-overlay-blur border-t border-gray-200/50 shadow-2xl list-panel ${
+            isDragging ? 'dragging' : ''
+          }`}
         style={{
           bottom: 0,
           height: `${listPosition}%`,
@@ -399,7 +426,11 @@ const MapView: React.FC = () => {
           </div>
         )}
       </div>
+      )}
 
+      {/* Hide live stream components when in events-only mode */}
+      {!isEventsOnlyMode && (
+        <>
       {/* Live Stream Viewer */}
       <LiveStreamViewer
         stream={selectedStream}
@@ -412,8 +443,10 @@ const MapView: React.FC = () => {
         isOpen={showLiveStreamController}
         onClose={handleCloseLiveStreamController}
       />
+        </>
+      )}
 
-      {/* Event Detail Modal */}
+      {/* Event Detail Modal - always visible */}
       <EventDetailModal
         event={selectedEvent}
         isOpen={showEventModal}

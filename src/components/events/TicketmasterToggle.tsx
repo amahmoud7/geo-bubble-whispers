@@ -10,12 +10,14 @@ import { formatCityDisplay, type City } from '@/utils/cityDetection';
 
 interface TicketmasterToggleProps {
   className?: string;
+  onEventsOnlyModeChange?: (enabled: boolean) => void;
 }
 
-const TicketmasterToggle: React.FC<TicketmasterToggleProps> = ({ className = '' }) => {
+const TicketmasterToggle: React.FC<TicketmasterToggleProps> = ({ className = '', onEventsOnlyModeChange }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [eventsVisible, setEventsVisible] = useState(false);
   const [eventCount, setEventCount] = useState(0);
+  const [isEventsOnlyMode, setIsEventsOnlyMode] = useState(false);
   const { events, refetch } = useEventMessages();
   const { map } = useMapContext();
   const { currentCity, isWithinRange, mapCenter } = useMapCityDetection(map);
@@ -39,19 +41,35 @@ const TicketmasterToggle: React.FC<TicketmasterToggleProps> = ({ className = '' 
   const handleToggleEvents = async () => {
     console.log('🎫 BUTTON CLICKED: Toggle events button pressed');
     console.log('🎫 BUTTON STATE: eventsVisible =', eventsVisible);
+    console.log('🎫 BUTTON STATE: isEventsOnlyMode =', isEventsOnlyMode);
     console.log('🎫 BUTTON STATE: currentCity =', currentCity);
     console.log('🎫 BUTTON STATE: mapCenter =', mapCenter);
     
-    if (eventsVisible) {
-      // Always clear existing events first, then load new ones for current city
-      console.log('🎫 BUTTON ACTION: Clearing existing events and loading for current city');
+    if (eventsVisible && isEventsOnlyMode) {
+      // Exit events-only mode - clear events and re-enable other content
+      console.log('🎫 BUTTON ACTION: Exiting events-only mode');
       await clearEvents();
-      // After clearing, always load events for the current city location
-      setTimeout(() => loadEvents(), 500); // Small delay to ensure clearing completes
+      setIsEventsOnlyMode(false);
+      onEventsOnlyModeChange?.(false);
+      
+      toast({
+        title: "🗺️ Map Restored",
+        description: "All content is now visible on the map",
+        duration: 2000,
+      });
     } else {
-      // Show events by fetching from Ticketmaster
-      console.log('🎫 BUTTON ACTION: Loading new events');
-      await loadEvents();
+      // Enter events-only mode - clear other content and load events
+      console.log('🎫 BUTTON ACTION: Entering events-only mode - clearing other content');
+      setIsEventsOnlyMode(true);
+      onEventsOnlyModeChange?.(true);
+      
+      // Clear existing events first, then load new ones for current city
+      if (eventsVisible) {
+        await clearEvents();
+        setTimeout(() => loadEvents(), 500); // Small delay to ensure clearing completes
+      } else {
+        await loadEvents();
+      }
     }
   };
 
@@ -95,8 +113,8 @@ const TicketmasterToggle: React.FC<TicketmasterToggleProps> = ({ className = '' 
       await refetch();
       
       toast({
-        title: `🎫 ${formatCityDisplay(currentCity)} Events Loaded!`,
-        description: `Found ${data?.totalEvents || 0} Ticketmaster events in ${currentCity.displayName} for the next 24 hours`,
+        title: `🎫 ${formatCityDisplay(currentCity)} Events Only!`,
+        description: `Showing ${data?.totalEvents || 0} events in ${currentCity.displayName} • Other content hidden for better performance`,
         duration: 3000,
       });
 
@@ -182,12 +200,14 @@ See REALTIME_EVENTS_SETUP.md for detailed instructions.
         disabled={isLoading}
         className={`
           relative min-w-[220px] h-16 text-lg font-bold rounded-2xl transition-all duration-300 shadow-2xl
-          ${eventsVisible 
+          ${eventsVisible && isEventsOnlyMode
+            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white' 
+            : eventsVisible 
             ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white' 
             : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black'
           }
           ${isLoading ? 'scale-95 opacity-90' : 'hover:scale-105 active:scale-95'}
-          border-2 ${eventsVisible ? 'border-green-300' : 'border-yellow-300'}
+          border-2 ${eventsVisible && isEventsOnlyMode ? 'border-purple-300' : eventsVisible ? 'border-green-300' : 'border-yellow-300'}
         `}
       >
         {/* Animated Background */}
@@ -209,10 +229,19 @@ See REALTIME_EVENTS_SETUP.md for detailed instructions.
           
           <div className="flex flex-col items-start">
             <span className="text-base leading-tight">
-              {isLoading ? 'Loading...' : eventsVisible ? 'Refresh Events' : 'Show Events'}
+              {isLoading 
+                ? 'Loading...' 
+                : eventsVisible && isEventsOnlyMode
+                ? 'Exit Events Mode'
+                : eventsVisible 
+                ? 'Events Only Mode' 
+                : 'Show Events'
+              }
             </span>
             <span className="text-sm opacity-90 leading-tight">
-              {eventsVisible 
+              {eventsVisible && isEventsOnlyMode
+                ? `Events Only • ${eventCount} Found`
+                : eventsVisible 
                 ? `${eventCount} Live Events` 
                 : currentCity 
                   ? `${currentCity.displayName} • 24h`

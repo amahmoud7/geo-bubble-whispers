@@ -318,3 +318,20 @@
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
 }
+
+/* iOS safe area support */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.h-safe-area-inset-bottom {
+  height: env(safe-area-inset-bottom);
+}
+
+/* Bottom navigation glassmorphism */
+.bottom-nav-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}

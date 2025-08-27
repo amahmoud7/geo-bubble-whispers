@@ -1,10 +1,24 @@
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import MapView from '../components/MapView';
 import TicketmasterToggle from '@/components/events/TicketmasterToggle';
+import BottomNavigation from '@/components/navigation/BottomNavigation';
 import { Sparkles, MapPin } from 'lucide-react';
 
 const Home = () => {
+  const [isEventsOnlyMode, setIsEventsOnlyMode] = useState(false);
+  const mapViewRef = useRef<any>(null);
+
+  const handleEventsOnlyModeChange = (enabled: boolean) => {
+    setIsEventsOnlyMode(enabled);
+    console.log('🏠 HOME: Events-only mode changed to:', enabled);
+  };
+
+  const handleCreateMessage = () => {
+    // This will trigger the internal message creation flow in MapView
+    console.log('📍 Triggering message creation from bottom nav');
+    window.dispatchEvent(new CustomEvent('createMessage'));
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -19,14 +33,17 @@ const Home = () => {
       </div>
       
       {/* Main Map View */}
-      <MapView />
+      <MapView isEventsOnlyMode={isEventsOnlyMode} />
 
       {/* Ticketmaster Events Toggle */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-        <TicketmasterToggle className="animate-fade-in" />
+      <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-50">
+        <TicketmasterToggle 
+          className="animate-fade-in" 
+          onEventsOnlyModeChange={handleEventsOnlyModeChange}
+        />
       </div>
 
-
+      <BottomNavigation onPostClick={handleCreateMessage} />
     </div>
   );
 };

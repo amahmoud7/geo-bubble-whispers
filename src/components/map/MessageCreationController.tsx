@@ -1,6 +1,5 @@
 
 import React from 'react';
-import CreateMessageButton from './CreateMessageButton';
 import PlacementIndicator from './PlacementIndicator';
 import MessageMarkers from './MessageMarkers';
 import CreateMessageModal from '../message/CreateMessageModal';
@@ -33,10 +32,6 @@ const MessageCreationController: React.FC<MessageCreationControllerProps> = ({
 }) => {
   return (
     <>
-      {!isInStreetView && (
-        <CreateMessageButton onClick={handleCreateMessage} />
-      )}
-
       {isPlacingPin && !isInStreetView && (
         <PlacementIndicator isPlacingPin={isPlacingPin} />
       )}

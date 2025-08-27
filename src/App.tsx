@@ -14,6 +14,8 @@ import Home from "./pages/Home";
 import List from "./pages/List";
 import Profile from "./pages/Profile";
 import Inbox from "./pages/Inbox";
+import Chat from "./pages/Chat";
+import Explore from "./pages/Explore";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import DownloadApp from "./pages/DownloadApp";
@@ -72,6 +74,8 @@ const App = () => {
               <Route path="/list" element={<List />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/inbox" element={<Inbox />} />
+              <Route path="/chat/:conversationId" element={<Chat />} />
+              <Route path="/explore" element={<Explore />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/app" element={<Index />} />
               <Route path="/profile-setup" element={<ProfileSetup />} />

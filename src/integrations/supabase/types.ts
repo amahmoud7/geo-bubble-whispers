@@ -531,6 +531,256 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          last_message_at: string
+          participant_1_id: string
+          participant_2_id: string
+          is_archived_by_1: boolean
+          is_archived_by_2: boolean
+          is_muted_by_1: boolean
+          is_muted_by_2: boolean
+          last_message_id: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          last_message_at?: string
+          participant_1_id: string
+          participant_2_id: string
+          is_archived_by_1?: boolean
+          is_archived_by_2?: boolean
+          is_muted_by_1?: boolean
+          is_muted_by_2?: boolean
+          last_message_id?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          last_message_at?: string
+          participant_1_id?: string
+          participant_2_id?: string
+          is_archived_by_1?: boolean
+          is_archived_by_2?: boolean
+          is_muted_by_1?: boolean
+          is_muted_by_2?: boolean
+          last_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_participant_1_id_fkey"
+            columns: ["participant_1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_participant_2_id_fkey"
+            columns: ["participant_2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          sender_id: string
+          content: string | null
+          media_url: string | null
+          media_type: string | null
+          reply_to_id: string | null
+          created_at: string
+          updated_at: string
+          edited_at: string | null
+          is_deleted: boolean
+          deleted_at: string | null
+          lat: number | null
+          lng: number | null
+          voice_duration: number | null
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          sender_id: string
+          content?: string | null
+          media_url?: string | null
+          media_type?: string | null
+          reply_to_id?: string | null
+          created_at?: string
+          updated_at?: string
+          edited_at?: string | null
+          is_deleted?: boolean
+          deleted_at?: string | null
+          lat?: number | null
+          lng?: number | null
+          voice_duration?: number | null
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          sender_id?: string
+          content?: string | null
+          media_url?: string | null
+          media_type?: string | null
+          reply_to_id?: string | null
+          created_at?: string
+          updated_at?: string
+          edited_at?: string | null
+          is_deleted?: boolean
+          deleted_at?: string | null
+          lat?: number | null
+          lng?: number | null
+          voice_duration?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_status: {
+        Row: {
+          id: string
+          message_id: string
+          user_id: string
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          user_id: string
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          user_id?: string
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_status_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reactions: {
+        Row: {
+          id: string
+          message_id: string
+          user_id: string
+          reaction: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          user_id: string
+          reaction: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          user_id?: string
+          reaction?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_presence: {
+        Row: {
+          user_id: string
+          last_seen: string
+          is_online: boolean
+          is_typing_in_conversation: string | null
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          last_seen?: string
+          is_online?: boolean
+          is_typing_in_conversation?: string | null
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          last_seen?: string
+          is_online?: boolean
+          is_typing_in_conversation?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_presence_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_presence_is_typing_in_conversation_fkey"
+            columns: ["is_typing_in_conversation"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -547,6 +797,10 @@ export type Database = {
       update_live_stream_location: {
         Args: { stream_id_param: string; new_lat: number; new_lng: number }
         Returns: undefined
+      }
+      get_or_create_conversation: {
+        Args: { user1_id: string; user2_id: string }
+        Returns: string
       }
     }
     Enums: {
