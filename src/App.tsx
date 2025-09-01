@@ -8,7 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { MapProvider } from "@/contexts/MapContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import LoadingSplash from "@/components/splash/LoadingSplash";
+import SplashScreen from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import Home from "./pages/Home";
 import List from "./pages/List";
@@ -59,7 +59,7 @@ const App = () => {
 
   // Show loading splash while initializing or when explicitly showing splash
   if (!isInitialized || showSplash) {
-    return <LoadingSplash onComplete={handleSplashComplete} />;
+    return <SplashScreen onComplete={handleSplashComplete} duration={2500} />;
   }
 
   return (

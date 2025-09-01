@@ -20,6 +20,14 @@ export default {
 		},
 		extend: {
 			colors: {
+				// Lo Brand Colors
+				'lo-white': '#FFFFFF',
+				'lo-navy': '#043651',
+				'lo-dark-blue': '#051F39',
+				'lo-blue-gray': '#043550',
+				'lo-near-black': '#051E38',
+				'lo-teal': '#13D3AA',
+				// Original colors
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

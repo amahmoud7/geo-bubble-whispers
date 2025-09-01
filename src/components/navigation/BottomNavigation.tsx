@@ -24,15 +24,32 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isActive, isCenter =
   const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
       e.preventDefault();
+      e.stopPropagation();
       onClick();
     }
   };
 
+  // For center button with onClick, use Button instead of Link to prevent navigation
+  if (isCenter && onClick) {
+    return (
+      <Button
+        onClick={handleClick}
+        className={cn(
+          "flex items-center justify-center border-0 p-0",
+          centerClasses
+        )}
+        variant="ghost"
+      >
+        {icon}
+      </Button>
+    );
+  }
+
+  // For center button without onClick, use Link
   if (isCenter) {
     return (
       <Link 
         to={to}
-        onClick={handleClick}
         className={cn(
           "flex items-center justify-center",
           centerClasses
@@ -86,7 +103,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ className, onPostCl
       isActive: isActive('/explore')
     },
     {
-      to: onPostClick ? '#' : '/home', // Use callback or fallback to home
+      to: '/post', // This will be ignored when onClick is present
       icon: <Plus className="h-6 w-6" />,
       label: 'Post',
       isActive: false,

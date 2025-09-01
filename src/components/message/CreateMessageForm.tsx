@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-import { X, Loader, Type, Image, Video, Radio, MapPin, Hash, AtSign, Clock, Settings } from 'lucide-react';
+import { X, Loader, Type, Image, Video, Radio, MapPin, Hash, AtSign, Clock, Settings, Save } from 'lucide-react';
 import { mockMessages } from '@/mock/messages';
 import MediaUpload from './MediaUpload';
 import PrivacyToggle from './PrivacyToggle';

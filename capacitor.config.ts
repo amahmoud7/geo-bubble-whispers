@@ -2,19 +2,19 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.822f9e01fc9740d1b5062512241aa634',
-  appName: 'geo-bubble-whispers',
+  appId: 'app.lo.social',
+  appName: 'Lo',
   webDir: 'dist',
   ios: {
     contentInset: 'always',
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
-      backgroundColor: "#FFFFFF",
+      launchShowDuration: 2500,
+      backgroundColor: "#043651",
       androidSplashResourceName: "splash",
-      showSpinner: true,
-      spinnerColor: "#999999",
+      showSpinner: false,
+      spinnerColor: "#13D3AA",
     },
     Geolocation: {
       permissions: {

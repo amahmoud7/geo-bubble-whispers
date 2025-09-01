@@ -3,10 +3,13 @@ import React, { useState, useRef } from 'react';
 import MapView from '../components/MapView';
 import TicketmasterToggle from '@/components/events/TicketmasterToggle';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
+import SimplePostModal from '@/components/post/SimplePostModal';
 import { Sparkles, MapPin } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const Home = () => {
   const [isEventsOnlyMode, setIsEventsOnlyMode] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
   const mapViewRef = useRef<any>(null);
 
   const handleEventsOnlyModeChange = (enabled: boolean) => {
@@ -15,9 +18,19 @@ const Home = () => {
   };
 
   const handleCreateMessage = () => {
-    // This will trigger the internal message creation flow in MapView
-    console.log('📍 Triggering message creation from bottom nav');
-    window.dispatchEvent(new CustomEvent('createMessage'));
+    console.log('📍 HOME: Opening post creation modal');
+    console.log('📍 HOME: Current showPostModal state:', showPostModal);
+    setShowPostModal(true);
+    console.log('📍 HOME: showPostModal set to true');
+  };
+
+  const handlePostCreated = (post: any) => {
+    console.log('📍 New post created:', post);
+    toast({
+      title: "Lo posted!",
+      description: "Your Lo has been shared with the community",
+    });
+    // Here you could also add the post to a global state or refresh the map
   };
 
   return (
@@ -36,7 +49,7 @@ const Home = () => {
       <MapView isEventsOnlyMode={isEventsOnlyMode} />
 
       {/* Ticketmaster Events Toggle */}
-      <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-50">
+      <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-40">
         <TicketmasterToggle 
           className="animate-fade-in" 
           onEventsOnlyModeChange={handleEventsOnlyModeChange}
@@ -44,6 +57,13 @@ const Home = () => {
       </div>
 
       <BottomNavigation onPostClick={handleCreateMessage} />
+      
+      {/* Post Creation Modal */}
+      <SimplePostModal 
+        isOpen={showPostModal}
+        onClose={() => setShowPostModal(false)}
+        onPostCreated={handlePostCreated}
+      />
     </div>
   );
 };

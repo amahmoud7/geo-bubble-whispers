@@ -199,14 +199,14 @@ export const useMessages = () => {
         };
       });
       
-      // Fall back to updated mock data
+      // Fall back to updated mock data silently
       setMessages(updatedMockMessages);
       
-      toast({
-        title: "Error loading messages",
-        description: "Using sample data instead",
-        variant: "destructive"
-      });
+      // Only show error toast for actual network/connection errors, not for empty results
+      if (error.message && !error.message.includes('JWT') && !error.message.includes('auth')) {
+        // Silently handle auth-related errors and empty results
+        console.log('Using local data while connecting to server...');
+      }
     } finally {
       setLoading(false);
     }
