@@ -223,14 +223,17 @@ const TabbedMapViewList: React.FC<TabbedMapViewListProps> = ({
     const state = emptyStates[tab];
 
     return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+      <div className="text-center py-16">
+        <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-lo-teal/10 to-blue-500/10 rounded-3xl flex items-center justify-center">
           {state.icon}
         </div>
-        <h3 className="text-lg font-semibold text-gray-600 mb-2">{state.title}</h3>
-        <p className="text-gray-500 text-sm max-w-sm mx-auto">
+        <h3 className="text-xl font-bold text-gray-800 mb-3">{state.title}</h3>
+        <p className="text-gray-500 text-base max-w-sm mx-auto leading-relaxed">
           {state.description}
         </p>
+        <div className="mt-6">
+          <div className="w-12 h-1 bg-gradient-to-r from-lo-teal to-blue-500 rounded-full mx-auto"></div>
+        </div>
       </div>
     );
   };
@@ -252,31 +255,33 @@ const TabbedMapViewList: React.FC<TabbedMapViewListProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Tab Navigation */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200/50 px-4 py-3 sticky top-0 z-10">
-        <div className="flex space-x-2 mb-3">
+      {/* Modern Tab Navigation */}
+      <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200/30 px-4 py-4 sticky top-0 z-10 shadow-sm">
+        <div className="flex space-x-3 mb-4">
           {renderTabButton('public', 'Public', publicMessages.length, <Globe className="w-4 h-4" />)}
           {renderTabButton('following', 'Following', followingMessages.length, <Users className="w-4 h-4" />)}
           {renderTabButton('events', 'Events', events.length, <Calendar className="w-4 h-4" />)}
         </div>
         
-        {/* Active Tab Info */}
+        {/* Enhanced Active Tab Info */}
         <div className="text-center">
-          <h2 className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-lo-navy to-lo-teal bg-clip-text text-transparent mb-1">
             {activeTab === 'public' && 'Public Los'}
             {activeTab === 'following' && 'Following'}
             {activeTab === 'events' && 'Live Events'}
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 font-medium">
             {items.length} {items.length === 1 ? 'item' : 'items'}
-            {activeTab === 'events' && ' in your area'}
+            {activeTab === 'events' && ' happening now'}
+            {activeTab === 'public' && ' near you'}
+            {activeTab === 'following' && ' from friends'}
           </p>
         </div>
       </div>
       
-      {/* Content Area */}
-      <div className="flex-1 px-4 py-2 overflow-y-auto modern-scrollbar">
-        <div className="space-y-3 pb-4">
+      {/* Enhanced Content Area */}
+      <div className="flex-1 px-4 py-4 overflow-y-auto modern-scrollbar">
+        <div className="space-y-4 pb-8">
           {items.length === 0 ? (
             renderEmptyState(activeTab)
           ) : (

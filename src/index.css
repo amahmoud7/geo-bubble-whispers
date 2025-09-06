@@ -371,6 +371,119 @@
   animation-delay: 1000ms;
 }
 
+/* iPhone safe area insets and map optimizations */
+.map-container {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Improve touch targets for iPhone */
+.map-container button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Safe area support */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .top-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .left-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+  .right-safe {
+    padding-right: env(safe-area-inset-right);
+  }
+  .bottom-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Modern Scrollbars */
+.modern-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.modern-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.modern-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #13D3AA, #0EA5E9);
+  border-radius: 10px;
+}
+
+.modern-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0EA5E9, #13D3AA);
+}
+
+/* Modern shadows */
+.shadow-3xl {
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.shadow-glow {
+  box-shadow: 
+    0 0 20px rgba(19, 211, 170, 0.3),
+    0 0 40px rgba(19, 211, 170, 0.1);
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animated background gradients */
+.animated-gradient {
+  background: linear-gradient(-45deg, #043651, #051F39, #13D3AA, #0EA5E9);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Modern button hover effects */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Text shimmer effect */
+.text-shimmer {
+  background: linear-gradient(90deg, #043651, #13D3AA, #0EA5E9, #043651);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 /* Lo Brand Gradient */
 .lo-gradient {
   background: linear-gradient(135deg, #043651 0%, #051F39 50%, #051E38 100%);

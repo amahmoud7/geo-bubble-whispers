@@ -1,5 +1,5 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "lo",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -34,8 +34,10 @@
     "prompt:export": "scripts/prompt-manager.sh export"
   },
   "dependencies": {
+    "@capacitor/camera": "^7.0.2",
     "@capacitor/cli": "^7.2.0",
     "@capacitor/core": "^7.2.0",
+    "@capacitor/geolocation": "^7.1.5",
     "@capacitor/ios": "^7.2.0",
     "@hookform/resolvers": "^3.9.0",
     "@ionic/pwa-elements": "^3.3.0",

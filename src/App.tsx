@@ -9,10 +9,11 @@ import { MapProvider } from "@/contexts/MapContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import SplashScreen from "@/components/SplashScreen";
+import PermissionRequest from "@/components/PermissionRequest";
 import Index from "./pages/Index";
 import Home from "./pages/Home";
 import List from "./pages/List";
-import Profile from "./pages/Profile";
+import ModernProfile from "./pages/ModernProfile";
 import Inbox from "./pages/Inbox";
 import Chat from "./pages/Chat";
 import Explore from "./pages/Explore";
@@ -29,6 +30,7 @@ const queryClient = new QueryClient();
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showPermissions, setShowPermissions] = useState(false);
 
   // Initialize app services and connections on mount
   useEffect(() => {
@@ -55,6 +57,11 @@ const App = () => {
 
   const handleSplashComplete = () => {
     setShowSplash(false);
+    setShowPermissions(true);
+  };
+
+  const handlePermissionsComplete = () => {
+    setShowPermissions(false);
   };
 
   // Show loading splash while initializing or when explicitly showing splash
@@ -63,6 +70,10 @@ const App = () => {
   }
 
   return (
+    <>
+      {showPermissions && (
+        <PermissionRequest onComplete={handlePermissionsComplete} />
+      )}
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <MapProvider>
@@ -72,7 +83,7 @@ const App = () => {
               <Route path="/" element={<Home />} />
               <Route path="/home" element={<Home />} />
               <Route path="/list" element={<List />} />
-              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile" element={<ModernProfile />} />
               <Route path="/inbox" element={<Inbox />} />
               <Route path="/chat/:conversationId" element={<Chat />} />
               <Route path="/explore" element={<Explore />} />
@@ -92,6 +103,7 @@ const App = () => {
         </MapProvider>
       </AuthProvider>
     </QueryClientProvider>
+    </>
   );
 };
 

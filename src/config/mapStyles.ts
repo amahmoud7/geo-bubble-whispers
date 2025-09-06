@@ -63,16 +63,17 @@ export const mapStyles = [
 
 export const defaultMapOptions = {
   styles: mapStyles,
-  disableDefaultUI: false,
-  zoomControl: true,
-  mapTypeControl: false,
-  streetViewControl: true,
-  fullscreenControl: true,
-  scaleControl: true,
-  // Ensure map interaction is fully enabled
+  disableDefaultUI: true, // Disable all default controls
+  zoomControl: false, // No zoom buttons
+  mapTypeControl: false, // No map/satellite toggle
+  streetViewControl: false, // No street view pegman
+  fullscreenControl: false, // No fullscreen button
+  scaleControl: false, // No scale indicator
+  rotateControl: false, // No rotation control
+  // Ensure map interaction is fully enabled for touch/mouse
   draggable: true,
   scrollwheel: true,
   disableDoubleClickZoom: false,
   keyboardShortcuts: true,
-  gestureHandling: 'greedy', // Allow single-finger/cursor dragging without restrictions
+  gestureHandling: 'greedy', // Allow single-finger dragging on mobile
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Filter, MapPin } from 'lucide-react';
+import { Search, Filter, Navigation } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuTrigger, 
@@ -16,18 +16,25 @@ interface CleanMapControlsProps {
   };
   onFilterChange: (type: 'showPublic' | 'showFollowers', checked: boolean) => void;
   onSearchBoxLoad: (ref: google.maps.places.SearchBox) => void;
+  map?: google.maps.Map | null;
 }
 
 const CleanMapControls: React.FC<CleanMapControlsProps> = ({
   filters,
   onFilterChange,
-  onSearchBoxLoad
+  onSearchBoxLoad,
+  map
 }) => {
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = React.useState(false);
 
   React.useEffect(() => {
-    if (!inputRef.current) return;
+    if (!inputRef.current || !window.google?.maps?.places) {
+      console.log('❌ Google Places API not loaded or input ref missing');
+      return;
+    }
 
+    console.log('✅ Initializing Google Places SearchBox');
     const searchBox = new google.maps.places.SearchBox(inputRef.current);
     onSearchBoxLoad(searchBox);
 
@@ -36,81 +43,107 @@ const CleanMapControls: React.FC<CleanMapControlsProps> = ({
     };
   }, [onSearchBoxLoad]);
 
+  const handleReturnToLocation = () => {
+    setIsLoadingLocation(true);
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          if (map) {
+            const userLocation = new google.maps.LatLng(latitude, longitude);
+            map.setCenter(userLocation);
+            map.setZoom(15);
+            console.log('📍 Centered map on user location:', latitude, longitude);
+          }
+          
+          setIsLoadingLocation(false);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setIsLoadingLocation(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      setIsLoadingLocation(false);
+    }
+  };
+
   return (
     <>
-      {/* Top Control Bar */}
-      <div className="absolute top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 z-20">
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Search Bar - Expanded */}
-          <div className="flex-1 relative">
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder="Search locations, places, addresses..."
-              className="pl-11 sm:pl-12 pr-4 h-10 sm:h-12 w-full bg-white/95 backdrop-blur-sm shadow-lg border-0 text-sm sm:text-base placeholder:text-gray-500 focus:bg-white transition-all rounded-xl"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                }
-              }}
-            />
-            <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
-          </div>
+      {/* Top Control Bar - Optimized for iPhone */}
+      <div className="absolute top-safe left-safe right-safe z-20" style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}>
+        <div className="px-4 py-2">
+          <div className="flex items-center gap-2">
+            {/* Search Bar - Full Width */}
+            <div className="flex-1 relative">
+              <Input
+                ref={inputRef}
+                type="text"
+                placeholder="Search places..."
+                className="pl-10 pr-4 h-11 w-full bg-white/95 backdrop-blur-sm shadow-lg border-0 text-base placeholder:text-gray-500 focus:bg-white transition-all rounded-2xl"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                }}
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            </div>
 
-          {/* Filter Button */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                size="default"
-                variant="outline" 
-                className="h-10 sm:h-12 px-3 sm:px-4 bg-white/95 backdrop-blur-sm border-0 shadow-lg hover:bg-white transition-all rounded-xl"
-              >
-                <Filter className="h-4 sm:h-5 w-4 sm:w-5 mr-0 sm:mr-2" />
-                <span className="hidden sm:inline">Filter</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 mr-4 sm:mr-6">
-              <DropdownMenuCheckboxItem
-                checked={filters.showPublic}
-                onCheckedChange={(checked) => 
-                  onFilterChange('showPublic', checked as boolean)
-                }
-              >
-                Public Messages
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filters.showFollowers}
-                onCheckedChange={(checked) => 
-                  onFilterChange('showFollowers', checked as boolean)
-                }
-              >
-                Follower Messages
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            {/* Filter Button - Compact */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  size="default"
+                  variant="outline" 
+                  className="h-11 w-11 p-0 bg-white/95 backdrop-blur-sm border-0 shadow-lg hover:bg-white transition-all rounded-2xl"
+                >
+                  <Filter className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 mr-4">
+                <DropdownMenuCheckboxItem
+                  checked={filters.showPublic}
+                  onCheckedChange={(checked) => 
+                    onFilterChange('showPublic', checked as boolean)
+                  }
+                >
+                  Public Messages
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filters.showFollowers}
+                  onCheckedChange={(checked) => 
+                    onFilterChange('showFollowers', checked as boolean)
+                  }
+                >
+                  Follower Messages
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 
-
-      {/* Left Side Quick Actions */}
-      <div className="absolute left-4 sm:left-6 bottom-32 z-20 flex flex-col gap-3">
-        {/* My Location Button */}
+      {/* Return to Current Location Button - Bottom Right */}
+      <div className="absolute bottom-24 right-4 z-20">
         <Button
           variant="outline"
-          className="h-10 sm:h-12 px-3 sm:px-4 bg-white/95 backdrop-blur-sm border-0 shadow-lg hover:bg-white transition-all rounded-xl active:scale-95"
-          onClick={() => {
-            // Get user's current location and center map
-            if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition((position) => {
-                const { latitude, longitude } = position.coords;
-                // This would center the map on user location
-                console.log('Center map on:', latitude, longitude);
-              });
-            }
-          }}
+          size="icon"
+          className="h-12 w-12 bg-white/95 backdrop-blur-sm border-0 shadow-lg hover:bg-white transition-all rounded-full active:scale-95"
+          onClick={handleReturnToLocation}
+          disabled={isLoadingLocation}
         >
-          <MapPin className="h-4 sm:h-5 w-4 sm:w-5 mr-0 sm:mr-2" />
-          <span className="hidden sm:inline">My Location</span>
+          <Navigation 
+            className={`h-5 w-5 ${isLoadingLocation ? 'animate-pulse' : ''}`} 
+            fill={isLoadingLocation ? 'currentColor' : 'none'}
+          />
         </Button>
       </div>
     </>

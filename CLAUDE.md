@@ -18,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-This is a location-based social messaging application called "Geo Bubble Whispers" built with React, TypeScript, and Supabase.
+This is a location-based social messaging application called "Lo" (formerly Geo Bubble Whispers) built with React, TypeScript, and Supabase.
 
 ### Tech Stack
 - **Frontend**: React 18 + TypeScript + Vite

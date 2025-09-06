@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Search, Edit3, MessageCircle, UserPlus } from 'lucide-react';
+import { ArrowLeft, Search, Edit3, MessageCircle, UserPlus, Sparkles, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDirectMessaging } from '@/hooks/useDirectMessaging';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
@@ -81,71 +81,89 @@ const Inbox = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white pb-20">
       <Navigation />
       
-      <div className="w-full bg-background min-h-screen">
-        {/* Header */}
-        <div className="sticky top-16 bg-background border-b border-border z-10">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center space-x-3">
-              <Link to="/home">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-semibold">{user.email?.split('@')[0] || 'User'}</h1>
-                <span className="text-muted-foreground">▼</span>
+      <div className="w-full min-h-screen">
+        {/* Modern Header */}
+        <div className="sticky top-16 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 z-10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-4">
+                <Link to="/home">
+                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100 transition-all duration-200">
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <div className="flex items-center space-x-3">
+                  <div className="text-left">
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-lo-navy to-lo-teal bg-clip-text text-transparent">
+                      {user.email?.split('@')[0] || 'Messages'}
+                    </h1>
+                    <p className="text-xs text-gray-500 font-medium">Stay connected with friends</p>
+                  </div>
+                  <div className="p-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full">
+                    <MessageCircle className="h-4 w-4 text-purple-500" />
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
               <Button 
                 variant="ghost" 
                 size="icon"
                 onClick={() => setShowNewConversation(!showNewConversation)}
+                className={`h-10 w-10 rounded-full transition-all duration-200 ${
+                  showNewConversation 
+                    ? 'bg-lo-teal/10 text-lo-teal hover:bg-lo-teal/20' 
+                    : 'hover:bg-gray-100'
+                }`}
               >
                 {showNewConversation ? <ArrowLeft className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
               </Button>
             </div>
-          </div>
 
-          {/* Tabs */}
-          <div className="flex px-4">
-            <button
-              onClick={() => setActiveTab('messages')}
-              className={`flex-1 py-3 text-center border-b-2 font-medium transition-colors ${
-                activeTab === 'messages'
-                  ? 'border-foreground text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Messages
-            </button>
-            <button
-              onClick={() => setActiveTab('requests')}
-              className={`flex-1 py-3 text-center border-b-2 font-medium transition-colors ${
-                activeTab === 'requests'
-                  ? 'border-foreground text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Requests
-            </button>
+            {/* Modern Tabs */}
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setActiveTab('messages')}
+                className={`flex-1 py-3 px-4 text-center rounded-2xl font-semibold transition-all duration-300 ${
+                  activeTab === 'messages'
+                    ? 'bg-gradient-to-r from-lo-teal to-blue-500 text-white shadow-lg shadow-lo-teal/25'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/80 backdrop-blur-sm'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Messages</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('requests')}
+                className={`flex-1 py-3 px-4 text-center rounded-2xl font-semibold transition-all duration-300 ${
+                  activeTab === 'requests'
+                    ? 'bg-gradient-to-r from-lo-teal to-blue-500 text-white shadow-lg shadow-lo-teal/25'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/80 backdrop-blur-sm'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <Users className="w-4 h-4" />
+                  <span>Requests</span>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Search Bar - Only show when not in new conversation view */}
+        {/* Enhanced Search Bar */}
         {!showNewConversation && (
           <div className="p-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search conversations..."
+                placeholder="Search messages, people, content..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 bg-muted border-none"
+                className="w-full h-11 pl-12 pr-4 bg-gray-100/80 border-0 rounded-2xl text-base placeholder:text-gray-500 focus:bg-white focus:ring-2 focus:ring-lo-teal/20 transition-all duration-200"
               />
             </div>
           </div>
@@ -154,38 +172,47 @@ const Inbox = () => {
         {/* Content Area */}
         <div className="flex-1 overflow-hidden">
           {showNewConversation ? (
-            /* New Conversation View */
-            <div className="px-4 space-y-1">
-              <div className="py-2">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Find people to message</h3>
+            /* Enhanced New Conversation View */
+            <div className="px-4 space-y-2">
+              <div className="py-3">
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Start New Conversation</h3>
+                <p className="text-sm text-gray-500 font-medium">Find people to connect with</p>
               </div>
               {filteredUsers.map((mockUser) => (
                 <div
                   key={mockUser.id}
-                  className="flex items-center space-x-3 py-3 px-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                  className="flex items-center space-x-4 py-4 px-3 rounded-2xl hover:bg-white hover:shadow-lg cursor-pointer transition-all duration-300 bg-white/50 backdrop-blur-sm border border-gray-200/50"
                   onClick={() => handleStartConversation(mockUser.id)}
                 >
                   <div className="relative">
-                    <Avatar className="h-14 w-14">
+                    <Avatar className="h-16 w-16 ring-2 ring-white shadow-lg">
                       <AvatarImage src={mockUser.avatar} alt={mockUser.name} />
-                      <AvatarFallback>{mockUser.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="bg-gradient-to-r from-lo-teal to-blue-500 text-white font-semibold text-lg">{mockUser.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     {mockUser.isOnline && (
-                      <div className="absolute bottom-0 right-0 h-4 w-4 bg-green-500 border-2 border-background rounded-full"></div>
+                      <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-green-500 border-3 border-white rounded-full shadow-lg animate-pulse"></div>
                     )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm">{mockUser.name}</h3>
-                    <p className="text-sm text-muted-foreground">{mockUser.username}</p>
+                    <h3 className="font-semibold text-base text-gray-900">{mockUser.name}</h3>
+                    <p className="text-sm text-gray-500 font-medium">{mockUser.username}</p>
+                    <p className="text-xs text-gray-400 mt-1">{mockUser.bio}</p>
                   </div>
                   
                   <Button 
-                    variant="outline" 
+                    className="bg-gradient-to-r from-lo-teal to-blue-500 hover:from-lo-teal/90 hover:to-blue-500/90 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2 rounded-full"
                     size="sm"
                     disabled={createOrGetConversation.isPending}
                   >
-                    {createOrGetConversation.isPending ? 'Starting...' : 'Message'}
+                    {createOrGetConversation.isPending ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-white/50 rounded-full animate-pulse"></div>
+                        <span>Starting...</span>
+                      </div>
+                    ) : (
+                      'Message'
+                    )}
                   </Button>
                 </div>
               ))}

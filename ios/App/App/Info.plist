@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Geo Bubble Whispers</string>
+        <string>Lo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -56,5 +56,14 @@
 			</array>
 		</dict>
 	</array>
+	
+	<!-- Camera and Microphone Permissions -->
+	<key>NSCameraUsageDescription</key>
+	<string>Lo needs access to your camera to take photos and videos for your posts</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Lo needs access to your microphone to record videos and enable live streaming</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Lo uses your location to tag posts and show nearby content</string>
+	
 </dict>
 </plist>

@@ -58,8 +58,9 @@ export class LiveStreamService {
       // 2. Configure streaming server (like AWS Kinesis, Agora, etc.)
       // 3. Generate RTMP endpoint
       
-      // For now, we'll simulate with a blob URL
-      const streamUrl = URL.createObjectURL(new MediaStreamTrackGenerator({ kind: 'video' }).readable);
+      // For now, we'll simulate with a stream URL (avoiding MediaStreamTrackGenerator for compatibility)
+      // In production, this would be a proper RTMP/HLS URL from your streaming service
+      const streamUrl = `wss://stream.example.com/live/${streamId}`;
       
       const liveStreamData: LiveStreamData = {
         id: streamId,

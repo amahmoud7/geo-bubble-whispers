@@ -134,7 +134,7 @@ export const useGoogleMap = () => {
     setSearchBox(ref);
 
     // Add search box event listener
-    ref.addListener('places_changed', () => {
+    const placesChangedListener = ref.addListener('places_changed', () => {
       console.log('🔍 Places changed event triggered');
       const places = ref.getPlaces();
       console.log('🔍 Places found:', places?.length || 0);
@@ -173,6 +173,10 @@ export const useGoogleMap = () => {
           map.setZoom(15);
         }
 
+        // Clear search input
+        const inputs = document.querySelectorAll('input[placeholder*="Search places"]');
+        inputs.forEach(input => (input as HTMLInputElement).value = '');
+
         // Notify user
         toast({
           title: "Location found",
@@ -182,6 +186,13 @@ export const useGoogleMap = () => {
         console.log('🔍 Map not available for location update');
       }
     });
+
+    // Return cleanup function
+    return () => {
+      if (placesChangedListener) {
+        google.maps.event.removeListener(placesChangedListener);
+      }
+    };
   }, [map]);
 
   return {

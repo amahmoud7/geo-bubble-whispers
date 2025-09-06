@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, OverlayView } from '@react-google-maps/api';
-import CleanMapControls from './map/CleanMapControls';
+import ModernMapControls from './map/ModernMapControls';
 import StreetViewController from './map/StreetViewController';
 import MessageCreationController from './map/MessageCreationController';
 import MessageDisplayController from './map/MessageDisplayController';
@@ -203,10 +203,11 @@ const MapView: React.FC<MapViewProps> = ({ isEventsOnlyMode = false }) => {
     <div className={mapContainerClassName}>
       {/* Full Screen Map Background */}
       <div className="absolute inset-0">
-        <CleanMapControls
+        <ModernMapControls
           filters={filters}
           onFilterChange={handleFilterChange}
           onSearchBoxLoad={onSearchBoxLoad}
+          map={map}
         />
 
         <StreetViewController

@@ -168,22 +168,36 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pb-20 bg-white">
+    <div className="min-h-screen flex flex-col pb-20 bg-gradient-to-br from-gray-50 to-white">
       <Navigation />
       
-      <div className="container max-w-4xl mx-auto py-6 space-y-8">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="mb-4"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back
-        </Button>
+      <div className="container max-w-4xl mx-auto py-6 space-y-6">
+        {/* Modern Header Bar */}
+        <div className="flex items-center justify-between px-4">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-10 w-10 rounded-full hover:bg-gray-100 transition-all duration-200"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          
+          <div className="flex items-center space-x-3">
+            <div className="text-center">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-lo-navy to-lo-teal bg-clip-text text-transparent">Profile</h1>
+              <p className="text-xs text-gray-500 font-medium">Your Lo journey</p>
+            </div>
+            <div className="p-2 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-full">
+              <Award className="h-4 w-4 text-amber-500" />
+            </div>
+          </div>
+          
+          <div className="w-10" /> {/* Spacer for centering */}
+        </div>
         
-        {/* Main Profile Section */}
-        <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+        {/* Enhanced Profile Section */}
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl border border-gray-200/50 overflow-hidden shadow-xl">
           <div className="p-6">
             <ProfileHeader 
               profile={enhancedProfile}
@@ -199,7 +213,7 @@ const Profile = () => {
             />
           </div>
           
-          <div className="border-t border-gray-100">
+          <div className="border-t border-gray-200/30">
             <div className="p-6">
               <ProfileTabs 
                 messages={profile.messages || []}

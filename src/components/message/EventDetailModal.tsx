@@ -194,9 +194,10 @@ const EventDetailModal: React.FC<EventDetailModalProps> = ({
           <div className="p-6">
             <LoadingSkeleton />
           </div>
-        ) : event && (
-          <ScrollArea className="h-full">
-            <div className="relative">
+        ) : event ? (
+          <div className="h-[95vh] flex flex-col">
+            <div className="flex-1 overflow-y-auto overscroll-behavior-contain">
+              <div className="relative">
               {/* Close Button */}
               <Button
                 onClick={onClose}
@@ -316,6 +317,7 @@ const EventDetailModal: React.FC<EventDetailModalProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
               </div>
 
               {/* Action Bar */}
@@ -521,8 +523,8 @@ const EventDetailModal: React.FC<EventDetailModalProps> = ({
                 )}
               </div>
             </div>
-          </ScrollArea>
-        )}
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

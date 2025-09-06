@@ -1,73 +1,103 @@
-# Welcome to your Lovable project
+# Lo - Location-Based Social Platform
 
-## Project info
+## About Lo
 
-**URL**: https://lovable.dev/projects/822f9e01-fc97-40d1-b506-2512241aa634
+Lo is a modern location-based social platform that allows users to share moments, discover events, and connect with their community through geo-located posts and live streams.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- 📍 **Location-Based Posts**: Share "Los" at specific locations on the map
+- 🗺️ **Interactive Map**: Explore posts and events on a dynamic Google Maps interface
+- 📹 **Live Streaming**: Broadcast live from any location
+- 🎫 **Event Discovery**: Find nearby events via Ticketmaster integration
+- 💬 **Direct Messaging**: Connect with other users through real-time chat
+- 👤 **Modern Profile**: Instagram/TikTok-inspired profile with post grid
+- 🎨 **Beautiful UI**: Clean, modern interface optimized for mobile
 
-**Use Lovable**
+## Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/822f9e01-fc97-40d1-b506-2512241aa634) and start prompting.
+- **Frontend**: React 18 + TypeScript + Vite
+- **UI**: Tailwind CSS + shadcn/ui
+- **Backend**: Supabase (Database, Auth, Real-time)
+- **Maps**: Google Maps API
+- **Mobile**: Capacitor for iOS/Android
+- **State**: TanStack Query + React Context
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js 18+
+- npm or yarn
+- Supabase account
+- Google Maps API key
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+```bash
+# Install dependencies
+npm install
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
+
+# Build for production
+npm run build
+
+# Run on iOS
+npx cap sync ios
+npx cap open ios
 ```
 
-**Edit a file directly in GitHub**
+## Project Structure
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+src/
+├── components/     # React components
+├── pages/         # Route pages
+├── hooks/         # Custom React hooks
+├── services/      # API services
+├── contexts/      # React contexts
+├── integrations/  # Third-party integrations
+└── types/         # TypeScript types
+```
 
-**Use GitHub Codespaces**
+## Available Scripts
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run lint` - Run ESLint
+- `npm run preview` - Preview production build
+- `npm test` - Run tests
 
-## What technologies are used for this project?
+## iOS Deployment
 
-This project is built with:
+1. Build the web app: `npm run build`
+2. Sync with iOS: `npx cap sync ios`
+3. Open in Xcode: `npx cap open ios`
+4. Build and run on device
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Environment Variables
 
-## How can I deploy this project?
+Create a `.env` file with:
 
-Simply open [Lovable](https://lovable.dev/projects/822f9e01-fc97-40d1-b506-2512241aa634) and click on Share -> Publish.
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Contributing
 
-Yes, you can!
+This is a private project. Please contact the maintainers for contribution guidelines.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Proprietary - All rights reserved
+
+## Support
+
+For support, please contact the development team.
+
+---
+
+**Lo** - Share your world, one location at a time 🌍
