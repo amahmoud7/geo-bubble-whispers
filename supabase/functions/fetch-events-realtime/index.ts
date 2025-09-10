@@ -1,5 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { 
+  fetchSeatGeekEventsEnhanced, 
+  fetchPredictHQEventsEnhanced, 
+  fetchYelpEventsEnhanced 
+} from './events-new-apis.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -136,6 +141,54 @@ Deno.serve(async (req) => {
               radius,
               timeframe,
               marketInfo,
+              requestId
+            })
+          );
+        }
+      }
+
+      if (source === 'seatgeek') {
+        const seatgeekId = Deno.env.get('SEATGEEK_CLIENT_ID');
+        if (!seatgeekId) {
+          console.warn(`⚠️ [${requestId}] Missing SeatGeek client ID, skipping SeatGeek`);
+        } else {
+          sourcePromises.push(
+            fetchSeatGeekEventsEnhanced(seatgeekId, {
+              center,
+              radius,
+              timeframe,
+              requestId
+            })
+          );
+        }
+      }
+
+      if (source === 'predicthq') {
+        const predicthqToken = Deno.env.get('PREDICTHQ_API_TOKEN');
+        if (!predicthqToken) {
+          console.warn(`⚠️ [${requestId}] Missing PredictHQ API token, skipping PredictHQ`);
+        } else {
+          sourcePromises.push(
+            fetchPredictHQEventsEnhanced(predicthqToken, {
+              center,
+              radius,
+              timeframe,
+              requestId
+            })
+          );
+        }
+      }
+
+      if (source === 'yelp') {
+        const yelpKey = Deno.env.get('YELP_API_KEY');
+        if (!yelpKey) {
+          console.warn(`⚠️ [${requestId}] Missing Yelp API key, skipping Yelp`);
+        } else {
+          sourcePromises.push(
+            fetchYelpEventsEnhanced(yelpKey, {
+              center,
+              radius,
+              timeframe,
               requestId
             })
           );

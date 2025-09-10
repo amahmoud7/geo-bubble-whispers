@@ -53,7 +53,10 @@ const ProfileGallery = ({ messages, onMessageClick, className = '' }: ProfileGal
         <div
           key={message.id}
           className="relative aspect-square cursor-pointer group overflow-hidden"
-          onClick={() => onMessageClick?.(message)}
+          onClick={() => {
+            console.log('🖼️ Gallery: Image clicked, calling onMessageClick');
+            onMessageClick?.(message);
+          }}
         >
           {/* Thumbnail image */}
           <img

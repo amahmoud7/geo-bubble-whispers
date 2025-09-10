@@ -51,7 +51,7 @@ interface TabbedMapViewListProps {
   selectedMessage: string | null;
 }
 
-type TabType = 'public' | 'following' | 'events';
+type TabType = 'public' | 'foryou' | 'following' | 'events';
 
 const TabbedMapViewList: React.FC<TabbedMapViewListProps> = ({ 
   messages, 
@@ -65,24 +65,36 @@ const TabbedMapViewList: React.FC<TabbedMapViewListProps> = ({
   // Filter messages for each tab
   const publicMessages = messages.filter(msg => msg.isPublic);
   const followingMessages = messages.filter(msg => !msg.isPublic);
+  
+  // For you recommendations based on user activity (simplified algorithm)
+  const forYouMessages = messages
+    .sort((a, b) => {
+      // Prioritize recent messages with higher engagement potential
+      const aScore = new Date(a.timestamp).getTime() / 1000000000;
+      const bScore = new Date(b.timestamp).getTime() / 1000000000;
+      return bScore - aScore;
+    })
+    .slice(0, Math.min(messages.length, 10)); // Limit to top 10 recommendations
 
   const renderTabButton = (tab: TabType, label: string, count: number, icon: React.ReactNode) => (
     <Button
       variant={activeTab === tab ? "default" : "ghost"}
       onClick={() => setActiveTab(tab)}
-      className={`flex-1 flex items-center justify-center space-x-2 h-12 rounded-xl font-semibold transition-all duration-200 ${
+      className={`flex-1 flex flex-col items-center justify-center space-y-1 h-14 rounded-lg font-medium text-xs transition-all duration-200 ${
         activeTab === tab
           ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg hover:from-emerald-600 hover:to-green-700'
           : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
       }`}
     >
-      {icon}
-      <span>{label}</span>
-      <Badge variant="secondary" className={`ml-1 ${
-        activeTab === tab ? 'bg-white/20 text-white border-0' : 'bg-gray-200 text-gray-600'
-      }`}>
-        {count}
-      </Badge>
+      <div className="flex items-center space-x-1">
+        {icon}
+        <Badge variant="secondary" className={`text-[9px] px-1 py-0.5 ${
+          activeTab === tab ? 'bg-white/20 text-white border-0' : 'bg-gray-200 text-gray-600'
+        }`}>
+          {count}
+        </Badge>
+      </div>
+      <span className="text-[10px] font-medium">{label}</span>
     </Button>
   );
 
@@ -208,6 +220,11 @@ const TabbedMapViewList: React.FC<TabbedMapViewListProps> = ({
         title: "No public Los yet",
         description: "Public Los from all users will appear here"
       },
+      foryou: {
+        icon: <Star className="w-8 h-8 text-gray-400" />,
+        title: "No recommendations yet",
+        description: "Personalized Los based on your activity will appear here"
+      },
       following: {
         icon: <Users className="w-8 h-8 text-gray-400" />,
         title: "No following Los yet",
@@ -242,6 +259,8 @@ const TabbedMapViewList: React.FC<TabbedMapViewListProps> = ({
     switch (activeTab) {
       case 'public':
         return { items: publicMessages, renderItem: renderMessageItem };
+      case 'foryou':
+        return { items: forYouMessages, renderItem: renderMessageItem };
       case 'following':
         return { items: followingMessages, renderItem: renderMessageItem };
       case 'events':
@@ -255,25 +274,22 @@ const TabbedMapViewList: React.FC<TabbedMapViewListProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Modern Tab Navigation */}
-      <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200/30 px-4 py-4 sticky top-0 z-10 shadow-sm">
-        <div className="flex space-x-3 mb-4">
-          {renderTabButton('public', 'Public', publicMessages.length, <Globe className="w-4 h-4" />)}
-          {renderTabButton('following', 'Following', followingMessages.length, <Users className="w-4 h-4" />)}
-          {renderTabButton('events', 'Events', events.length, <Calendar className="w-4 h-4" />)}
+      {/* Compact Tab Navigation */}
+      <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200/30 px-3 py-3 sticky top-0 z-10 shadow-sm">
+        <div className="flex space-x-1 mb-3">
+          {renderTabButton('public', 'Public', publicMessages.length, <Globe className="w-3 h-3" />)}
+          {renderTabButton('foryou', 'For you', forYouMessages.length, <Star className="w-3 h-3" />)}
+          {renderTabButton('following', 'Following', followingMessages.length, <Users className="w-3 h-3" />)}
+          {renderTabButton('events', 'Events', events.length, <Calendar className="w-3 h-3" />)}
         </div>
         
-        {/* Enhanced Active Tab Info */}
+        {/* Compact Active Tab Info */}
         <div className="text-center">
-          <h2 className="text-xl font-bold bg-gradient-to-r from-lo-navy to-lo-teal bg-clip-text text-transparent mb-1">
-            {activeTab === 'public' && 'Public Los'}
-            {activeTab === 'following' && 'Following'}
-            {activeTab === 'events' && 'Live Events'}
-          </h2>
-          <p className="text-sm text-gray-500 font-medium">
+          <p className="text-xs text-gray-500 font-medium">
             {items.length} {items.length === 1 ? 'item' : 'items'}
             {activeTab === 'events' && ' happening now'}
             {activeTab === 'public' && ' near you'}
+            {activeTab === 'foryou' && ' recommended'}
             {activeTab === 'following' && ' from friends'}
           </p>
         </div>

@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, ImageOff } from 'lucide-react';
 import { getMessageType } from '../map/utils/messageTypeUtils';
 
 interface MessageDetailContentProps {
@@ -16,6 +16,7 @@ const MessageDetailContent: React.FC<MessageDetailContentProps> = ({
   timestamp,
   expiresAt
 }) => {
+  const [imageError, setImageError] = useState(false);
   // Format timestamp
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -54,11 +55,25 @@ const MessageDetailContent: React.FC<MessageDetailContentProps> = ({
             >
               Your browser does not support the video tag.
             </video>
+          ) : imageError ? (
+            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+              <div className="text-center text-gray-500">
+                <ImageOff className="h-8 w-8 mx-auto mb-2" />
+                <p className="text-sm">Image unavailable</p>
+              </div>
+            </div>
           ) : (
             <img
               src={mediaUrl}
               alt="Message media"
               className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('Failed to load image:', mediaUrl);
+                setImageError(true);
+              }}
+              onLoad={() => {
+                console.log('✅ Image loaded successfully:', mediaUrl?.substring(0, 50) + '...');
+              }}
             />
           )}
         </div>

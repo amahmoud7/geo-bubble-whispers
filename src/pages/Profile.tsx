@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Award } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileTabs from '../components/profile/ProfileTabs';
@@ -16,6 +16,7 @@ import { ProfileAchievement } from '../components/profile/ProfileBadges';
 import EventsManager from '../components/EventsManager';
 import { useProfileData, ProfileData } from '@/hooks/useProfileData';
 import { Message } from '@/types/database';
+import PostModal from '../components/profile/PostModal';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -26,6 +27,8 @@ const Profile = () => {
   const [followersModalOpen, setFollowersModalOpen] = useState(false);
   const [followingModalOpen, setFollowingModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'Followers' | 'Following'>('Followers');
+  const [selectedPost, setSelectedPost] = useState<Message | null>(null);
+  const [selectedPostIndex, setSelectedPostIndex] = useState<number>(0);
 
   // Mock data for demonstration - in real app, this would come from API
   const mockFollowers: FollowUser[] = [
@@ -111,8 +114,27 @@ const Profile = () => {
   };
 
   const handleMessageClick = (message: Message) => {
-    console.log('Open message detail:', message);
-    // Navigate to message detail view
+    console.log('🖱️ Profile: Message clicked:', message);
+    const allMessages = profile.messages || [];
+    const index = allMessages.findIndex(m => m.id === message.id);
+    console.log('📍 Setting selected post:', message.id, 'at index:', index);
+    setSelectedPost(message);
+    setSelectedPostIndex(index >= 0 ? index : 0);
+  };
+
+  const handlePostNavigate = (direction: 'prev' | 'next') => {
+    const allMessages = profile.messages || [];
+    if (allMessages.length === 0) return;
+    
+    let newIndex = selectedPostIndex;
+    if (direction === 'prev' && selectedPostIndex > 0) {
+      newIndex = selectedPostIndex - 1;
+    } else if (direction === 'next' && selectedPostIndex < allMessages.length - 1) {
+      newIndex = selectedPostIndex + 1;
+    }
+    
+    setSelectedPostIndex(newIndex);
+    setSelectedPost(allMessages[newIndex]);
   };
 
   const handleStoryHighlightClick = (highlight: StoryHighlight) => {
@@ -255,6 +277,20 @@ const Profile = () => {
         onUnfollow={handleUnfollowUser}
         onUserClick={handleUserClick}
       />
+
+      {/* Post Modal */}
+      {selectedPost && (
+        <>
+          {console.log('🎨 Rendering PostModal with:', selectedPost)}
+          <PostModal
+            message={selectedPost}
+            messages={profile.messages || []}
+            currentIndex={selectedPostIndex}
+            onClose={() => setSelectedPost(null)}
+            onNavigate={handlePostNavigate}
+          />
+        </>
+      )}
     </div>
   );
 };

@@ -105,8 +105,14 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({
     }
     
     setMediaFile(file);
-    const previewUrl = URL.createObjectURL(file);
-    setMediaPreview(previewUrl);
+    
+    // Convert to base64 for persistent storage
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setMediaPreview(base64String);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleTypeSelect = (type: PostType) => {
@@ -214,10 +220,7 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({
 
   const clearMedia = () => {
     setMediaFile(null);
-    if (mediaPreview) {
-      URL.revokeObjectURL(mediaPreview);
-      setMediaPreview(null);
-    }
+    setMediaPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -643,22 +646,28 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+      {/* Liquid Glass Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 glass-overlay"
         onClick={onClose}
       />
       
-      {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+      {/* Modal with Liquid Glass UI */}
+      <div className="relative glass-card w-full max-w-lg max-h-[90vh] overflow-hidden animate-fade-in"
+           style={{
+             background: 'rgba(255, 255, 255, 0.15)',
+             backdropFilter: 'blur(20px)',
+             border: '1px solid rgba(255, 255, 255, 0.3)',
+             boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
+           }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Create Lo</h2>
+        <div className="flex items-center justify-between p-4 glass border-b border-white/20">
+          <h2 className="text-lg font-semibold text-white liquid-text">Create Lo</h2>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1.5 glass hover:bg-white/20 rounded-full transition-all"
           >
-            <X className="h-4 w-4 text-gray-500" />
+            <X className="h-4 w-4 text-white" />
           </button>
         </div>
 
@@ -682,7 +691,7 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({
               <button
                 type="submit"
                 disabled={isLoading || (!content.trim() && !mediaFile)}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-lo-teal to-emerald-500 hover:from-emerald-600 hover:to-lo-teal text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="flex-1 liquid-button disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
                   <>

@@ -22,28 +22,17 @@ import EventMarkerIcon from './map/EventMarkerIcon';
 import EventDetailModal from './message/EventDetailModal';
 import { LiveStream } from '@/types/livestream';
 
+// Static libraries array to prevent LoadScript warning
+const GOOGLE_MAPS_LIBRARIES = ['places'] as const;
+
 interface MapViewProps {
   isEventsOnlyMode?: boolean;
 }
 
-const MapView: React.FC<MapViewProps> = ({ isEventsOnlyMode = false }) => {
+const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false }, ref) => {
   const { userLocation } = useUserLocation();
   const { filters, filteredMessages, addMessage, updateMessage, handleFilterChange } = useMessages();
   const { events, eventsStartingSoon } = useEventMessages();
-  
-  // Debug events in MapView
-  useEffect(() => {
-    console.log(`🗺️ MAP VIEW: Received ${events.length} events for map display`);
-    console.log(`🗺️ MAP VIEW: Events-only mode: ${isEventsOnlyMode}`);
-    if (events.length > 0) {
-      console.log('🗺️ MAP VIEW: Events to render:', events.map(e => ({
-        title: e.event_title,
-        venue: e.event_venue,
-        coordinates: { lat: e.lat, lng: e.lng },
-        hasCoordinates: !!(e.lat && e.lng)
-      })));
-    }
-  }, [events, isEventsOnlyMode]);
   
   const { user } = useAuth();
   const { setMap: setMapInContext } = useMapContext();
@@ -117,10 +106,20 @@ const MapView: React.FC<MapViewProps> = ({ isEventsOnlyMode = false }) => {
     setNewPinPosition,
   } = usePinPlacement();
 
+  // Expose methods via ref
+  React.useImperativeHandle(ref, () => ({
+    panTo: (location: { lat: number; lng: number }) => {
+      if (map) {
+        map.panTo(location);
+        map.setZoom(15);
+      }
+    }
+  }), [map]);
+
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: 'AIzaSyCja18mhM6OgcQPkZp7rCZM6C29SGz3S4U',
-    libraries: ['places']
+    libraries: GOOGLE_MAPS_LIBRARIES
   });
 
   const handleCreateMessage = useCallback(() => {
@@ -197,7 +196,7 @@ const MapView: React.FC<MapViewProps> = ({ isEventsOnlyMode = false }) => {
   const userName = user?.user_metadata?.name;
 
   // Add cursor-pin class when in pin placement mode
-  const mapContainerClassName = `map-container relative w-full h-[calc(100vh-4rem)] ${isPlacingPin ? 'cursor-pin' : ''}`;
+  const mapContainerClassName = `map-container relative w-full h-full ${isPlacingPin ? 'cursor-pin' : ''}`;
 
   return (
     <div className={mapContainerClassName}>
@@ -231,8 +230,6 @@ const MapView: React.FC<MapViewProps> = ({ isEventsOnlyMode = false }) => {
             // Events-only mode: Show ONLY event markers, nothing else
             <>
               {events.map((event) => {
-                console.log(`🎯 EVENTS-ONLY MODE: Rendering event ${event.event_title}`);
-                
                 if (!event.lat || !event.lng) {
                   return null;
                 }
@@ -355,6 +352,8 @@ const MapView: React.FC<MapViewProps> = ({ isEventsOnlyMode = false }) => {
       />
     </div>
   );
-};
+});
+
+MapView.displayName = 'MapView';
 
 export default MapView;

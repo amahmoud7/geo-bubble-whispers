@@ -21,7 +21,16 @@ export const useMessages = () => {
   const { user } = useAuth();
 
   const addMessage = (newMessage: any) => {
-    setMessages(prev => [newMessage, ...prev]);
+    console.log('📍 useMessages: Adding message to state:', {
+      id: newMessage.id,
+      position: newMessage.position,
+      content: newMessage.content?.substring(0, 50)
+    });
+    setMessages(prev => {
+      const updated = [newMessage, ...prev];
+      console.log(`✅ Total messages after adding: ${updated.length}`);
+      return updated;
+    });
   };
 
   const updateMessage = (id: string, updates: any) => {
@@ -31,18 +40,18 @@ export const useMessages = () => {
   };
 
   const fetchMessages = async (searchQuery?: string) => {
+    console.log('🔄 Fetching messages from database...');
     try {
       setLoading(true);
       
       // Fetch regular messages including events
+      // Include messages from the last 24 hours
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      
       let messageQuery = supabase
         .from('messages')
-        .select(`
-          *,
-          profiles:user_id (name, username, avatar_url),
-          likes:likes (user_id)
-        `)
-        .gte('expires_at', new Date().toISOString())
+        .select('*')
+        .or(`expires_at.gte.${new Date().toISOString()},created_at.gte.${oneDayAgo}`)
         .order('created_at', { ascending: false });
 
       // Apply search filter if provided
@@ -74,6 +83,8 @@ export const useMessages = () => {
 
       if (messagesError) throw messagesError;
 
+      console.log(`📦 Fetched ${messagesData?.length || 0} messages from database`);
+      
       let allMessages = [];
 
       // Process regular messages
@@ -127,17 +138,15 @@ export const useMessages = () => {
             timestamp: message.created_at,
             expiresAt: message.expires_at,
             user: {
-              name: message.profiles?.name || 'Unknown User',
-              avatar: message.profiles?.avatar_url || '/placeholder.svg'
+              name: 'Lo User',
+              avatar: '/placeholder.svg'
             },
             position: {
               x: message.lat,
               y: message.lng
             },
-            // Check if current user has liked this message
-            liked: user ? message.likes?.some((like: any) => like.user_id === user.id) : false,
-            // Count of likes
-            likes: message.likes?.length || 0,
+            liked: false,
+            likes: 0,
             isEvent: isEvent
           };
         });
@@ -185,27 +194,31 @@ export const useMessages = () => {
     } catch (error: any) {
       console.error('Error fetching messages:', error);
       
-      // Update mock messages to ensure they have the proper avatar URLs
-      const updatedMockMessages = mockMessages.map(message => {
-        // Ensure we have a valid avatar URL
-        const userAvatar = message.user?.avatar || user?.user_metadata?.avatar_url || '/placeholder.svg';
+      // Don't overwrite existing messages on error - keep what we have
+      // Only use mock data if we have no messages at all
+      if (messages.length === 0) {
+        // Update mock messages to ensure they have the proper avatar URLs
+        const updatedMockMessages = mockMessages.map(message => {
+          // Ensure we have a valid avatar URL
+          const userAvatar = message.user?.avatar || user?.user_metadata?.avatar_url || '/placeholder.svg';
+          
+          return {
+            ...message,
+            user: {
+              ...message.user,
+              avatar: userAvatar
+            }
+          };
+        });
         
-        return {
-          ...message,
-          user: {
-            ...message.user,
-            avatar: userAvatar
-          }
-        };
-      });
-      
-      // Fall back to updated mock data silently
-      setMessages(updatedMockMessages);
+        // Fall back to updated mock data only if no messages exist
+        setMessages(updatedMockMessages);
+      }
       
       // Only show error toast for actual network/connection errors, not for empty results
       if (error.message && !error.message.includes('JWT') && !error.message.includes('auth')) {
         // Silently handle auth-related errors and empty results
-        console.log('Using local data while connecting to server...');
+        console.log('Using existing messages while database connection fails...');
       }
     } finally {
       setLoading(false);
@@ -227,12 +240,21 @@ export const useMessages = () => {
         schema: 'public', 
         table: 'messages' 
       }, () => {
+        console.log('📡 Real-time update received, fetching messages...');
         fetchMessages();
       })
       .subscribe();
     
+    // Listen for manual refresh events
+    const handleRefresh = () => {
+      console.log('🔄 Manual refresh triggered, fetching messages...');
+      fetchMessages();
+    };
+    window.addEventListener('refreshMessages', handleRefresh);
+    
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener('refreshMessages', handleRefresh);
     };
   }, [user?.id]);
 
@@ -241,10 +263,14 @@ export const useMessages = () => {
   };
 
   const filteredMessages = messages.filter(message => {
-    if (message.isPublic && filters.showPublic) return true;
-    if (!message.isPublic && filters.showFollowers) return true;
-    return false;
+    const shouldShow = (message.isPublic && filters.showPublic) || (!message.isPublic && filters.showFollowers);
+    if (!shouldShow && messages.length > 0) {
+      console.log(`🚫 Message filtered out:`, message.id, 'isPublic:', message.isPublic, 'filters:', filters);
+    }
+    return shouldShow;
   });
+  
+  console.log(`📊 Filtered messages: ${filteredMessages.length} / ${messages.length} total`);
 
   return {
     filters,

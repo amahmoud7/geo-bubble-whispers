@@ -59,11 +59,23 @@
 	
 	<!-- Camera and Microphone Permissions -->
 	<key>NSCameraUsageDescription</key>
-	<string>Lo needs access to your camera to take photos and videos for your posts</string>
+	<string>Lo needs access to your camera to take photos, videos, and use AR view to see messages around you</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Lo needs access to your microphone to record videos and enable live streaming</string>
+	
+	<!-- Location Permissions -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Lo uses your location to tag posts and show nearby content</string>
+	<string>Lo uses your location to tag posts, show nearby content, and send notifications for messages near you</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Lo uses your location to tag posts, show nearby content, and send notifications for messages near you</string>
+	
+	<!-- Motion and Device Orientation for AR -->
+	<key>NSMotionUsageDescription</key>
+	<string>Lo uses device motion sensors to provide accurate AR viewing of messages</string>
+	
+	<!-- User Notifications -->
+	<key>NSUserNotificationUsageDescription</key>
+	<string>Lo sends notifications about nearby messages and social interactions</string>
 	
 </dict>
 </plist>

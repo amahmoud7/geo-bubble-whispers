@@ -89,41 +89,60 @@ export const useProfileData = (userId: string | undefined) => {
   };
 
   const fetchUserMessages = async (userId: string) => {
-    // In a real app, we would fetch messages from the database
-    // For now, we'll use mock data that conforms to the Message type
-    const mockMessages: Message[] = [
-      {
-        id: '101',
-        user_id: userId,
-        content: 'Found this amazing food market today! Worth checking out.',
-        media_url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
-        is_public: true,
-        location: 'Ferry Building, San Francisco',
-        lat: 37.7955,
-        lng: -122.3937,
-        created_at: '2023-05-10T14:30:00Z',
-        expires_at: '2023-05-17T14:30:00Z',
-        updated_at: '2023-05-10T14:30:00Z',
-      },
-      {
-        id: '102',
-        user_id: userId,
-        content: 'Beautiful sunset over the Golden Gate Bridge today!',
-        media_url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-        is_public: true,
-        location: 'Crissy Field, San Francisco',
-        lat: 37.8039,
-        lng: -122.4640,
-        created_at: '2023-05-08T19:45:00Z',
-        expires_at: '2023-05-15T19:45:00Z',
-        updated_at: '2023-05-08T19:45:00Z',
-      },
-    ];
-    
-    setProfile(prev => ({
-      ...prev,
-      messages: mockMessages
-    }));
+    try {
+      // Fetch user's messages from the database
+      const { data: messagesData, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching user messages:', error);
+        // Fallback to mock data if fetch fails
+        const mockMessages: Message[] = [
+          {
+            id: '101',
+            user_id: userId,
+            content: 'Found this amazing food market today! Worth checking out.',
+            media_url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
+            is_public: true,
+            location: 'Ferry Building, San Francisco',
+            lat: 37.7955,
+            lng: -122.3937,
+            created_at: '2023-05-10T14:30:00Z',
+            expires_at: '2023-05-17T14:30:00Z',
+            updated_at: '2023-05-10T14:30:00Z',
+          },
+          {
+            id: '102',
+            user_id: userId,
+            content: 'Beautiful sunset over the Golden Gate Bridge today!',
+            media_url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+            is_public: true,
+            location: 'Crissy Field, San Francisco',
+            lat: 37.8039,
+            lng: -122.4640,
+            created_at: '2023-05-08T19:45:00Z',
+            expires_at: '2023-05-15T19:45:00Z',
+            updated_at: '2023-05-08T19:45:00Z',
+          },
+        ];
+        
+        setProfile(prev => ({
+          ...prev,
+          messages: mockMessages
+        }));
+      } else {
+        console.log(`👤 Fetched ${messagesData?.length || 0} messages for user ${userId}`);
+        setProfile(prev => ({
+          ...prev,
+          messages: messagesData || []
+        }));
+      }
+    } catch (error) {
+      console.error('Error in fetchUserMessages:', error);
+    }
   };
 
   const saveProfile = async (updatedProfileData: ProfileData): Promise<boolean> => {

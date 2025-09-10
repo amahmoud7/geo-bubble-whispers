@@ -17,6 +17,8 @@ import ModernMediaUpload from './ModernMediaUpload';
 import ModernLocationSelector from './ModernLocationSelector';
 import LiveStreamInterface from './LiveStreamInterface';
 import RichTextEditor from './RichTextEditor';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CreateMessageFormProps {
   onClose: () => void;
@@ -26,6 +28,7 @@ interface CreateMessageFormProps {
 }
 
 const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialPosition, addMessage, updateMessage }) => {
+  const { user } = useAuth();
   // Core state
   const [content, setContent] = useState('');
   const [isPublic, setIsPublic] = useState(true);
@@ -141,7 +144,7 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
     setCharCount(content.length);
   }, [content]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!position || !isPinPlaced) {
@@ -153,69 +156,107 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to post a Lo",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     
-    // Determine post type and media URL
-    let mediaUrl = previewUrl;
-    let postType = 'text';
-    
-    if (mediaFiles.length > 0) {
-      // For multiple files, create a carousel
-      postType = mediaFiles[0].type.startsWith('video/') ? 'video' : 'image';
-      // TODO: Handle multiple file uploads
-    } else if (selectedFile) {
-      postType = selectedFile.type.startsWith('video/') ? 'video' : 'image';
-    }
-    
-    if (activeTab === 'live') {
-      postType = 'livestream';
-    }
-    
-    // Create a new message object
-    const newMessage = {
-      id: `new-${Date.now()}`,
-      content: content,
-      location: locationName || "Current Location",
-      user: {
-        name: "Current User",
-        avatar: "/placeholder.svg"
-      },
-      isPublic: isPublic,
-      timestamp: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      mediaUrl: mediaUrl || undefined,
-      position: {
-        x: position.lat,
-        y: position.lng
-      },
-      hashtags: hashtags,
-      mentions: mentions,
-      postType: postType,
-      mediaFiles: mediaFiles.length > 0 ? mediaFiles.map(f => f.name) : undefined
-    };
-    
-    // Add the new message using the reactive state
-    addMessage(newMessage);
-    
-    // Clear draft if it exists
-    clearDraft();
-    
-    // Stop the bounce animation after 2 seconds by removing the 'new-' prefix
-    setTimeout(() => {
-      updateMessage(newMessage.id, {
-        id: newMessage.id.replace('new-', 'posted-')
-      });
-    }, 2000);
-    
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Determine post type and media URL
+      let mediaUrl = previewUrl;
+      let postType = 'text';
+      
+      if (mediaFiles.length > 0) {
+        // For multiple files, create a carousel
+        postType = mediaFiles[0].type.startsWith('video/') ? 'video' : 'image';
+        // TODO: Handle multiple file uploads
+      } else if (selectedFile) {
+        postType = selectedFile.type.startsWith('video/') ? 'video' : 'image';
+      }
+      
+      if (activeTab === 'live') {
+        postType = 'livestream';
+      }
+      
+      // First, save the message to the database
+      const { data: messageData, error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          content: content,
+          location: locationName || "Current Location",
+          user_id: user.id,
+          is_public: isPublic,
+          lat: position.lat,
+          lng: position.lng,
+          media_url: mediaUrl || null,
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        })
+        .select('*, profiles:user_id(name, username, avatar_url)')
+        .single();
+
+      if (messageError) {
+        console.error('❌ Database error:', messageError);
+        throw messageError;
+      }
+
+      console.log('✅ Message saved to database:', messageData);
+
+      // Create a new message object for the UI with the 'new-' prefix for animation
+      const newMessage = {
+        id: `new-${messageData.id}`,
+        content: messageData.content,
+        location: messageData.location,
+        user: {
+          name: messageData.profiles?.name || user.user_metadata?.full_name || "Current User",
+          avatar: messageData.profiles?.avatar_url || user.user_metadata?.avatar_url || "/placeholder.svg"
+        },
+        isPublic: messageData.is_public,
+        timestamp: messageData.created_at,
+        expiresAt: messageData.expires_at,
+        mediaUrl: messageData.media_url || undefined,
+        position: {
+          x: messageData.lat,
+          y: messageData.lng
+        },
+        hashtags: hashtags,
+        mentions: mentions,
+        postType: postType,
+        mediaFiles: mediaFiles.length > 0 ? mediaFiles.map(f => f.name) : undefined
+      };
+      
+      // Add the new message using the reactive state
+      console.log('📍 Adding message to map with position:', newMessage.position);
+      addMessage(newMessage);
+      
+      // Clear draft if it exists
+      clearDraft();
+      
+      // Stop the bounce animation after 2 seconds by removing the 'new-' prefix
+      setTimeout(() => {
+        updateMessage(newMessage.id, {
+          id: messageData.id
+        });
+      }, 2000);
+      
+      // Trigger a refresh of messages to ensure they show on the map
+      // The real-time subscription should handle this, but we'll force it for reliability
+      setTimeout(() => {
+        console.log('🔄 Triggering message refresh...');
+        window.dispatchEvent(new CustomEvent('refreshMessages'));
+      }, 100);
       
       const getSuccessMessage = () => {
         if (postType === 'livestream') return 'Your live stream Lo is now active!';
         if (mediaFiles.length > 1) return `Your Lo with ${mediaFiles.length} media files has been posted!`;
         if (postType === 'video') return 'Your video Lo has been posted!';
         if (postType === 'image') return 'Your photo Lo has been posted!';
-        return 'Your Lo has been posted successfully!';
+        return 'Your Lo is live on the map!';
       };
       
       toast({
@@ -223,7 +264,17 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
         description: getSuccessMessage(),
       });
       onClose();
-    }, 1000);
+      
+    } catch (error: any) {
+      console.error('Error posting message:', error);
+      toast({
+        title: "Error posting Lo",
+        description: error.message || "Failed to post your Lo. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const isSubmitDisabled = isLoading || !content.trim() || !isPinPlaced;

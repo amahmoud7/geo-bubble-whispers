@@ -24,6 +24,11 @@ interface MessageMarkersProps {
 }
 
 const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClick }) => {
+  console.log(`🗺️ MessageMarkers: Rendering ${messages.length} messages`);
+  if (messages.length > 0) {
+    console.log('📍 First message position:', messages[0].position);
+  }
+  
   return (
     <>
       {messages.map((message) => {
