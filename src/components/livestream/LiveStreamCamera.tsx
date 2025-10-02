@@ -75,12 +75,29 @@ const LiveStreamCamera: React.FC<LiveStreamCameraProps> = ({
         await loadVideoDevices();
         setStatus("ready");
       } catch (error: unknown) {
+        console.error('❌ Camera initialization failed:', error);
         setStatus("error");
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "We couldn't access your camera or microphone. Check permissions and try again."
-        );
+
+        // Enhanced error messages
+        let errorMsg = "We couldn't access your camera or microphone.";
+
+        if (error instanceof Error) {
+          if (error.name === 'NotAllowedError') {
+            errorMsg = "Camera permission denied. Go to Settings > Safari > Camera and enable access for this site.";
+          } else if (error.name === 'NotFoundError') {
+            errorMsg = "No camera found. Make sure your device has a working camera.";
+          } else if (error.name === 'NotReadableError') {
+            errorMsg = "Camera is already in use. Close other apps using the camera and try again.";
+          } else if (error.name === 'OverconstrainedError') {
+            errorMsg = "Camera settings not supported. Your camera doesn't support the requested quality.";
+          } else if (error.name === 'SecurityError') {
+            errorMsg = "Security error. Camera access requires HTTPS connection.";
+          } else {
+            errorMsg = error.message;
+          }
+        }
+
+        setErrorMessage(errorMsg);
       }
     };
 
@@ -112,26 +129,66 @@ const LiveStreamCamera: React.FC<LiveStreamCameraProps> = ({
       throw new Error("Camera access requires a secure (HTTPS) context.");
     }
 
+    // Detect iOS for platform-specific handling
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    console.log('📱 Platform - iOS:', isIOS);
+
+    // iOS-optimized constraints
     const constraints: MediaStreamConstraints = {
-      video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "user" },
-      audio: { echoCancellation: true, noiseSuppression: true },
+      video: {
+        ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "user" }),
+        width: { ideal: 1280, max: 1920 },
+        height: { ideal: 720, max: 1080 },
+        aspectRatio: 16/9
+      },
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      },
     };
 
+    console.log('🎥 Requesting camera with constraints:', constraints);
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    console.log('✅ Camera stream obtained:', stream.getTracks().length, 'tracks');
+
     streamRef.current = stream;
 
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
+
+      // iOS-specific attributes for reliable playback
+      if (isIOS) {
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.setAttribute('webkit-playsinline', 'true');
+      }
+
       videoRef.current.autoplay = true;
       videoRef.current.playsInline = true;
       videoRef.current.muted = true;
-      videoRef.current.onloadedmetadata = () => {
-        videoRef.current
-          ?.play()
-          .catch(() => {
+
+      videoRef.current.onloadedmetadata = async () => {
+        try {
+          await videoRef.current?.play();
+          console.log('✅ Video playback started successfully');
+        } catch (playError) {
+          console.error('⚠️ Autoplay failed, trying iOS fallback:', playError);
+          // iOS autoplay fallback
+          if (isIOS && videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.load();
+            try {
+              await videoRef.current.play();
+              console.log('✅ Video playback started with iOS fallback');
+            } catch (retryError) {
+              setStatus("error");
+              setErrorMessage("Unable to start the preview automatically. Tap retry.");
+            }
+          } else {
             setStatus("error");
             setErrorMessage("Unable to start the preview automatically. Tap retry.");
-          });
+          }
+        }
       };
     }
 
