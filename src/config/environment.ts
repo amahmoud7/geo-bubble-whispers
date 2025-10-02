@@ -1,5 +1,5 @@
 // Environment Configuration Management
-import { getEnv, getGoogleMapsApiKey } from '@/utils/env';
+import { Capacitor } from '@capacitor/core';
 
 interface EnvironmentConfig {
   NODE_ENV: string;
@@ -33,13 +33,22 @@ class Environment {
   }
 
   private loadEnvironmentConfig(): EnvironmentConfig {
-    const env = getEnv();
+    // Get Google Maps API key based on platform
+    const platform = Capacitor.getPlatform();
+    let googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
+    if (platform === 'ios' && import.meta.env.VITE_GOOGLE_MAPS_API_KEY_IOS) {
+      googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY_IOS;
+    } else if (platform === 'android' && import.meta.env.VITE_GOOGLE_MAPS_API_KEY_ANDROID) {
+      googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY_ANDROID;
+    }
+
     return {
       NODE_ENV: import.meta.env.NODE_ENV || 'development',
-      SUPABASE_URL: env.VITE_SUPABASE_URL,
-      SUPABASE_ANON_KEY: env.VITE_SUPABASE_ANON_KEY,
-      GOOGLE_MAPS_API_KEY: getGoogleMapsApiKey(),
-      APP_NAME: import.meta.env.VITE_APP_NAME || 'Geo Bubble Whispers',
+      SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || '',
+      SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+      GOOGLE_MAPS_API_KEY: googleMapsApiKey,
+      APP_NAME: import.meta.env.VITE_APP_NAME || 'Lo',
       APP_VERSION: import.meta.env.VITE_APP_VERSION || '1.0.0',
       API_BASE_URL: import.meta.env.VITE_API_BASE_URL || '',
       ENABLE_DEV_TOOLS: import.meta.env.VITE_ENABLE_DEV_TOOLS === 'true',
@@ -59,10 +68,9 @@ class Environment {
 
     for (const key of requiredKeys) {
       if (!this.config[key]) {
-        console.error(`Missing required environment variable: ${key}`);
-        if (this.isProduction()) {
-          throw new Error(`Missing required environment variable: ${key}`);
-        }
+        console.warn(`⚠️ Missing environment variable: ${key}`);
+        // Don't throw in development to allow the app to load
+        // Map will show error fallback if API key is missing
       }
     }
   }

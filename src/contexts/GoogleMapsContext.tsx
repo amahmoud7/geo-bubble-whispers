@@ -8,7 +8,6 @@ import React, {
 } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { environment } from '@/config/environment';
-import { getGoogleMapsApiKey } from '@/utils/env';
 
 // Simple libraries array 
 const LIBRARIES = ['places'] as const;
@@ -35,10 +34,12 @@ interface GoogleMapsProviderProps {
 
 export const GoogleMapsProvider: React.FC<GoogleMapsProviderProps> = ({ children }) => {
   const [authError, setAuthError] = useState<string | null>(null);
-  const googleMapsApiKey = getGoogleMapsApiKey();
-  
+
+  // Get API key directly from environment config
+  const googleMapsApiKey = environment.get('GOOGLE_MAPS_API_KEY') || '';
+
   console.log('🗺️ GoogleMapsContext initializing...');
-  console.log('🗺️ API key from environment.get():', googleMapsApiKey ? `${googleMapsApiKey.substring(0, 20)}...` : 'Missing');
+  console.log('🗺️ API key from environment:', googleMapsApiKey ? `${googleMapsApiKey.substring(0, 20)}...` : 'Missing');
   console.log('🗺️ API key type:', typeof googleMapsApiKey);
   console.log('🗺️ API key length:', googleMapsApiKey ? googleMapsApiKey.length : 'N/A');
   console.log('🗺️ Libraries:', LIBRARIES);
