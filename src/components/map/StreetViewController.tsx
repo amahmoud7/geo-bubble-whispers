@@ -5,6 +5,7 @@ import StreetViewControls from './StreetViewControls';
 import { useGoogleMap } from '@/hooks/useGoogleMap';
 import { useMessageState } from '@/hooks/useMessageState';
 import { toast } from '@/hooks/use-toast';
+import { eventBus } from '@/utils/eventBus';
 
 interface StreetViewControllerProps {
   map: google.maps.Map | null;
@@ -24,7 +25,6 @@ const StreetViewController: React.FC<StreetViewControllerProps> = ({
   const {
     isAttemptingStreetView,
     isInStreetView,
-    streetViewPosition,
     handleCancelStreetView,
     activateStreetView,
   } = useGoogleMap();
@@ -47,21 +47,15 @@ const StreetViewController: React.FC<StreetViewControllerProps> = ({
 
   // Listen for street view clicks to place pins
   useEffect(() => {
-    const handleStreetViewClick = (e: CustomEvent<{lat: number, lng: number}>) => {
-      if (isPlacingPin && isInStreetView && e.detail) {
-        setNewPinPosition(e.detail);
+    return eventBus.on('streetViewClick', (detail) => {
+      if (isPlacingPin && isInStreetView && detail) {
+        setNewPinPosition(detail);
         toast({
-          title: "Street View location selected",
-          description: "Now you can create your Lo at this location",
+          title: 'Street View location selected',
+          description: 'Now you can create your Lo at this location',
         });
       }
-    };
-
-    window.addEventListener('streetViewClick', handleStreetViewClick as EventListener);
-    
-    return () => {
-      window.removeEventListener('streetViewClick', handleStreetViewClick as EventListener);
-    };
+    });
   }, [isPlacingPin, isInStreetView, setNewPinPosition]);
 
   if (!isAttemptingStreetView) return null;

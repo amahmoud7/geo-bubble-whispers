@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 
-interface EventMessage {
+export interface EventMessage {
   id: string;
   content: string;
   media_url?: string;

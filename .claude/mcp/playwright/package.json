@@ -1,0 +1,27 @@
+{
+  "name": "playwright-universal-mcp",
+  "version": "1.0.0",
+  "description": "Universal browser testing and validation MCP server",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "install-browsers": "npx playwright install"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "playwright": "^1.40.0"
+  },
+  "keywords": [
+    "mcp",
+    "playwright",
+    "testing",
+    "browser-automation",
+    "e2e-testing",
+    "accessibility",
+    "performance"
+  ],
+  "author": "Universal Development Toolkit",
+  "license": "MIT"
+}

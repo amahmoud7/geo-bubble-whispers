@@ -1,0 +1,51 @@
+{
+  "projectName": "Lo Social Messaging Platform",
+  "projectType": "full-stack-social",
+  "detected": {
+    "framework": "react",
+    "language": "typescript",
+    "backend": "supabase",
+    "database": "postgresql",
+    "maps": "google-maps",
+    "mobile": "capacitor",
+    "deployment": "vercel",
+    "testing": "playwright",
+    "styling": "tailwindcss",
+    "uiLibrary": "shadcn-ui"
+  },
+  "features": {
+    "authentication": true,
+    "realtime": true,
+    "geolocation": true,
+    "media-processing": true,
+    "live-streaming": true,
+    "social-features": true,
+    "mobile-app": true,
+    "maps-integration": true
+  },
+  "architecture": {
+    "pattern": "micro-frontend",
+    "stateManagement": "tanstack-query",
+    "routing": "react-router",
+    "apiPattern": "rest",
+    "realtimePattern": "websockets"
+  },
+  "quality": {
+    "testCoverage": 80,
+    "performanceTarget": {
+      "lcp": 2.5,
+      "fid": 100,
+      "cls": 0.1
+    },
+    "accessibilityTarget": "WCAG-2.1-AA",
+    "securityStandards": ["OWASP", "GDPR", "CCPA"]
+  },
+  "team": {
+    "size": "small",
+    "experience": "senior",
+    "timezone": "mixed",
+    "workingStyle": "async"
+  },
+  "generated": "2025-09-23T07:01:00.000Z",
+  "version": "1.0.0"
+}

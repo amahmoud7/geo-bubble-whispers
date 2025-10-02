@@ -1,4 +1,5 @@
 import { Share } from '@capacitor/share';
+import { toast } from '@/hooks/use-toast';
 import { PlatformService } from './platform';
 
 export interface ShareOptions {
@@ -48,7 +49,7 @@ export class ShareService {
       } else {
         return 'share' in navigator;
       }
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -112,22 +113,17 @@ export class ShareService {
         textArea.remove();
       }
       
-      // Show toast notification
-      window.dispatchEvent(new CustomEvent('show-toast', {
-        detail: {
-          title: 'Copied to clipboard',
-          description: 'The content has been copied to your clipboard'
-        }
-      }));
+      toast({
+        title: 'Copied to clipboard',
+        description: 'The content has been copied to your clipboard',
+      });
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
-      window.dispatchEvent(new CustomEvent('show-toast', {
-        detail: {
-          title: 'Share failed',
-          description: 'Unable to share content',
-          variant: 'destructive'
-        }
-      }));
+      toast({
+        title: 'Share failed',
+        description: 'Unable to share content',
+        variant: 'destructive',
+      });
     }
   }
 }

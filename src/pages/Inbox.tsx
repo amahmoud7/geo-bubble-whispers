@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Search, Edit3, MessageCircle, UserPlus, Sparkles, Users } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Search, UserPlus, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDirectMessaging } from '@/hooks/useDirectMessaging';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
-import Navigation from '@/components/Navigation';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import { ConversationList } from '@/components/messaging/ConversationList';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import AppTopBar from '@/components/layout/AppTopBar';
+import { Chip } from '@/components/ui/chip';
 
 // Mock data for finding new users to message
 const mockUsers = [
@@ -44,19 +44,18 @@ const Inbox = () => {
   const { user } = useAuth();
   
   // Use the real messaging system
-  const { 
-    conversations, 
-    conversationsLoading, 
-    createOrGetConversation,
-    userPresence 
-  } = useDirectMessaging();
+  const { conversations, createOrGetConversation, userPresence } = useDirectMessaging();
   
   // Enable real-time messaging
   useRealtimeMessaging();
 
-  const filteredUsers = mockUsers.filter(mockUser =>
-    mockUser.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    mockUser.username.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUsers = useMemo(
+    () =>
+      mockUsers.filter((mockUser) =>
+        mockUser.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mockUser.username.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [searchQuery]
   );
   
   const handleStartConversation = async (userId: string) => {
@@ -70,10 +69,10 @@ const Inbox = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pb-20">
-        <Navigation />
-        <div className="p-4 text-center">
-          <p className="text-muted-foreground">Please sign in to view your inbox.</p>
+      <div className="flex min-h-screen flex-col bg-slate-50 pb-24">
+        <AppTopBar title="Messages" subtitle="connect" />
+        <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-slate-500">
+          Please sign in to view your inbox.
         </div>
         <BottomNavigation />
       </div>
@@ -81,166 +80,103 @@ const Inbox = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white pb-20">
-      <Navigation />
-      
-      <div className="w-full min-h-screen">
-        {/* Modern Header */}
-        <div className="sticky top-16 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 z-10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-          <div className="px-4 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <Link to="/home">
-                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100 transition-all duration-200">
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <div className="flex items-center space-x-3">
-                  <div className="text-left">
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-lo-navy to-lo-teal bg-clip-text text-transparent">
-                      {user.email?.split('@')[0] || 'Messages'}
-                    </h1>
-                    <p className="text-xs text-gray-500 font-medium">Stay connected with friends</p>
-                  </div>
-                  <div className="p-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full">
-                    <MessageCircle className="h-4 w-4 text-purple-500" />
-                  </div>
-                </div>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setShowNewConversation(!showNewConversation)}
-                className={`h-10 w-10 rounded-full transition-all duration-200 ${
-                  showNewConversation 
-                    ? 'bg-lo-teal/10 text-lo-teal hover:bg-lo-teal/20' 
-                    : 'hover:bg-gray-100'
-                }`}
-              >
-                {showNewConversation ? <ArrowLeft className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
-              </Button>
-            </div>
+    <div className="flex min-h-screen flex-col bg-slate-50 pb-24">
+      <AppTopBar
+        title={user.email?.split('@')[0] || 'Messages'}
+        subtitle="inbox"
+        leading={
+          <Link to="/home">
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+        }
+        trailing={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full"
+            onClick={() => setShowNewConversation((prev) => !prev)}
+          >
+            <UserPlus className="h-4 w-4" />
+          </Button>
+        }
+      />
 
-            {/* Modern Tabs */}
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setActiveTab('messages')}
-                className={`flex-1 py-3 px-4 text-center rounded-2xl font-semibold transition-all duration-300 ${
-                  activeTab === 'messages'
-                    ? 'bg-gradient-to-r from-lo-teal to-blue-500 text-white shadow-lg shadow-lo-teal/25'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/80 backdrop-blur-sm'
-                }`}
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Messages</span>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('requests')}
-                className={`flex-1 py-3 px-4 text-center rounded-2xl font-semibold transition-all duration-300 ${
-                  activeTab === 'requests'
-                    ? 'bg-gradient-to-r from-lo-teal to-blue-500 text-white shadow-lg shadow-lo-teal/25'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/80 backdrop-blur-sm'
-                }`}
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <Users className="w-4 h-4" />
-                  <span>Requests</span>
-                </div>
-              </button>
-            </div>
-          </div>
+      <div className="px-6 pt-3">
+        <div className="flex gap-2">
+          <Chip selected={activeTab === 'messages'} onClick={() => setActiveTab('messages')} className="flex-1">
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Messages
+          </Chip>
+          <Chip selected={activeTab === 'requests'} onClick={() => setActiveTab('requests')} className="flex-1">
+            <Users className="mr-2 h-4 w-4" />
+            Requests
+          </Chip>
         </div>
 
-        {/* Enhanced Search Bar */}
         {!showNewConversation && (
-          <div className="p-4">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search messages, people, content..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-11 pl-12 pr-4 bg-gray-100/80 border-0 rounded-2xl text-base placeholder:text-gray-500 focus:bg-white focus:ring-2 focus:ring-lo-teal/20 transition-all duration-200"
-              />
-            </div>
+          <div className="relative mt-4">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search conversations"
+              className="h-11 w-full rounded-full bg-white pl-11 pr-4 text-sm shadow-sm focus:ring-2 focus:ring-slate-900/10"
+            />
           </div>
         )}
+      </div>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden">
-          {showNewConversation ? (
-            /* Enhanced New Conversation View */
-            <div className="px-4 space-y-2">
-              <div className="py-3">
-                <h3 className="text-lg font-bold text-gray-800 mb-2">Start New Conversation</h3>
-                <p className="text-sm text-gray-500 font-medium">Find people to connect with</p>
-              </div>
+      <div className="mt-4 flex-1 overflow-hidden px-6">
+        {showNewConversation ? (
+          <div className="space-y-3 rounded-3xl bg-white p-5 shadow-sm">
+            <div className="mb-2">
+              <h3 className="text-base font-semibold text-slate-900">Start a conversation</h3>
+              <p className="text-xs text-slate-500">Suggested people you might know</p>
+            </div>
+            <div className="space-y-3">
               {filteredUsers.map((mockUser) => (
-                <div
+                <button
                   key={mockUser.id}
-                  className="flex items-center space-x-4 py-4 px-3 rounded-2xl hover:bg-white hover:shadow-lg cursor-pointer transition-all duration-300 bg-white/50 backdrop-blur-sm border border-gray-200/50"
                   onClick={() => handleStartConversation(mockUser.id)}
+                  className="flex items-center justify-between rounded-2xl border border-slate-100 px-4 py-3 text-left transition hover:border-slate-200 hover:bg-slate-50"
                 >
-                  <div className="relative">
-                    <Avatar className="h-16 w-16 ring-2 ring-white shadow-lg">
-                      <AvatarImage src={mockUser.avatar} alt={mockUser.name} />
-                      <AvatarFallback className="bg-gradient-to-r from-lo-teal to-blue-500 text-white font-semibold text-lg">{mockUser.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    {mockUser.isOnline && (
-                      <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-green-500 border-3 border-white rounded-full shadow-lg animate-pulse"></div>
-                    )}
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={mockUser.avatar} alt={mockUser.name} />
+                        <AvatarFallback>{mockUser.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      {mockUser.isOnline && (
+                        <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-white bg-emerald-500" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{mockUser.name}</p>
+                      <p className="text-xs text-slate-500">{mockUser.username}</p>
+                    </div>
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base text-gray-900">{mockUser.name}</h3>
-                    <p className="text-sm text-gray-500 font-medium">{mockUser.username}</p>
-                    <p className="text-xs text-gray-400 mt-1">{mockUser.bio}</p>
-                  </div>
-                  
-                  <Button 
-                    className="bg-gradient-to-r from-lo-teal to-blue-500 hover:from-lo-teal/90 hover:to-blue-500/90 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-2 rounded-full"
-                    size="sm"
-                    disabled={createOrGetConversation.isPending}
-                  >
-                    {createOrGetConversation.isPending ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-white/50 rounded-full animate-pulse"></div>
-                        <span>Starting...</span>
-                      </div>
-                    ) : (
-                      'Message'
-                    )}
-                  </Button>
-                </div>
+                  <MessageCircle className="h-4 w-4 text-slate-400" />
+                </button>
               ))}
             </div>
-          ) : (
-            /* Conversations List */
-            <div className="flex-1">
-              {activeTab === 'messages' ? (
-                <ConversationList
-                  conversations={conversations}
-                  userPresence={userPresence}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                />
-              ) : (
-                <div className="text-center py-12">
-                  <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">No message requests</h3>
-                  <p className="text-sm text-muted-foreground">
-                    When someone who isn't following you sends you a message, it will appear here
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+          </div>
+        ) : activeTab === 'messages' ? (
+          <ConversationList
+            conversations={conversations}
+            userPresence={userPresence}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center text-center text-sm text-slate-500">
+            <MessageCircle className="mb-3 h-10 w-10 text-slate-400" />
+            You have no message requests yet.
+          </div>
+        )}
       </div>
-      
+
       <BottomNavigation />
     </div>
   );

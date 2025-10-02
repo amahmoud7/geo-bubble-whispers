@@ -1,5 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getEnv } from '@/utils/env';
+import { eventBus } from '@/utils/eventBus';
 
 interface NotificationOptions {
   enableNearbyMessages: boolean;
@@ -7,6 +9,16 @@ interface NotificationOptions {
   enableFollowerUpdates: boolean;
   enableReactions: boolean;
   enableTrendingAlerts: boolean;
+}
+
+interface NearbyMessageRecord {
+  id: string;
+  lat: number;
+  lng: number;
+  content: string;
+  profiles?: {
+    name?: string;
+  } | null;
 }
 
 class PushNotificationService {
@@ -22,9 +34,17 @@ class PushNotificationService {
   };
   private notifiedMessages: Set<string> = new Set();
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
+  private vapidKey?: string;
 
   constructor() {
     this.initializeServiceWorker();
+    try {
+      this.vapidKey = getEnv().VITE_VAPID_PUBLIC_KEY;
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn('Push notifications VAPID key missing. Notifications will be disabled.', error);
+      }
+    }
   }
 
   private async initializeServiceWorker() {
@@ -82,13 +102,16 @@ class PushNotificationService {
       let subscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
       
       if (!subscription) {
-        // Create new subscription
-        const vapidPublicKey = process.env.VITE_VAPID_PUBLIC_KEY || 'BKagOI0KJq7YJ_XEXq1kBg2Xs-WdPxDKxiZZe3XBr4UzSZE-xx9MuvIV5hnhZ3lO9Vcnc5r_1xPbpHJknbKWjxM';
-        const convertedVapidKey = this.urlBase64ToUint8Array(vapidPublicKey);
-        
+        if (!this.vapidKey) {
+          console.warn('Cannot subscribe to push notifications without VAPID key.');
+          return;
+        }
+
+        const convertedVapidKey = this.urlBase64ToUint8Array(this.vapidKey);
+
         subscription = await this.serviceWorkerRegistration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: convertedVapidKey
+          applicationServerKey: convertedVapidKey,
         });
       }
 
@@ -102,7 +125,7 @@ class PushNotificationService {
   private urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
-      .replace(/\-/g, '+')
+      .replace(/-/g, '+')
       .replace(/_/g, '/');
 
     const rawData = window.atob(base64);
@@ -177,7 +200,7 @@ class PushNotificationService {
       return;
     }
 
-    messages?.forEach(message => {
+    (messages as NearbyMessageRecord[] | null)?.forEach((message) => {
       const distance = this.calculateDistance(
         latitude,
         longitude,
@@ -209,7 +232,7 @@ class PushNotificationService {
     return R * c;
   }
 
-  private sendNearbyMessageNotification(message: any, distance: number) {
+  private sendNearbyMessageNotification(message: NearbyMessageRecord, distance: number) {
     if (this.permission !== 'granted') return;
 
     const distanceText = distance < 100 ? 
@@ -232,10 +255,11 @@ class PushNotificationService {
 
     notification.onclick = () => {
       window.focus();
-      // Navigate to the message location on the map
-      window.dispatchEvent(new CustomEvent('navigate-to-message', {
-        detail: { lat: message.lat, lng: message.lng, messageId: message.id }
-      }));
+      eventBus.emit('navigateToMessage', {
+        lat: message.lat,
+        lng: message.lng,
+        messageId: message.id,
+      });
       notification.close();
     };
   }

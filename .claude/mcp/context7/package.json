@@ -1,0 +1,23 @@
+{
+  "name": "context7-universal-mcp",
+  "version": "1.0.0",
+  "description": "Universal documentation and best practices MCP server",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "documentation",
+    "best-practices",
+    "universal",
+    "development"
+  ],
+  "author": "Universal Development Toolkit",
+  "license": "MIT"
+}

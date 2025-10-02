@@ -1,11 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { X, MapPin, Globe, Lock, Camera, Video, Type, Loader2, Radio, ChevronRight, CheckCircle, Navigation } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapPin, Camera, Type, Radio, Paperclip, UploadCloud, ShieldCheck, Navigation } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import LiveStreamCamera from '@/components/livestream/LiveStreamCamera';
 import { LiveStreamService, LiveStreamData } from '@/services/livestreamService';
-import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, Marker } from '@react-google-maps/api';
+import { useGoogleMapsLoader } from '@/contexts/GoogleMapsContext';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Textarea } from '@/components/ui/textarea';
+import { Chip } from '@/components/ui/chip';
+import { Switch } from '@/components/ui/switch';
 
 interface CreateLoModalProps {
   isOpen: boolean;
@@ -14,44 +19,37 @@ interface CreateLoModalProps {
 }
 
 type PostType = 'text' | 'media' | 'live';
-type CreateStep = 'type' | 'location' | 'content';
 
-const CreateLoModal: React.FC<CreateLoModalProps> = ({
-  isOpen,
-  onClose,
-  onPostCreated
-}) => {
-  // State management
-  const [currentStep, setCurrentStep] = useState<CreateStep>('type');
+const POST_TYPE_OPTIONS: { type: PostType; label: string; description: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { type: 'text', label: 'Text', description: 'Share a quick update', icon: Type },
+  { type: 'media', label: 'Media', description: 'Photo or video moment', icon: Camera },
+  { type: 'live', label: 'Live', description: 'Broadcast in real-time', icon: Radio },
+];
+
+const CreateLoModal: React.FC<CreateLoModalProps> = ({ isOpen, onClose, onPostCreated }) => {
+  const [postType, setPostType] = useState<PostType>('text');
   const [content, setContent] = useState('');
-  const [postType, setPostType] = useState<PostType | null>(null);
   const [isPrivate, setIsPrivate] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [streamTitle, setStreamTitle] = useState('');
   const [isLiveStreaming, setIsLiveStreaming] = useState(false);
   const [currentLiveStream, setCurrentLiveStream] = useState<LiveStreamData | null>(null);
-  const [streamTitle, setStreamTitle] = useState('');
-  
-  // Location state
+  const [isLocationExpanded, setIsLocationExpanded] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { userLocation } = useUserLocation();
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationName, setLocationName] = useState<string>('');
-  const [isSelectingLocation, setIsSelectingLocation] = useState(false);
-  
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: 'AIzaSyCja18mhM6OgcQPkZp7rCZM6C29SGz3S4U',
-    libraries: ['places']
-  });
+  const { isLoaded, loadError } = useGoogleMapsLoader();
 
   // Reset form when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      setCurrentStep('type');
       setContent('');
-      setPostType(null);
+      setPostType('text');
       setIsPrivate(false);
       setMediaFile(null);
       setMediaPreview(null);
@@ -60,6 +58,7 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({
       setStreamTitle('');
       setSelectedLocation(null);
       setLocationName('');
+      setIsLocationExpanded(false);
     }
   }, [isOpen]);
 
@@ -115,23 +114,6 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleTypeSelect = (type: PostType) => {
-    setPostType(type);
-    setCurrentStep('location');
-  };
-
-  const handleLocationConfirm = () => {
-    if (!selectedLocation) {
-      toast({
-        title: "Location required",
-        description: "Please select a location for your Lo",
-        variant: "destructive"
-      });
-      return;
-    }
-    setCurrentStep('content');
-  };
-
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
     if (e.latLng) {
       const newLocation = {
@@ -150,39 +132,38 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async () => {
     if (postType === 'live') {
-      toast({
-        title: "Already streaming!",
-        description: "Your livestream is already active",
-      });
+      if (!isLiveStreaming || !currentLiveStream) {
+        toast({ title: 'Start streaming', description: 'Go live before publishing.' });
+        return;
+      }
+      // Livestream metadata handled elsewhere
       return;
     }
-    
+
     if (!content.trim() && !mediaFile) {
       toast({
-        title: "Content required",
-        description: "Please add some content to your Lo",
-        variant: "destructive"
+        title: 'Add something to share',
+        description: 'Write a message or attach media.',
+        variant: 'destructive',
       });
       return;
     }
 
     if (!selectedLocation) {
       toast({
-        title: "Location required",
-        description: "Please select a location for your Lo",
-        variant: "destructive"
+        title: 'Location required',
+        description: 'Select a spot so others can discover your Lo.',
+        variant: 'destructive',
       });
       return;
     }
 
-    setIsLoading(true);
+    setIsPublishing(true);
 
     try {
-      const newPost = {
+      onPostCreated?.({
         id: `post-${Date.now()}`,
         content: content.trim(),
         type: postType,
@@ -191,30 +172,17 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({
         location: {
           lat: selectedLocation.lat,
           lng: selectedLocation.lng,
-          name: locationName || 'Selected Location'
+          name: locationName || 'Selected Location',
         },
         createdAt: new Date().toISOString(),
-        user: {
-          id: 'current-user',
-          name: 'You',
-          avatar: '/placeholder-avatar.png'
-        }
-      };
-
-      onPostCreated?.(newPost);
-
-      // Success toast is now handled by the parent component after database save
-      // onClose() is also handled by the parent component
-
-    } catch (error: any) {
-      console.error('Error creating post:', error);
-      toast({
-        title: "Failed to post",
-        description: "Please try again",
-        variant: "destructive"
       });
+
+      onClose();
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast({ title: 'Failed to post', description: 'Please try again', variant: 'destructive' });
     } finally {
-      setIsLoading(false);
+      setIsPublishing(false);
     }
   };
 
@@ -225,488 +193,234 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({
       fileInputRef.current.value = '';
     }
   };
-
-  if (!isOpen) return null;
-
-  const renderStepIndicator = () => (
-    <div className="flex items-center justify-center space-x-2 mb-6">
-      {['type', 'location', 'content'].map((step, index) => (
-        <React.Fragment key={step}>
-          <div className={`flex items-center justify-center w-8 h-8 rounded-full transition-all ${
-            currentStep === step 
-              ? 'bg-lo-teal text-white' 
-              : index < ['type', 'location', 'content'].indexOf(currentStep)
-              ? 'bg-green-500 text-white'
-              : 'bg-gray-200 text-gray-500'
-          }`}>
-            {index < ['type', 'location', 'content'].indexOf(currentStep) ? (
-              <CheckCircle className="w-5 h-5" />
-            ) : (
-              <span className="text-sm font-semibold">{index + 1}</span>
-            )}
-          </div>
-          {index < 2 && (
-            <div className={`w-12 h-0.5 transition-all ${
-              index < ['type', 'location', 'content'].indexOf(currentStep)
-                ? 'bg-green-500'
-                : 'bg-gray-200'
-            }`} />
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
-
-  const renderTypeSelection = () => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900 text-center mb-6">
-        What would you like to share?
-      </h3>
-      
-      <div className="grid grid-cols-1 gap-3">
-        <button
-          type="button"
-          onClick={() => handleTypeSelect('text')}
-          className="flex items-center justify-between p-4 rounded-xl border-2 border-gray-200 hover:border-lo-teal hover:bg-lo-teal/5 transition-all group"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-              <Type className="w-6 h-6 text-white" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-gray-900">Text Message</p>
-              <p className="text-sm text-gray-500">Share your thoughts</p>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-lo-teal transition-colors" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTypeSelect('media')}
-          className="flex items-center justify-between p-4 rounded-xl border-2 border-gray-200 hover:border-lo-teal hover:bg-lo-teal/5 transition-all group"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-              <Camera className="w-6 h-6 text-white" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-gray-900">Photo/Video</p>
-              <p className="text-sm text-gray-500">Share visual moments</p>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-lo-teal transition-colors" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTypeSelect('live')}
-          className="flex items-center justify-between p-4 rounded-xl border-2 border-gray-200 hover:border-red-500 hover:bg-red-50 transition-all group"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
-              <Radio className="w-6 h-6 text-white" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-gray-900">Go Live</p>
-              <p className="text-sm text-gray-500">Stream from your location</p>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors" />
-        </button>
+  const locationDisplay = selectedLocation ? (
+    <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm">
+      <div className="flex items-center gap-2 font-medium text-slate-700">
+        <MapPin className="h-4 w-4 text-slate-500" />
+        {locationName || 'Selected Location'}
       </div>
+      <p className="mt-1 text-xs text-slate-400">
+        {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
+      </p>
     </div>
-  );
+  ) : null;
 
-  const renderLocationSelection = () => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={() => setCurrentStep('type')}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ChevronRight className="w-5 h-5 text-gray-500 rotate-180" />
-        </button>
-        <h3 className="text-lg font-semibold text-gray-900">
-          Select Location
-        </h3>
-        <div className="w-9" />
-      </div>
-
-      <div className="space-y-4">
-        {/* Current Location Button */}
-        <button
-          type="button"
-          onClick={() => {
-            if (userLocation) {
-              setSelectedLocation(userLocation);
-              const geocoder = new google.maps.Geocoder();
-              geocoder.geocode({ location: userLocation }, (results, status) => {
-                if (status === 'OK' && results?.[0]) {
-                  setLocationName(results[0].formatted_address.split(',')[0]);
-                }
-              });
-            }
-          }}
-          className="w-full flex items-center justify-between p-3 rounded-lg bg-lo-teal/10 border border-lo-teal/30 hover:bg-lo-teal/20 transition-colors"
-        >
-          <div className="flex items-center space-x-2">
-            <Navigation className="w-5 h-5 text-lo-teal" />
-            <span className="font-medium text-gray-900">Use Current Location</span>
-          </div>
-          {selectedLocation && selectedLocation.lat === userLocation?.lat && (
-            <CheckCircle className="w-5 h-5 text-lo-teal" />
-          )}
-        </button>
-
-        {/* Map for location selection */}
-        {isLoaded && (
-          <div className="relative">
-            <div className="h-64 rounded-xl overflow-hidden border border-gray-200">
-              <GoogleMap
-                mapContainerClassName="w-full h-full"
-                center={selectedLocation || userLocation || { lat: 40.7128, lng: -74.0060 }}
-                zoom={15}
-                onClick={handleMapClick}
-                options={{
-                  disableDefaultUI: true,
-                  zoomControl: true,
-                  clickableIcons: false,
-                  styles: [
-                    {
-                      featureType: "poi",
-                      elementType: "labels",
-                      stylers: [{ visibility: "off" }]
-                    }
-                  ]
-                }}
-              >
-                {selectedLocation && (
-                  <Marker
-                    position={selectedLocation}
-                    icon={{
-                      path: google.maps.SymbolPath.CIRCLE,
-                      scale: 8,
-                      fillColor: '#13D3AA',
-                      fillOpacity: 1,
-                      strokeColor: '#ffffff',
-                      strokeWeight: 2
-                    }}
-                  />
-                )}
-              </GoogleMap>
-            </div>
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              Tap on the map to select a different location
-            </p>
-          </div>
-        )}
-
-        {/* Selected Location Display */}
+  const mapSection = isLoaded ? (
+    <div className={isLocationExpanded ? 'h-56' : 'h-40'}>
+      <GoogleMap
+        mapContainerClassName="h-full w-full rounded-2xl"
+        center={selectedLocation || userLocation || { lat: 40.7128, lng: -74.006 }}
+        zoom={15}
+        onClick={handleMapClick}
+        options={{
+          disableDefaultUI: true,
+          zoomControl: true,
+          clickableIcons: false,
+          styles: [
+            {
+              featureType: 'poi',
+              elementType: 'labels',
+              stylers: [{ visibility: 'off' }],
+            },
+          ],
+        }}
+      >
         {selectedLocation && (
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-start space-x-2">
-              <MapPin className="w-5 h-5 text-lo-teal mt-0.5" />
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">
-                  {locationName || 'Selected Location'}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
-                </p>
-              </div>
-            </div>
-          </div>
+          <Marker
+            position={selectedLocation}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: '#0f172a',
+              fillOpacity: 1,
+              strokeColor: '#fff',
+              strokeWeight: 2,
+            }}
+          />
         )}
-
-        {/* Continue Button */}
-        <Button
-          onClick={handleLocationConfirm}
-          disabled={!selectedLocation}
-          className="w-full bg-gradient-to-r from-lo-teal to-emerald-500 hover:from-emerald-600 hover:to-lo-teal text-white"
-        >
-          Continue to Create Lo
-          <ChevronRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
+      </GoogleMap>
+    </div>
+  ) : (
+    <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-500">
+      {loadError ? 'Map unavailable right now' : 'Loading map…'}
     </div>
   );
 
-  const renderContent = () => {
-    switch (currentStep) {
-      case 'type':
-        return renderTypeSelection();
-      case 'location':
-        return renderLocationSelection();
-      case 'content':
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={() => setCurrentStep('location')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ChevronRight className="w-5 h-5 text-gray-500 rotate-180" />
-              </button>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Create Your Lo
-              </h3>
-              <div className="w-9" />
-            </div>
-
-            {/* Location Badge */}
-            <div className="flex items-center justify-center">
-              <div className="inline-flex items-center space-x-2 px-3 py-1.5 bg-lo-teal/10 rounded-full">
-                <MapPin className="w-4 h-4 text-lo-teal" />
-                <span className="text-sm font-medium text-gray-700">
-                  {locationName || 'Selected Location'}
-                </span>
-              </div>
-            </div>
-
-            {/* Content based on type */}
-            {postType === 'live' ? (
-              <LiveStreamCamera
-                isStreaming={isLiveStreaming}
-                onStreamStart={async (stream) => {
-                  if (!selectedLocation) {
-                    toast({
-                      title: "Location required",
-                      description: "Please select a location first",
-                      variant: "destructive"
-                    });
-                    return;
-                  }
-
-                  try {
-                    const liveStreamData = await LiveStreamService.startLiveStream(
-                      stream,
-                      streamTitle || 'Live from my location',
-                      {
-                        lat: selectedLocation.lat,
-                        lng: selectedLocation.lng,
-                        name: locationName || 'Selected Location'
-                      },
-                      isPrivate
-                    );
-                    
-                    setCurrentLiveStream(liveStreamData);
-                    setIsLiveStreaming(true);
-                    
-                    onPostCreated?.({
-                      id: liveStreamData.id,
-                      content: liveStreamData.title,
-                      type: 'live',
-                      isLive: true,
-                      streamUrl: liveStreamData.streamUrl,
-                      location: liveStreamData.location,
-                      createdAt: liveStreamData.startedAt
-                    });
-                  } catch (error: any) {
-                    toast({
-                      title: "Failed to start stream",
-                      description: error.message,
-                      variant: "destructive"
-                    });
-                  }
-                }}
-                onStreamEnd={async () => {
-                  if (currentLiveStream) {
-                    try {
-                      await LiveStreamService.endLiveStream(currentLiveStream.id);
-                      setIsLiveStreaming(false);
-                      setCurrentLiveStream(null);
-                      onClose();
-                    } catch (error: any) {
-                      toast({
-                        title: "Error ending stream",
-                        description: error.message,
-                        variant: "destructive"
-                      });
-                    }
-                  }
-                }}
-                viewerCount={currentLiveStream?.viewerCount || 0}
-                streamTitle={streamTitle}
-                onTitleChange={setStreamTitle}
-              />
-            ) : (
-              <>
-                {postType !== 'media' && (
-                  <div>
-                    <textarea
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      placeholder="What's happening at this location?"
-                      className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-lo-teal focus:border-transparent"
-                      rows={4}
-                      maxLength={500}
-                    />
-                    <div className="text-right text-xs text-gray-500 mt-1">
-                      {content.length}/500
-                    </div>
-                  </div>
-                )}
-
-                {postType === 'media' && (
-                  <div>
-                    {!mediaFile ? (
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:border-lo-teal hover:bg-gray-50 transition-all"
-                      >
-                        <div className="flex flex-col items-center space-y-2">
-                          <div className="p-3 bg-gray-100 rounded-full">
-                            <Camera className="h-6 w-6 text-gray-500" />
-                          </div>
-                          <p className="text-sm text-gray-700 font-medium">
-                            Add photo or video
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Max 5MB (photo) / 100MB (video)
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        {mediaFile?.type.startsWith('image/') ? (
-                          <img
-                            src={mediaPreview!}
-                            alt="Preview"
-                            className="w-full h-48 object-cover rounded-lg"
-                          />
-                        ) : (
-                          <video
-                            src={mediaPreview!}
-                            className="w-full h-48 object-cover rounded-lg"
-                            controls
-                          />
-                        )}
-                        <button
-                          type="button"
-                          onClick={clearMedia}
-                          className="absolute top-2 right-2 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
-                    
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*,video/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-
-                    {mediaFile && (
-                      <div className="mt-3">
-                        <textarea
-                          value={content}
-                          onChange={(e) => setContent(e.target.value)}
-                          placeholder="Add a caption..."
-                          className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-lo-teal focus:border-transparent"
-                          rows={2}
-                          maxLength={500}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Privacy Toggle */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    {isPrivate ? <Lock className="h-4 w-4 text-orange-500" /> : <Globe className="h-4 w-4 text-lo-teal" />}
-                    <span className="text-sm text-gray-700">
-                      {isPrivate ? 'Private (Followers only)' : 'Public (Everyone)'}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsPrivate(!isPrivate)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      isPrivate ? 'bg-orange-500' : 'bg-lo-teal'
-                    }`}
-                  >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      isPrivate ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  const composerFooterDisabled =
+    isPublishing || (postType !== 'live' && !content.trim() && !mediaFile);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Liquid Glass Backdrop */}
-      <div 
-        className="absolute inset-0 glass-overlay"
-        onClick={onClose}
-      />
-      
-      {/* Modal with Liquid Glass UI */}
-      <div className="relative glass-card w-full max-w-lg max-h-[90vh] overflow-hidden animate-fade-in"
-           style={{
-             background: 'rgba(255, 255, 255, 0.15)',
-             backdropFilter: 'blur(20px)',
-             border: '1px solid rgba(255, 255, 255, 0.3)',
-             boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
-           }}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 glass border-b border-white/20">
-          <h2 className="text-lg font-semibold text-white liquid-text">Create Lo</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 glass hover:bg-white/20 rounded-full transition-all"
-          >
-            <X className="h-4 w-4 text-white" />
-          </button>
-        </div>
+    <Sheet open={isOpen} onOpenChange={(open) => (!open ? onClose() : undefined)}>
+      <SheetContent side="bottom" className="h-[88vh] overflow-y-auto rounded-t-[32px] px-6 pb-6 pt-4">
+        <SheetHeader className="items-start">
+          <SheetTitle className="text-left text-lg font-semibold text-slate-900">
+            Create Lo
+          </SheetTitle>
+        </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          {/* Content */}
-          <div className="flex-1 p-4 overflow-y-auto">
-            {renderStepIndicator()}
-            {renderContent()}
+        <div className="mt-4 space-y-6">
+          <div className="grid grid-cols-3 gap-2">
+            {POST_TYPE_OPTIONS.map(({ type, label, description, icon: Icon }) => (
+              <Chip
+                key={type}
+                selected={postType === type}
+                onClick={() => setPostType(type)}
+                className="flex-col items-start justify-start gap-1 rounded-2xl px-3 py-3 text-left"
+              >
+                <Icon className="mb-1 h-4 w-4" />
+                <span className="text-sm font-semibold">{label}</span>
+                <span className="text-[11px] font-normal text-slate-500">{description}</span>
+              </Chip>
+            ))}
           </div>
 
-          {/* Footer - Only show for non-live posts in content step */}
-          {currentStep === 'content' && postType !== 'live' && (
-            <div className="flex space-x-3 p-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => setCurrentStep('location')}
-                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
-              >
-                Back
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading || (!content.trim() && !mediaFile)}
-                className="flex-1 liquid-button disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Posting...</span>
-                  </>
+          {postType === 'live' ? (
+            <LiveStreamCamera
+              isStreaming={isLiveStreaming}
+              streamTitle={streamTitle}
+              onTitleChange={setStreamTitle}
+              onStreamStart={async (stream, { title }) => {
+                if (!selectedLocation) {
+                  toast({ title: 'Location required', description: 'Select a location first', variant: 'destructive' });
+                  return;
+                }
+                try {
+                  const resolvedTitle = title.trim() || streamTitle.trim() || 'Live on Lo';
+                  const liveStreamData = await LiveStreamService.startLiveStream(
+                    stream,
+                    resolvedTitle,
+                    {
+                      lat: selectedLocation.lat,
+                      lng: selectedLocation.lng,
+                      name: locationName || 'Selected Location',
+                    },
+                    isPrivate
+                  );
+                  setStreamTitle(resolvedTitle);
+                  setCurrentLiveStream(liveStreamData);
+                  setIsLiveStreaming(true);
+                } catch (error: unknown) {
+                  setIsLiveStreaming(false);
+                  setCurrentLiveStream(null);
+                  const message = error instanceof Error ? error.message : 'Please try again in a moment.';
+                  throw new Error(message);
+                }
+              }}
+              onStreamEnd={async () => {
+                if (!currentLiveStream) {
+                  return;
+                }
+
+                try {
+                  await LiveStreamService.endLiveStream(currentLiveStream.id);
+                  setCurrentLiveStream(null);
+                  setIsLiveStreaming(false);
+                  onClose();
+                } catch (error) {
+                  setIsLiveStreaming(true);
+                  throw error instanceof Error ? error : new Error('Unable to end livestream.');
+                }
+              }}
+            />
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Textarea
+                  value={content}
+                  onChange={(event) => setContent(event.target.value)}
+                  placeholder="What's happening nearby?"
+                  maxLength={500}
+                  className="min-h-[120px] resize-none rounded-2xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-slate-900/10"
+                />
+                <p className="mt-1 text-right text-[11px] text-slate-400">{content.length}/500</p>
+              </div>
+
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4">
+                {!mediaFile ? (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 transition hover:border-slate-300 hover:bg-slate-100"
+                  >
+                    <Paperclip className="h-4 w-4" /> Attach photo or video
+                  </button>
                 ) : (
-                  <span>Post Lo</span>
+                  <div className="relative">
+                    {mediaFile.type.startsWith('image/') ? (
+                      <img src={mediaPreview ?? ''} alt="Preview" className="h-48 w-full rounded-xl object-cover" />
+                    ) : (
+                      <video src={mediaPreview ?? ''} className="h-48 w-full rounded-xl object-cover" controls />
+                    )}
+                    <Button variant="ghost" size="sm" className="absolute right-3 top-3 rounded-full bg-white/80" onClick={clearMedia}>
+                      Remove
+                    </Button>
+                  </div>
                 )}
-              </button>
+                <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFileSelect} />
+
+                <div className="mt-3 flex items-start gap-2 rounded-xl bg-slate-100 px-3 py-2 text-xs text-slate-500">
+                  <UploadCloud className="mt-0.5 h-3.5 w-3.5" />
+                  Your upload will be optimized before publishing.
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700">Visibility</p>
+                    <p className="text-xs text-slate-400">Decide who sees this Lo</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <ShieldCheck className={`h-4 w-4 ${isPrivate ? 'text-amber-500' : 'text-emerald-500'}`} />
+                    <span>{isPrivate ? 'Followers' : 'Public'}</span>
+                    <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-        </form>
-      </div>
-    </div>
+
+          <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Location</p>
+                <p className="text-xs text-slate-400">Drop a pin to anchor this Lo</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setIsLocationExpanded((state) => !state)}>
+                {isLocationExpanded ? 'Collapse' : 'Adjust'}
+              </Button>
+            </div>
+            <div className="overflow-hidden rounded-2xl border border-slate-100">
+              {mapSection}
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="w-full justify-start gap-2 rounded-xl"
+              onClick={() => {
+                if (userLocation) {
+                  setSelectedLocation(userLocation);
+                  setLocationName('Current location');
+                }
+              }}
+            >
+              <Navigation className="h-4 w-4" /> Use current position
+            </Button>
+            {locationDisplay}
+          </div>
+        </div>
+
+        <SheetFooter className="mt-6">
+          <Button
+            className="h-12 w-full rounded-full bg-slate-900 text-white hover:bg-slate-800"
+            disabled={composerFooterDisabled}
+            onClick={handleSubmit}
+          >
+            {isPublishing ? 'Publishing…' : postType === 'live' ? 'Go Live' : 'Share Lo'}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 };
 

@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Download, Upload, Trash2 } from 'lucide-react';
+import { eventBus } from '@/utils/eventBus';
 
 interface LiveStreamManagerProps {
   isRecording: boolean;
@@ -127,9 +128,7 @@ const LiveStreamManager: React.FC<LiveStreamManagerProps> = ({
     Object.defineProperty(changeEvent, 'target', { value: fileInput });
     
     // Dispatch custom event that the parent can listen for
-    window.dispatchEvent(new CustomEvent('livestreamVideoReady', {
-      detail: { file, event: changeEvent }
-    }));
+    eventBus.emit('livestreamVideoReady', { file, event: changeEvent });
     
     // Clean up
     URL.revokeObjectURL(recordedStream.url);

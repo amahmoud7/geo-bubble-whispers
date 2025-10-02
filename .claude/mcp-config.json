@@ -1,0 +1,96 @@
+{
+  "version": "1.0.0",
+  "description": "Universal MCP Configuration - Works with any project",
+  "mcpServers": {
+    "context7": {
+      "command": "node",
+      "args": [".claude/mcp/context7/server.js"],
+      "env": {
+        "PROJECT_ROOT": "${PWD}",
+        "CONTEXT_FILE": "${PWD}/.claude/project-context.json",
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+      },
+      "description": "Universal documentation and best practices server"
+    },
+    "playwright": {
+      "command": "node",
+      "args": [".claude/mcp/playwright/server.js"],
+      "env": {
+        "PROJECT_ROOT": "${PWD}",
+        "PLAYWRIGHT_CONFIG": "${PWD}/.claude/playwright.config.js",
+        "PLAYWRIGHT_BROWSERS_PATH": "${PLAYWRIGHT_BROWSERS_PATH}"
+      },
+      "description": "Universal browser testing and validation server"
+    },
+    "linear": {
+      "command": "node",
+      "args": [".claude/mcp/linear/server.js"],
+      "env": {
+        "PROJECT_ROOT": "${PWD}",
+        "LINEAR_API_KEY": "${LINEAR_API_KEY}",
+        "LINEAR_TEAM_ID": "${LINEAR_TEAM_ID}",
+        "LINEAR_PROJECT_ID": "${LINEAR_PROJECT_ID}"
+      },
+      "description": "Universal project management and requirements tracking server"
+    },
+    "magic": {
+      "command": "node",
+      "args": [".claude/mcp/magic/index.js"],
+      "env": {
+        "PROJECT_ROOT": "${PWD}"
+      },
+      "description": "Component generation and design system integration server"
+    },
+    "workflow-engine": {
+      "command": "node", 
+      "args": [".claude/mcp/workflow-engine/index.js"],
+      "env": {
+        "PROJECT_ROOT": "${PWD}"
+      },
+      "description": "Workflow orchestration and state machine server"
+    }
+  },
+  "globalConfig": {
+    "autoDetectFramework": true,
+    "adaptToProject": true,
+    "updateBestPractices": "weekly",
+    "logLevel": "info"
+  },
+  "projectTypes": {
+    "react": {
+      "patterns": ["component-library", "state-management", "routing"],
+      "testing": ["component-testing", "integration-testing"],
+      "performance": ["bundle-analysis", "core-web-vitals"]
+    },
+    "vue": {
+      "patterns": ["composition-api", "vuex", "vue-router"],
+      "testing": ["vue-test-utils", "e2e-testing"],
+      "performance": ["lighthouse", "bundle-analysis"]
+    },
+    "nextjs": {
+      "patterns": ["app-router", "server-components", "api-routes"],
+      "testing": ["component-testing", "api-testing"],
+      "performance": ["next-bundle-analyzer", "core-web-vitals"]
+    },
+    "fastapi": {
+      "patterns": ["async-routes", "dependency-injection", "pydantic-models"],
+      "testing": ["pytest", "httpx-testing"],
+      "performance": ["async-optimization", "database-queries"]
+    },
+    "django": {
+      "patterns": ["class-based-views", "django-rest", "orm-optimization"],
+      "testing": ["django-test", "rest-testing"],
+      "performance": ["database-optimization", "caching"]
+    },
+    "nodejs": {
+      "patterns": ["express-middleware", "async-patterns", "error-handling"],
+      "testing": ["jest", "supertest"],
+      "performance": ["profiling", "memory-optimization"]
+    },
+    "universal": {
+      "patterns": ["clean-architecture", "error-handling", "logging"],
+      "testing": ["unit-testing", "integration-testing"],
+      "performance": ["profiling", "monitoring"]
+    }
+  }
+}

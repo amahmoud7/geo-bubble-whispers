@@ -6,6 +6,7 @@ import {
   PermissionStatus
 } from '@capacitor/push-notifications';
 import { PlatformService } from './platform';
+import { eventBus } from '@/utils/eventBus';
 
 export interface NotificationPermission {
   receive: 'granted' | 'denied' | 'prompt';
@@ -214,12 +215,10 @@ export class NotificationService {
     
     if (data?.messageId) {
       // Navigate to specific message
-      window.dispatchEvent(new CustomEvent('notification-action', {
-        detail: {
-          action: 'view-message',
-          messageId: data.messageId
-        }
-      }));
+      eventBus.emit('notificationAction', {
+        action: 'view-message',
+        messageId: data.messageId,
+      });
     }
   }
 }

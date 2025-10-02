@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { eventBus } from '@/utils/eventBus';
 
 export const useGoogleMap = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -57,9 +58,7 @@ export const useGoogleMap = () => {
           lat: event.latLng.lat(),
           lng: event.latLng.lng()
         };
-        window.dispatchEvent(new CustomEvent('streetViewClick', { 
-          detail: position 
-        }));
+        eventBus.emit('streetViewClick', position);
       }
     });
 

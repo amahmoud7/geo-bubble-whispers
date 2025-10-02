@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, OverlayView } from '@react-google-maps/api';
+import React, { useState, useEffect, useCallback } from 'react';
+import { GoogleMap, OverlayView } from '@react-google-maps/api';
 import ModernMapControls from './map/ModernMapControls';
 import StreetViewController from './map/StreetViewController';
 import MessageCreationController from './map/MessageCreationController';
 import MessageDisplayController from './map/MessageDisplayController';
 import LiveStreamMarkers from './livestream/LiveStreamMarkers';
 import LiveStreamViewer from './livestream/LiveStreamViewer';
-import LiveStreamController from './livestream/LiveStreamController';
 import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { useGoogleMap } from '@/hooks/useGoogleMap';
 import { useMessages } from '@/hooks/useMessages';
@@ -15,28 +14,69 @@ import { useUserLocation } from '@/hooks/useUserLocation';
 import { useLiveStreams } from '@/hooks/useLiveStreams';
 import { useMapContext } from '@/contexts/MapContext';
 import { defaultMapOptions } from '@/config/mapStyles';
-import { mockMessages } from '@/mock/messages';
 import { useAuth } from '@/hooks/useAuth';
-import { useEventMessages } from '@/hooks/useEventMessages';
+import { useEventMessages, type EventMessage } from '@/hooks/useEventMessages';
 import EventMarkerIcon from './map/EventMarkerIcon';
 import EventDetailModal from './message/EventDetailModal';
 import { LiveStream } from '@/types/livestream';
+import { eventBus } from '@/utils/eventBus';
+import { useGoogleMapsLoader } from '@/contexts/GoogleMapsContext';
+const DEFAULT_CENTER = { lat: 34.0522, lng: -118.2437 };
 
-// Static libraries array to prevent LoadScript warning
-const GOOGLE_MAPS_LIBRARIES = ['places'] as const;
+type MapCoordinates = { lat: number; lng: number };
+
+export type MapViewHandle = {
+  panTo: (location: MapCoordinates) => void;
+};
+
+const MapFallback: React.FC<{
+  title: string;
+  description: string;
+  actionLabel?: string;
+  onRetry?: () => void;
+}> = ({ title, description, actionLabel, onRetry }) => (
+  <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-slate-900 px-6 text-center text-white">
+    <div className="max-w-md">
+      <h2 className="text-2xl font-semibold">{title}</h2>
+      <p className="mt-2 text-sm text-slate-300">{description}</p>
+    </div>
+    {onRetry ? (
+      <button
+        type="button"
+        onClick={onRetry}
+        className="rounded-full bg-white/10 px-5 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+      >
+        {actionLabel ?? 'Retry'}
+      </button>
+    ) : null}
+    <a
+      href="/diagnostic"
+      className="text-xs font-medium text-slate-300 underline underline-offset-4 hover:text-white"
+    >
+      Open Google Maps diagnostics
+    </a>
+  </div>
+);
 
 interface MapViewProps {
   isEventsOnlyMode?: boolean;
 }
 
-const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false }, ref) => {
+const MapView = React.forwardRef<MapViewHandle, MapViewProps>(({ isEventsOnlyMode = false }, ref) => {
   const { userLocation } = useUserLocation();
-  const { filters, filteredMessages, addMessage, updateMessage, handleFilterChange } = useMessages();
+  const {
+    filters,
+    filteredMessages,
+    addMessage,
+    updateMessage,
+    handleFilterChange,
+    updateBounds,
+  } = useMessages();
   const { events, eventsStartingSoon } = useEventMessages();
   
   const { user } = useAuth();
   const { setMap: setMapInContext } = useMapContext();
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventMessage | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   
   // Live streaming state
@@ -44,7 +84,6 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
   const [selectedStreamId, setSelectedStreamId] = useState<string | null>(null);
   const [selectedStream, setSelectedStream] = useState<LiveStream | null>(null);
   const [showStreamViewer, setShowStreamViewer] = useState(false);
-  const [showLiveStreamController, setShowLiveStreamController] = useState(false);
   
   const {
     selectedMessage,
@@ -62,40 +101,42 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
     onSearchBoxLoad,
   } = useGoogleMap();
 
-  // Enhanced onLoad that also sets the map in context
-  const onLoad = useCallback((mapInstance: google.maps.Map) => {
-    console.log('🗺️ Map loaded with options:', defaultMapOptions);
-    console.log('🗺️ Map draggable:', mapInstance.get('draggable'));
-    console.log('🗺️ Map scrollwheel:', mapInstance.get('scrollwheel'));
-    console.log('🗺️ Map gesture handling:', mapInstance.get('gestureHandling'));
-    
-    // Force set gesture handling to greedy to avoid "two fingers" message
-    mapInstance.setOptions({
-      gestureHandling: 'greedy',
-      draggable: true,
-      scrollwheel: true
-    });
-    console.log('🗺️ FORCED gestureHandling to greedy');
-    
-    // Add event listeners to debug map interaction
-    mapInstance.addListener('dragstart', () => {
-      console.log('🗺️ Map drag started');
-    });
-    
-    mapInstance.addListener('drag', () => {
-      console.log('🗺️ Map is being dragged');
-    });
-    
-    mapInstance.addListener('dragend', () => {
-      console.log('🗺️ Map drag ended');
-    });
+  const { isLoaded, loadError, retry } = useGoogleMapsLoader();
 
-    originalOnLoad(mapInstance);
-    setMapInContext(mapInstance);
-    // Also set globally for debugging
-    (window as any).currentGoogleMap = mapInstance;
-    console.log('🗺️ MAP CONTEXT: Map instance registered in context and globally');
-  }, [originalOnLoad, setMapInContext]);
+  const updateBoundsFromMap = useCallback(
+    (instance: google.maps.Map | null) => {
+      if (!instance) {
+        updateBounds(null);
+        return;
+      }
+      const bounds = instance.getBounds();
+      if (!bounds) return;
+      const northEast = bounds.getNorthEast();
+      const southWest = bounds.getSouthWest();
+      updateBounds({
+        north: northEast.lat(),
+        south: southWest.lat(),
+        east: northEast.lng(),
+        west: southWest.lng(),
+      });
+    },
+    [updateBounds]
+  );
+
+  // Enhanced onLoad that also sets the map in context
+  const onLoad = useCallback(
+    (mapInstance: google.maps.Map) => {
+      mapInstance.setOptions({
+        gestureHandling: 'greedy',
+        draggable: true,
+        scrollwheel: true,
+      });
+      originalOnLoad(mapInstance);
+      setMapInContext(mapInstance);
+      updateBoundsFromMap(mapInstance);
+    },
+    [originalOnLoad, setMapInContext, updateBoundsFromMap]
+  );
 
   const {
     newPinPosition,
@@ -108,19 +149,33 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
 
   // Expose methods via ref
   React.useImperativeHandle(ref, () => ({
-    panTo: (location: { lat: number; lng: number }) => {
+    panTo: (location: MapCoordinates) => {
       if (map) {
         map.panTo(location);
         map.setZoom(15);
       }
-    }
+    },
   }), [map]);
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: 'AIzaSyCja18mhM6OgcQPkZp7rCZM6C29SGz3S4U',
-    libraries: GOOGLE_MAPS_LIBRARIES
-  });
+  useEffect(() => {
+    if (!map) return;
+    const idleListener = map.addListener('idle', () => updateBoundsFromMap(map));
+    updateBoundsFromMap(map);
+    return () => idleListener.remove();
+  }, [map, updateBoundsFromMap]);
+
+  useEffect(() => {
+    return eventBus.on('navigateToMessage', (detail) => {
+      if (!map || !detail) return;
+      map.panTo({ lat: detail.lat, lng: detail.lng });
+      if (map.getZoom() && map.getZoom()! < 15) {
+        map.setZoom(15);
+      }
+      if (detail.messageId) {
+        setSelectedMessage(detail.messageId);
+      }
+    });
+  }, [map, setSelectedMessage]);
 
   const handleCreateMessage = useCallback(() => {
     setIsCreating(true);
@@ -138,19 +193,11 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
         setNewPinPosition(newPos);
       }
     }
-  }, [isInStreetView, map, startPinPlacement]);
+  }, [isInStreetView, map, setIsCreating, setNewPinPosition, setSelectedMessage, startPinPlacement]);
 
   // Listen for external create message events (e.g., from bottom navigation)
   useEffect(() => {
-    const handleExternalCreateMessage = () => {
-      handleCreateMessage();
-    };
-
-    window.addEventListener('createMessage', handleExternalCreateMessage);
-
-    return () => {
-      window.removeEventListener('createMessage', handleExternalCreateMessage);
-    };
+    return eventBus.on('createMessage', handleCreateMessage);
   }, [handleCreateMessage]);
 
   const handleMessageClick = (id: string) => {
@@ -171,15 +218,7 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
     setSelectedStream(null);
   };
 
-  const handleStartLiveStream = () => {
-    setShowLiveStreamController(true);
-  };
-
-  const handleCloseLiveStreamController = () => {
-    setShowLiveStreamController(false);
-  };
-
-  const handleEventClick = (event: any) => {
+  const handleEventClick = (event: EventMessage) => {
     setSelectedEvent(event);
     setShowEventModal(true);
   };
@@ -189,7 +228,30 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
     setSelectedEvent(null);
   };
 
-  if (!isLoaded) return <div>Loading...</div>;
+  const mapCenter = userLocation || DEFAULT_CENTER;
+
+  if (loadError) {
+    return (
+      <MapFallback
+        title="Unable to load Google Maps"
+        description={loadError.message || 'An unexpected error occurred while loading the map.'}
+        actionLabel="Retry"
+        onRetry={retry}
+      />
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-slate-900">
+        <div className="text-center text-white">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-white/80"></div>
+          <h2 className="text-xl font-semibold">Loading Google Maps…</h2>
+          <p className="mt-2 text-sm text-white/70">Preparing location data and controls.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Get the user avatar for the new pin
   const userAvatar = user?.user_metadata?.avatar_url || '/placeholder.svg';
@@ -200,8 +262,8 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
 
   return (
     <div className={mapContainerClassName}>
-      {/* Full Screen Map Background */}
-      <div className="absolute inset-0">
+        {/* Full Screen Map Background */}
+        <div className="absolute inset-0">
         <ModernMapControls
           filters={filters}
           onFilterChange={handleFilterChange}
@@ -218,10 +280,14 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
 
         <GoogleMap
           mapContainerClassName="w-full h-full"
-          center={userLocation}
+          center={mapCenter}
           zoom={13}
           onLoad={onLoad}
-          onUnmount={onUnmount}
+          onUnmount={() => {
+            updateBounds(null);
+            setMapInContext(null);
+            onUnmount();
+          }}
           onClick={handleMapClick}
           options={defaultMapOptions}
         >
@@ -230,7 +296,7 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
             // Events-only mode: Show ONLY event markers, nothing else
             <>
               {events.map((event) => {
-                if (!event.lat || !event.lng) {
+                if (event.lat == null || event.lng == null) {
                   return null;
                 }
                 
@@ -277,7 +343,7 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
 
               {/* Also show events in normal mode */}
               {events.map((event) => {
-                if (!event.lat || !event.lng) {
+                if (event.lat == null || event.lng == null) {
                   return null;
                 }
                 
@@ -334,12 +400,6 @@ const MapView = React.forwardRef<any, MapViewProps>(({ isEventsOnlyMode = false 
         stream={selectedStream}
         isOpen={showStreamViewer}
         onClose={handleCloseStreamViewer}
-      />
-      
-      {/* Live Stream Controller */}
-      <LiveStreamController
-        isOpen={showLiveStreamController}
-        onClose={handleCloseLiveStreamController}
       />
         </>
       )}

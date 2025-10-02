@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { eventBus } from '@/utils/eventBus';
 
 export interface PinPosition {
   lat: number;
@@ -27,20 +28,18 @@ export const usePinPlacement = () => {
 
   // Add handler for street view clicks
   useEffect(() => {
-    const handleStreetViewClick = (e: CustomEvent<PinPosition>) => {
-      if (isPlacingPin && e.detail) {
-        setNewPinPosition(e.detail);
+    const unsubscribe = eventBus.on('streetViewClick', (detail) => {
+      if (isPlacingPin && detail) {
+        setNewPinPosition(detail);
         toast({
           title: "Street View location selected",
           description: "Now you can create your Lo at this street view location",
         });
       }
-    };
+    });
 
-    window.addEventListener('streetViewClick', handleStreetViewClick as EventListener);
-    
     return () => {
-      window.removeEventListener('streetViewClick', handleStreetViewClick as EventListener);
+      unsubscribe();
     };
   }, [isPlacingPin]);
 

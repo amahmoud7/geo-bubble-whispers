@@ -4,6 +4,7 @@ import PlacementIndicator from './PlacementIndicator';
 import MessageMarkers from './MessageMarkers';
 import CreateMessageModal from '../message/CreateMessageModal';
 import { PinPosition } from '@/hooks/usePinPlacement';
+import type { MapMessage } from '@/types/messages';
 
 interface MessageCreationControllerProps {
   isCreating: boolean;
@@ -14,8 +15,8 @@ interface MessageCreationControllerProps {
   userName: string | undefined;
   handleClose: () => void;
   handleCreateMessage: () => void;
-  addMessage: (newMessage: any) => void;
-  updateMessage: (id: string, updates: any) => void;
+  addMessage: (newMessage: MapMessage) => void;
+  updateMessage: (id: string, updates: Partial<MapMessage>) => void;
 }
 
 const MessageCreationController: React.FC<MessageCreationControllerProps> = ({ 
@@ -41,7 +42,12 @@ const MessageCreationController: React.FC<MessageCreationControllerProps> = ({
           messages={[
             {
               id: 'new-pin',
-              position: { x: newPinPosition.lat, y: newPinPosition.lng },
+              position: {
+                lat: newPinPosition.lat,
+                lng: newPinPosition.lng,
+                x: newPinPosition.lat,
+                y: newPinPosition.lng,
+              },
               isPublic: true,
               user: {
                 avatar: userAvatar,

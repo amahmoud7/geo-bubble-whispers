@@ -1,0 +1,82 @@
+{
+  "timestamp": "2025-09-23T17:02:40.889Z",
+  "overallStatus": "FAIL",
+  "summary": {
+    "totalTests": 7,
+    "passed": 5,
+    "failed": 2,
+    "successRate": "71%"
+  },
+  "testResults": {
+    "googleMaps": {
+      "status": "FAIL",
+      "errors": [
+        "Google Maps canvas not visible"
+      ],
+      "warnings": [],
+      "evidence": [
+        "Google Maps API loaded in window object"
+      ]
+    },
+    "diagnosticPage": {
+      "status": "PASS",
+      "errors": [],
+      "warnings": [],
+      "evidence": [
+        "Diagnostic page loaded with content (1171 characters)"
+      ]
+    },
+    "navigation": {
+      "status": "FAIL",
+      "errors": [
+        "Profile page appears empty",
+        "Auth page appears empty",
+        "Explore page appears empty",
+        "Only 1/4 pages loaded successfully"
+      ],
+      "warnings": [],
+      "evidence": []
+    },
+    "consoleErrors": {
+      "status": "PASS",
+      "errors": [],
+      "warnings": [
+        "Google Maps JavaScript API error: InvalidKeyMapError\nhttps://developers.google.com/maps/documentation/javascript/error-messages#invalid-key-map-error",
+        "Google Maps JavaScript API error: InvalidKeyMapError\nhttps://developers.google.com/maps/documentation/javascript/error-messages#invalid-key-map-error"
+      ],
+      "evidence": [
+        "2 minor console errors (acceptable)"
+      ]
+    },
+    "mobileResponsiveness": {
+      "status": "PASS",
+      "errors": [],
+      "warnings": [],
+      "evidence": [
+        "Mobile viewport detected correctly"
+      ]
+    },
+    "performance": {
+      "status": "PASS",
+      "errors": [],
+      "warnings": [],
+      "evidence": [
+        "Page load time: 690ms (< 8s target)"
+      ]
+    },
+    "iosConfiguration": {
+      "status": "PASS",
+      "errors": [],
+      "warnings": [],
+      "evidence": [
+        "All iOS configuration files present",
+        "iOS deployment script found in package.json"
+      ]
+    }
+  },
+  "iosDeploymentReady": false,
+  "recommendations": [
+    "Fix googleMaps: Google Maps canvas not visible",
+    "Fix navigation: Profile page appears empty, Auth page appears empty, Explore page appears empty, Only 1/4 pages loaded successfully"
+  ]
+}

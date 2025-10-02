@@ -23,6 +23,8 @@ const LiveStreamController: React.FC<LiveStreamControllerProps> = ({
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentStreamId, setCurrentStreamId] = useState<string | null>(null);
   const [viewerCount, setViewerCount] = useState(0);
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
+  const [cameraError, setCameraError] = useState<string>('');
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -71,19 +73,144 @@ const LiveStreamController: React.FC<LiveStreamControllerProps> = ({
     }
   }, []);
 
+  // Test camera access separate from streaming
+  const testCamera = async () => {
+    try {
+      console.log('🎥 Testing camera access...');
+      setCameraError('');
+      
+      // Check if running on iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      console.log('🎥 Device type - iOS:', isIOS);
+      
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera API not available on this device');
+      }
+
+      // Basic constraints for testing
+      const testConstraints = {
+        video: { 
+          width: { ideal: 640, max: 1280 },
+          height: { ideal: 480, max: 720 },
+          facingMode: 'user'
+        },
+        audio: false // Test video only first
+      };
+
+      console.log('🎥 Requesting camera with test constraints:', testConstraints);
+      const testStream = await navigator.mediaDevices.getUserMedia(testConstraints);
+      
+      console.log('🎥 Camera access granted! Stream:', testStream);
+      console.log('🎥 Video tracks:', testStream.getVideoTracks());
+      
+      // Clean up old stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      
+      streamRef.current = testStream;
+      setCameraPermissionGranted(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = testStream;
+        
+        // iOS-specific video settings
+        if (isIOS) {
+          videoRef.current.setAttribute('playsinline', 'true');
+          videoRef.current.setAttribute('webkit-playsinline', 'true');
+          videoRef.current.muted = true;
+        }
+        
+        try {
+          await videoRef.current.play();
+          console.log('🎥 Video preview started successfully');
+        } catch (playError) {
+          console.error('🎥 Video play error:', playError);
+          // Force play on iOS
+          videoRef.current.muted = true;
+          videoRef.current.load();
+          await videoRef.current.play();
+        }
+      }
+      
+      toast({
+        title: "Camera connected!",
+        description: "Camera preview is now active",
+      });
+      
+    } catch (error: any) {
+      console.error('🎥 Camera test failed:', error);
+      setCameraError(error.message || 'Camera access failed');
+      setCameraPermissionGranted(false);
+      
+      let errorMessage = "Camera access failed";
+      
+      if (error.name === 'NotAllowedError') {
+        errorMessage = "Camera permission denied. Please enable camera access in iOS Settings > Safari > Camera.";
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = "No camera found on this device.";
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = "Camera is being used by another app. Please close other camera apps and try again.";
+      }
+      
+      toast({
+        title: "Camera test failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleStartStream = async () => {
     try {
-      // Get user media
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720 },
-        audio: true
-      });
+      console.log('📹 Starting live stream - requesting camera access...');
+      
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera access not supported on this device');
+      }
+
+      // Enhanced camera constraints for better iOS compatibility
+      const constraints = {
+        video: { 
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          facingMode: 'user', // Front-facing camera
+          frameRate: { ideal: 30, max: 30 }
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        }
+      };
+
+      console.log('📹 Requesting media with constraints:', constraints);
+
+      // Get user media with enhanced error handling
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('📹 Media stream obtained:', stream);
+      console.log('📹 Video tracks:', stream.getVideoTracks());
+      console.log('📹 Audio tracks:', stream.getAudioTracks());
 
       streamRef.current = stream;
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        // Add better video element configuration for iOS
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.setAttribute('webkit-playsinline', 'true');
+        videoRef.current.muted = true; // Required for autoplay on iOS
+        
+        try {
+          await videoRef.current.play();
+          console.log('📹 Video playback started successfully');
+        } catch (playError) {
+          console.error('📹 Video play error:', playError);
+          // Try to recover
+          videoRef.current.load();
+          await videoRef.current.play();
+        }
       }
 
       // Start the live stream in database
@@ -106,11 +233,50 @@ const LiveStreamController: React.FC<LiveStreamControllerProps> = ({
           description: "You're now live! Your location will be tracked in real-time.",
         });
       }
-    } catch (error) {
-      console.error('Error starting live stream:', error);
+    } catch (error: any) {
+      console.error('📹 Error starting live stream:', error);
+      
+      let errorMessage = "Please check your camera and microphone permissions";
+      
+      if (error.name === 'NotAllowedError') {
+        errorMessage = "Camera and microphone access denied. Please enable permissions in settings.";
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = "No camera or microphone found on this device.";
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = "Camera is being used by another app. Please close other camera apps.";
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage = "Camera doesn't support the required settings. Trying fallback...";
+        
+        // Try with basic constraints as fallback
+        try {
+          const basicStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+          });
+          
+          streamRef.current = basicStream;
+          
+          if (videoRef.current) {
+            videoRef.current.srcObject = basicStream;
+            videoRef.current.setAttribute('playsinline', 'true');
+            videoRef.current.setAttribute('webkit-playsinline', 'true');
+            videoRef.current.muted = true;
+            await videoRef.current.play();
+          }
+          
+          toast({
+            title: "Camera started with basic settings",
+            description: "Using fallback camera configuration",
+          });
+          return;
+        } catch (fallbackError) {
+          console.error('📹 Fallback also failed:', fallbackError);
+        }
+      }
+      
       toast({
         title: "Failed to start stream",
-        description: "Please check your camera and microphone permissions",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -236,6 +402,9 @@ const LiveStreamController: React.FC<LiveStreamControllerProps> = ({
               autoPlay
               muted
               playsInline
+              webkit-playsinline="true"
+              controls={false}
+              preload="none"
             />
             
             {isStreaming && (
@@ -252,12 +421,30 @@ const LiveStreamController: React.FC<LiveStreamControllerProps> = ({
               </div>
             )}
 
-            {!isStreaming && !streamRef.current && (
+            {!isStreaming && !cameraPermissionGranted && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-white text-center">
+                <div className="text-white text-center space-y-3">
                   <Video className="h-8 w-8 mx-auto mb-2" />
                   <p className="text-sm">Camera preview will appear here</p>
+                  {cameraError && (
+                    <p className="text-xs text-red-300 bg-red-900/30 px-2 py-1 rounded">
+                      {cameraError}
+                    </p>
+                  )}
+                  <Button 
+                    onClick={testCamera}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    Test Camera
+                  </Button>
                 </div>
+              </div>
+            )}
+            
+            {!isStreaming && cameraPermissionGranted && streamRef.current && (
+              <div className="absolute bottom-2 left-2 bg-green-500/80 text-white px-2 py-1 rounded text-xs">
+                ✅ Camera Ready
               </div>
             )}
           </div>

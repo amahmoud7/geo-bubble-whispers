@@ -19,12 +19,14 @@ import LiveStreamInterface from './LiveStreamInterface';
 import RichTextEditor from './RichTextEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { eventBus } from '@/utils/eventBus';
+import type { MapMessage } from '@/types/messages';
 
 interface CreateMessageFormProps {
   onClose: () => void;
   initialPosition?: { lat: number; lng: number };
-  addMessage: (newMessage: any) => void;
-  updateMessage: (id: string, updates: any) => void;
+  addMessage: (newMessage: MapMessage) => void;
+  updateMessage: (id: string, updates: Partial<MapMessage>) => void;
 }
 
 const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialPosition, addMessage, updateMessage }) => {
@@ -137,7 +139,7 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
     if (savedDraft && !content) {
       setIsDraft(true);
     }
-  }, []);
+  }, [content]);
 
   // Update character count when content changes
   useEffect(() => {
@@ -169,7 +171,7 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
     
     try {
       // Determine post type and media URL
-      let mediaUrl = previewUrl;
+      const mediaUrl = previewUrl;
       let postType = 'text';
       
       if (mediaFiles.length > 0) {
@@ -205,35 +207,37 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
         throw messageError;
       }
 
-      console.log('✅ Message saved to database:', messageData);
+      const derivedLat = messageData.lat ?? position.lat;
+      const derivedLng = messageData.lng ?? position.lng;
 
-      // Create a new message object for the UI with the 'new-' prefix for animation
-      const newMessage = {
+      const newMessage: MapMessage = {
         id: `new-${messageData.id}`,
-        content: messageData.content,
-        location: messageData.location,
+        content: messageData.content ?? '',
+        location: messageData.location ?? 'Current Location',
         user: {
-          name: messageData.profiles?.name || user.user_metadata?.full_name || "Current User",
-          avatar: messageData.profiles?.avatar_url || user.user_metadata?.avatar_url || "/placeholder.svg"
+          name: messageData.profiles?.name || user.user_metadata?.full_name || 'Current User',
+          avatar: messageData.profiles?.avatar_url || user.user_metadata?.avatar_url || '/placeholder.svg',
         },
-        isPublic: messageData.is_public,
+        isPublic: Boolean(messageData.is_public),
         timestamp: messageData.created_at,
-        expiresAt: messageData.expires_at,
-        mediaUrl: messageData.media_url || undefined,
+        expiresAt: messageData.expires_at ?? null,
+        mediaUrl: messageData.media_url ?? null,
         position: {
-          x: messageData.lat,
-          y: messageData.lng
+          lat: derivedLat,
+          lng: derivedLng,
+          x: derivedLat,
+          y: derivedLng,
         },
-        hashtags: hashtags,
-        mentions: mentions,
-        postType: postType,
-        mediaFiles: mediaFiles.length > 0 ? mediaFiles.map(f => f.name) : undefined
+        lat: derivedLat,
+        lng: derivedLng,
+        liked: false,
+        likes: 0,
+        isEvent: false,
       };
-      
-      // Add the new message using the reactive state
-      console.log('📍 Adding message to map with position:', newMessage.position);
+
       addMessage(newMessage);
-      
+      eventBus.emit('messageCreated', { id: messageData.id });
+
       // Clear draft if it exists
       clearDraft();
       
@@ -247,8 +251,7 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
       // Trigger a refresh of messages to ensure they show on the map
       // The real-time subscription should handle this, but we'll force it for reliability
       setTimeout(() => {
-        console.log('🔄 Triggering message refresh...');
-        window.dispatchEvent(new CustomEvent('refreshMessages'));
+        eventBus.emit('refreshMessages', undefined);
       }, 100);
       
       const getSuccessMessage = () => {
@@ -265,11 +268,11 @@ const CreateMessageForm: React.FC<CreateMessageFormProps> = ({ onClose, initialP
       });
       onClose();
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error posting message:', error);
       toast({
         title: "Error posting Lo",
-        description: error.message || "Failed to post your Lo. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to post your Lo. Please try again.",
         variant: "destructive"
       });
     } finally {

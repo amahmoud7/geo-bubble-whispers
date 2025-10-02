@@ -1,0 +1,164 @@
+{
+  "timestamp": "2025-09-25T05:11:44.982Z",
+  "codeSize": {
+    "reliable": {
+      "lines": 194,
+      "characters": 6250,
+      "imports": 4
+    },
+    "original": {
+      "lines": 368,
+      "characters": 12124,
+      "imports": 24
+    }
+  },
+  "dependencies": {
+    "reliable": [
+      "react",
+      "@react-google-maps/api",
+      "@/hooks/useAuth",
+      "@/hooks/useUserLocation"
+    ],
+    "original": [
+      "react",
+      "@react-google-maps/api",
+      "./map/ModernMapControls",
+      "./map/StreetViewController",
+      "./map/MessageCreationController",
+      "./map/MessageDisplayController",
+      "./livestream/LiveStreamMarkers",
+      "./livestream/LiveStreamViewer",
+      "./livestream/LiveStreamController",
+      "./map/GoogleMapsErrorBoundary",
+      "@/hooks/usePinPlacement",
+      "@/hooks/useGoogleMap",
+      "@/hooks/useMessages",
+      "@/hooks/useMessageState",
+      "@/hooks/useUserLocation",
+      "@/hooks/useLiveStreams",
+      "@/contexts/MapContext",
+      "@/contexts/GoogleMapsContext",
+      "@/config/mapStyles",
+      "@/hooks/useAuth",
+      "@/hooks/useEventMessages",
+      "./map/EventMarkerIcon",
+      "./message/EventDetailModal",
+      "@/types/livestream"
+    ]
+  },
+  "features": [
+    {
+      "name": "Google Maps Display",
+      "reliable": true,
+      "original": true
+    },
+    {
+      "name": "Error Handling",
+      "reliable": true,
+      "original": true
+    },
+    {
+      "name": "Loading States",
+      "reliable": true,
+      "original": true
+    },
+    {
+      "name": "User Location",
+      "reliable": true,
+      "original": true
+    },
+    {
+      "name": "Message Creation",
+      "reliable": false,
+      "original": true
+    },
+    {
+      "name": "Live Streaming",
+      "reliable": false,
+      "original": true
+    },
+    {
+      "name": "Street View",
+      "reliable": false,
+      "original": true
+    },
+    {
+      "name": "Event Markers",
+      "reliable": false,
+      "original": true
+    },
+    {
+      "name": "Pin Placement",
+      "reliable": false,
+      "original": true
+    },
+    {
+      "name": "Search Box",
+      "reliable": false,
+      "original": true
+    },
+    {
+      "name": "Diagnostic Overlay",
+      "reliable": true,
+      "original": false
+    }
+  ],
+  "complexity": {
+    "reliable": {
+      "functions": 2,
+      "hooks": 18,
+      "conditionals": 4,
+      "ternary": 8
+    },
+    "original": {
+      "functions": 13,
+      "hooks": 43,
+      "conditionals": 8,
+      "ternary": 2
+    }
+  },
+  "reliability": [
+    {
+      "name": "Hardcoded API Key",
+      "present": false,
+      "good": true
+    },
+    {
+      "name": "Error Boundary UI",
+      "present": true,
+      "good": true
+    },
+    {
+      "name": "Detailed Error Info",
+      "present": true,
+      "good": true
+    },
+    {
+      "name": "Loading Spinner",
+      "present": true,
+      "good": true
+    },
+    {
+      "name": "Debug Logging",
+      "present": true,
+      "good": true
+    },
+    {
+      "name": "Minimal Dependencies",
+      "present": true,
+      "good": true
+    },
+    {
+      "name": "Reload Button",
+      "present": true,
+      "good": true
+    }
+  ],
+  "assessment": {
+    "purpose": "DEBUGGING & RELIABILITY TESTING",
+    "production_ready": true,
+    "full_replacement": false,
+    "recommended_use": "FALLBACK_COMPONENT",
+    "risk_level": "LOW"
+  }
+}

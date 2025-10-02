@@ -266,37 +266,48 @@ function toRadians(degrees: number): number {
 // Find the nearest major city to user's location
 // Overloaded function signatures for backward compatibility
 export function detectNearestCity(userLat: number, userLng: number): City;
-export function detectNearestCity(userLat: number, userLng: number, options: { maxDistance?: number; preferLargeMetros?: boolean }): City;
-export function detectNearestCity(userLat: number, userLng: number, options: { maxDistance?: number; preferLargeMetros?: boolean } = {}): City {
-  console.log(`🔍 CITY DETECTION: Starting detection for location ${userLat}, ${userLng}`);
-  
-  let nearestCity = TOP_US_CITIES[0]; // NYC fallback
+export function detectNearestCity(
+  userLat: number,
+  userLng: number,
+  options: { maxDistance?: number; preferLargeMetros?: boolean }
+): City;
+export function detectNearestCity(
+  userLat: number,
+  userLng: number,
+  options: { maxDistance?: number; preferLargeMetros?: boolean } = {}
+): City {
+  const { maxDistance, preferLargeMetros = false } = options;
+  const primaryPool = preferLargeMetros ? TOP_US_CITIES : EXPANDED_US_CITIES;
+
+  let nearestCity: City | null = null;
   let shortestDistance = Infinity;
-  
-  console.log(`🔍 CITY DETECTION: Checking ${TOP_US_CITIES.length} cities...`);
-  
-  // Special check for Atlanta coordinates
-  const atlantaDistance = calculateDistance(userLat, userLng, 33.7490, -84.3880);
-  console.log(`🔍 SPECIAL CHECK: Distance to Atlanta (33.7490, -84.3880): ${Math.round(atlantaDistance)} miles`);
-  
-  for (const city of TOP_US_CITIES) {
-    const distance = calculateDistance(
-      userLat, 
-      userLng, 
-      city.coordinates.lat, 
-      city.coordinates.lng
-    );
-    
-    console.log(`🔍 ${city.displayName} (${city.id}): ${Math.round(distance)} miles away (coords: ${city.coordinates.lat}, ${city.coordinates.lng})`);
-    
-    if (distance < shortestDistance) {
-      shortestDistance = distance;
-      nearestCity = city;
-      console.log(`🎯 NEW CLOSEST: ${city.displayName} (${city.id}) at ${Math.round(distance)} miles`);
+
+  const evaluateCities = (cities: City[]) => {
+    for (const city of cities) {
+      const distance = calculateDistance(
+        userLat,
+        userLng,
+        city.coordinates.lat,
+        city.coordinates.lng
+      );
+
+      if (distance < shortestDistance) {
+        shortestDistance = distance;
+        nearestCity = city;
+      }
     }
+  };
+
+  evaluateCities(primaryPool);
+
+  if (!nearestCity || (maxDistance && shortestDistance > maxDistance)) {
+    evaluateCities(EXPANDED_US_CITIES);
   }
-  
-  console.log(`✅ FINAL RESULT: ${nearestCity.displayName} (${nearestCity.id}) is ${Math.round(shortestDistance)} miles away`);
+
+  if (!nearestCity) {
+    return TOP_US_CITIES[0];
+  }
+
   return nearestCity;
 }
 
@@ -307,17 +318,17 @@ export function getCityById(cityId: string): City | null {
 
 // Get all cities for selection UI
 export function getAllCities(): City[] {
-  return TOP_US_CITIES.sort((a, b) => b.population - a.population);
+  return [...EXPANDED_US_CITIES].sort((a, b) => b.population - a.population);
 }
 
 // Check if user is within a reasonable distance from any major city
 export function isWithinEventRadius(userLat: number, userLng: number, maxDistance: number = 50): boolean {
   console.log(`🔍 EVENT RADIUS CHECK: Testing location ${userLat}, ${userLng} within ${maxDistance} miles`);
-  
+
   let closestDistance = Infinity;
   let closestCity = '';
-  
-  for (const city of TOP_US_CITIES) {
+
+  for (const city of EXPANDED_US_CITIES) {
     const distance = calculateDistance(
       userLat, 
       userLng, 

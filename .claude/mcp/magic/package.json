@@ -1,0 +1,13 @@
+{
+  "name": "magic-mcp-server",
+  "version": "1.0.0",
+  "description": "Magic component generation and design system integration MCP server",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

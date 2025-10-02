@@ -1,9 +1,9 @@
 PODS:
-  - Capacitor (7.4.3):
+  - Capacitor (7.2.0):
     - CapacitorCordova
   - CapacitorCamera (7.0.2):
     - Capacitor
-  - CapacitorCordova (7.4.3)
+  - CapacitorCordova (7.2.0)
   - CapacitorGeolocation (7.1.5):
     - Capacitor
     - IONGeolocationLib (= 1.0.1)
@@ -30,9 +30,9 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/geolocation"
 
 SPEC CHECKSUMS:
-  Capacitor: 28d6c01026a9a3f7156529498ec1f389a2a28dbc
+  Capacitor: 03bc7cbdde6a629a8b910a9d7d78c3cc7ed09ea7
   CapacitorCamera: f9e54db0a18bb218a8dc360907d63aaefe9209ff
-  CapacitorCordova: 435121e81a2df4d0034f0fb11fcefab5104cfdb5
+  CapacitorCordova: 5967b9ba03915ef1d585469d6e31f31dc49be96f
   CapacitorGeolocation: 84f868bea4c2499aebc3bb3a88fd0a508f87ab87
   IONGeolocationLib: 20f9d0248a0b5264511fb57a37e25dd2badf797a
 

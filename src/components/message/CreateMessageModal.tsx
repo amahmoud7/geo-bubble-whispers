@@ -1,12 +1,13 @@
 
 import React from 'react';
 import CreateMessageForm from './CreateMessageForm';
+import type { MapMessage } from '@/types/messages';
 
 interface CreateMessageModalProps {
   onClose: () => void;
   initialPosition?: { lat: number; lng: number };
-  addMessage: (newMessage: any) => void;
-  updateMessage: (id: string, updates: any) => void;
+  addMessage: (newMessage: MapMessage) => void;
+  updateMessage: (id: string, updates: Partial<MapMessage>) => void;
 }
 
 const CreateMessageModal: React.FC<CreateMessageModalProps> = ({ 

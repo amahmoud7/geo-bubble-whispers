@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Context
+
+For detailed Lo platform specifications, architecture, performance targets, and business context, see `.claude/PROJECT_CONTEXT.md`. All agents should reference this file to understand the specific technical requirements when working on Lo-related tasks.
+
 ## Commands
 
 ### Development

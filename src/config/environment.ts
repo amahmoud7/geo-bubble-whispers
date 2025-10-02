@@ -1,4 +1,6 @@
 // Environment Configuration Management
+import { getEnv, getGoogleMapsApiKey } from '@/utils/env';
+
 interface EnvironmentConfig {
   NODE_ENV: string;
   SUPABASE_URL: string;
@@ -31,11 +33,12 @@ class Environment {
   }
 
   private loadEnvironmentConfig(): EnvironmentConfig {
+    const env = getEnv();
     return {
       NODE_ENV: import.meta.env.NODE_ENV || 'development',
-      SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || '',
-      SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-      GOOGLE_MAPS_API_KEY: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+      SUPABASE_URL: env.VITE_SUPABASE_URL,
+      SUPABASE_ANON_KEY: env.VITE_SUPABASE_ANON_KEY,
+      GOOGLE_MAPS_API_KEY: getGoogleMapsApiKey(),
       APP_NAME: import.meta.env.VITE_APP_NAME || 'Geo Bubble Whispers',
       APP_VERSION: import.meta.env.VITE_APP_VERSION || '1.0.0',
       API_BASE_URL: import.meta.env.VITE_API_BASE_URL || '',
@@ -64,7 +67,7 @@ class Environment {
     }
   }
 
-  public get(key: keyof EnvironmentConfig): any {
+  public get<K extends keyof EnvironmentConfig>(key: K): EnvironmentConfig[K] {
     return this.config[key];
   }
 

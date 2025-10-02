@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home Page Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f1aeb5; }
+        .info { background: #cce7ff; color: #004085; border: 1px solid #99d3ff; }
+        iframe { width: 100%; height: 600px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>🏠 Home Page Loading Test</h1>
+    
+    <div class="status info">
+        <strong>Test Objective:</strong> Verify that the home page loads without JavaScript errors
+    </div>
+    
+    <div id="test-results"></div>
+    
+    <h2>Live Preview</h2>
+    <iframe src="/" id="home-iframe"></iframe>
+    
+    <script>
+        async function runTests() {
+            const results = document.getElementById('test-results');
+            
+            // Test 1: Check if dev server is running
+            try {
+                const response = await fetch('/');
+                if (response.ok) {
+                    results.innerHTML += '<div class="status success">✅ Dev server is running (status: ' + response.status + ')</div>';
+                } else {
+                    results.innerHTML += '<div class="status error">❌ Dev server error (status: ' + response.status + ')</div>';
+                }
+            } catch (error) {
+                results.innerHTML += '<div class="status error">❌ Cannot reach dev server: ' + error.message + '</div>';
+                return;
+            }
+            
+            // Test 2: Check if React root element loads
+            const iframe = document.getElementById('home-iframe');
+            iframe.onload = () => {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const rootElement = iframeDoc.getElementById('root');
+                    
+                    if (rootElement) {
+                        results.innerHTML += '<div class="status success">✅ React root element found</div>';
+                        
+                        // Check if root has content
+                        setTimeout(() => {
+                            if (rootElement.innerHTML.trim().length > 100) {
+                                results.innerHTML += '<div class="status success">✅ React app rendered successfully (content length: ' + rootElement.innerHTML.length + ')</div>';
+                            } else {
+                                results.innerHTML += '<div class="status error">❌ React root element is empty or too small</div>';
+                            }
+                        }, 3000);
+                    } else {
+                        results.innerHTML += '<div class="status error">❌ React root element not found</div>';
+                    }
+                } catch (error) {
+                    results.innerHTML += '<div class="status info">ℹ️ Cannot access iframe content (CORS protection) - this is normal</div>';
+                }
+            };
+        }
+        
+        // Run tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

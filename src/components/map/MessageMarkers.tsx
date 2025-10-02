@@ -6,7 +6,7 @@ import { createCustomMarkerIcon } from './CustomMarkerIcon';
 
 interface Message {
   id: string;
-  position: { x: number; y: number };
+  position: { lat: number; lng: number };
   isPublic: boolean;
   mediaUrl?: string | null;
   isLivestream?: boolean;
@@ -56,7 +56,7 @@ const MessageMarkers: React.FC<MessageMarkersProps> = ({ messages, onMessageClic
         return (
           <Marker
             key={message.id}
-            position={{ lat: message.position.x, lng: message.position.y }}
+            position={{ lat: message.position.lat, lng: message.position.lng }}
             onClick={() => onMessageClick(message.id)}
             icon={{
               url: markerIcon,

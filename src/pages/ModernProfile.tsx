@@ -1,32 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  ArrowLeft, 
-  Settings, 
-  Grid3x3, 
-  Bookmark, 
-  Heart,
-  MessageCircle,
-  Share2,
-  MoreHorizontal,
-  MapPin,
-  Link2,
-  Calendar,
-  Edit3,
+import {
+  ArrowLeft,
   Camera,
-  CheckCircle,
-  TrendingUp,
+  MapPin,
+  Play,
+  Settings,
+  Share2,
   Users,
-  Image as ImageIcon,
-  Play
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AppTopBar from '@/components/layout/AppTopBar';
+import { Chip } from '@/components/ui/chip';
+import type { Tables, TablesUpdate } from '@/integrations/supabase/types';
 
 interface ProfileStats {
   posts: number;
@@ -44,108 +35,163 @@ interface Post {
   type: 'image' | 'video' | 'text';
 }
 
+type ProfileRow = Tables<'profiles'>;
+type MessageRow = Tables<'messages'>;
+
+const MAX_BIO_LENGTH = 280;
+
 const ModernProfile = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [stats, setStats] = useState<ProfileStats>({ posts: 0, followers: 0, following: 0 });
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'saved' | 'tagged'>('posts');
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bio, setBio] = useState('');
 
-  useEffect(() => {
-    if (user) {
-      loadProfile();
-      loadPosts();
-    }
-  }, [user]);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!user) return;
     
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, name, username, bio, avatar_url, location, created_at, updated_at')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code === 'PGRST116') {
-        // Profile doesn't exist, create it
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        const defaultBio = "Hey there! I'm new to Lo 👋";
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert({
             id: user.id,
             name: user.email?.split('@')[0] || 'Anonymous',
-            bio: 'Hey there! I\'m new to Lo 👋',
-            avatar_url: null
+            bio: defaultBio,
+            avatar_url: null,
           })
-          .select()
+          .select('id, name, username, bio, avatar_url, location, created_at, updated_at')
           .single();
 
-        if (!createError && newProfile) {
-          setProfile(newProfile);
-          setBio(newProfile.bio || '');
+        if (createError) {
+          throw createError;
         }
-      } else if (data) {
-        setProfile(data);
-        setBio(data.bio || '');
+
+        setProfile(newProfile ?? null);
+        setBio(newProfile?.bio ?? '');
+        return;
       }
+
+      setProfile(data);
+      setBio(data.bio ?? '');
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
-  const loadPosts = async () => {
+  const loadPosts = useCallback(async () => {
     if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select('*')
+        .select('id, content, media_url, created_at, message_type')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (data) {
-        const formattedPosts: Post[] = data.map(msg => ({
-          id: msg.id,
-          media_url: msg.media_url,
-          content: msg.content,
-          created_at: msg.created_at,
-          likes: Math.floor(Math.random() * 100), // Mock data
-          comments: Math.floor(Math.random() * 50), // Mock data
-          type: msg.media_url ? 'image' : 'text'
-        }));
-        setPosts(formattedPosts);
-        setStats(prev => ({ ...prev, posts: data.length }));
+      if (error) {
+        throw error;
       }
+
+      const messageRows: MessageRow[] = data ?? [];
+      const formattedPosts: Post[] = messageRows.map((msg) => {
+        const mediaUrl = msg.media_url ?? undefined;
+        const inferredType: Post['type'] = mediaUrl
+          ? /\.(mp4|mov|webm|m4v)$/i.test(mediaUrl)
+            ? 'video'
+            : 'image'
+          : 'text';
+
+        return {
+          id: msg.id,
+          media_url: mediaUrl,
+          content: msg.content,
+          created_at: msg.created_at ?? new Date().toISOString(),
+          likes: Math.floor(Math.random() * 100),
+          comments: Math.floor(Math.random() * 50),
+          type: msg.message_type === 'livestream' ? 'video' : inferredType,
+        };
+      }) ?? [];
+
+      setPosts(formattedPosts);
+      setStats((prev) => ({ ...prev, posts: messageRows.length }));
     } catch (error) {
       console.error('Error loading posts:', error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadProfile();
+    loadPosts();
+  }, [user, loadProfile, loadPosts]);
 
   const handleEditProfile = async () => {
     if (isEditingBio) {
-      // Save bio
       try {
+        const sanitizedBio = bio.trim();
+
+        if (sanitizedBio.length > MAX_BIO_LENGTH) {
+          toast({
+            title: 'Bio too long',
+            description: `Keep it under ${MAX_BIO_LENGTH} characters.`,
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        if (sanitizedBio === (profile?.bio ?? '')) {
+          setIsEditingBio(false);
+          return;
+        }
+
+        const updatePayload: TablesUpdate<'profiles'> = {
+          bio: sanitizedBio.length ? sanitizedBio : null,
+        };
+
         const { error } = await supabase
           .from('profiles')
-          .update({ bio })
-          .eq('id', user?.id);
+          .update(updatePayload)
+          .eq('id', user?.id)
+          .select('bio')
+          .single();
 
-        if (!error) {
-          toast({
-            title: "Profile updated!",
-            description: "Your bio has been saved",
-          });
-          setProfile((prev: any) => ({ ...prev, bio }));
+        if (error) {
+          throw error;
         }
+
+        toast({
+          title: 'Profile updated!',
+          description: 'Your bio has been saved.',
+        });
+        setProfile((prev) => (prev ? { ...prev, bio: updatePayload.bio ?? null } : prev));
+        setBio(sanitizedBio);
       } catch (error) {
         console.error('Error updating bio:', error);
+        toast({
+          title: 'Unable to save bio',
+          description: 'Please try again in a moment.',
+          variant: 'destructive',
+        });
+        setBio(profile?.bio ?? '');
+        return;
       }
     }
     setIsEditingBio(!isEditingBio);
@@ -165,8 +211,8 @@ const ModernProfile = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
-        <div className="text-center px-6">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-lo-teal to-blue-500 rounded-full flex items-center justify-center">
+        <div className="px-6 text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-slate-900 to-slate-700 text-white">
             <Users className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Sign in to view your profile</h1>
@@ -197,231 +243,190 @@ const ModernProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-20">
-      {/* Header */}
-      <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-gray-200/50 z-50" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/')}
-              className="h-10 w-10 rounded-full"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            
-            <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-bold">{profile?.name || user.email?.split('@')[0]}</h1>
-              <CheckCircle className="h-5 w-5 text-blue-500" />
+    <div className="relative min-h-screen bg-slate-50 pb-24">
+      <AppTopBar
+        title={profile?.name || user.email?.split('@')[0] || 'Profile'}
+        subtitle="profile"
+        leading={
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => navigate('/home')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        }
+        trailing={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full"
+            onClick={() => navigate('/settings')}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        }
+      />
+
+      <div className="px-6">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 text-white">
+          <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(circle at top, rgba(20,184,166,0.35), transparent 55%)' }} />
+          <div className="relative flex items-end justify-between gap-4">
+            <div className="flex items-end gap-4">
+              <div className="relative">
+                <Avatar className="h-24 w-24 border-4 border-white/40 shadow-xl">
+                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-slate-700 text-2xl font-semibold text-white">
+                    {(profile?.name || user.email || 'U')[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <label
+                  htmlFor="avatar-upload"
+                  className="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg"
+                >
+                  <Camera className="h-4 w-4" />
+                  <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                </label>
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight">{profile?.name || user.email?.split('@')[0]}</h1>
+                <p className="text-sm text-white/70">@{profile?.username || user.email?.split('@')[0]}</p>
+              </div>
             </div>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-full"
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
+            <div className="flex gap-3">
+              {[
+                { label: 'Posts', value: stats.posts },
+                { label: 'Followers', value: stats.followers },
+                { label: 'Following', value: stats.following },
+              ].map((item) => (
+                <div key={item.label} className="rounded-2xl bg-white/10 px-4 py-2 text-center text-sm">
+                  <p className="text-lg font-semibold">{item.value}</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">{item.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Profile Info Section */}
-      <div className="px-4 py-6">
-        <div className="flex items-start space-x-4">
-          {/* Avatar */}
-          <div className="relative">
-            <Avatar className="h-24 w-24 ring-3 ring-gradient-to-r from-lo-teal to-blue-500 ring-offset-2">
-              <AvatarImage src={profile?.avatar_url} />
-              <AvatarFallback className="bg-gradient-to-r from-lo-teal to-blue-500 text-white text-2xl font-bold">
-                {(profile?.name || user.email || 'U')[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <label htmlFor="avatar-upload" className="absolute -bottom-1 -right-1 h-8 w-8 bg-gradient-to-r from-lo-teal to-blue-500 rounded-full flex items-center justify-center cursor-pointer shadow-lg">
-              <Camera className="h-4 w-4 text-white" />
-              <input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarChange}
-              />
-            </label>
-          </div>
-
-          {/* Stats */}
-          <div className="flex-1">
-            <div className="flex justify-around">
-              <button className="text-center">
-                <p className="text-2xl font-bold">{stats.posts}</p>
-                <p className="text-sm text-gray-500">Posts</p>
-              </button>
-              <button className="text-center" onClick={() => toast({ title: "Followers", description: "Coming soon!" })}>
-                <p className="text-2xl font-bold">{stats.followers}</p>
-                <p className="text-sm text-gray-500">Followers</p>
-              </button>
-              <button className="text-center" onClick={() => toast({ title: "Following", description: "Coming soon!" })}>
-                <p className="text-2xl font-bold">{stats.following}</p>
-                <p className="text-sm text-gray-500">Following</p>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Bio Section */}
-        <div className="mt-4">
-          <h2 className="font-bold text-base">{profile?.name || user.email?.split('@')[0]}</h2>
-          <p className="text-sm text-gray-500">@{profile?.username || user.email?.split('@')[0]}</p>
-          
+      <div className="mt-8 space-y-8 px-6">
+        <div className="rounded-3xl bg-white p-5 shadow-sm">
           {isEditingBio ? (
             <textarea
               value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              className="mt-2 w-full p-2 border rounded-lg text-sm resize-none"
+              onChange={(event) => setBio(event.target.value)}
+              className="w-full resize-none rounded-2xl border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10"
               rows={3}
-              placeholder="Write something about yourself..."
-              maxLength={150}
+              placeholder="Tell the community about yourself"
             />
           ) : (
-            <p className="mt-2 text-sm">{profile?.bio || 'No bio yet'}</p>
+            <p className="text-sm text-slate-600">{profile?.bio || 'No bio yet'}</p>
           )}
-          
-          {profile?.location && (
-            <div className="flex items-center mt-2 text-sm text-gray-500">
-              <MapPin className="h-3 w-3 mr-1" />
-              <span>{profile.location}</span>
-            </div>
-          )}
-          
-          <div className="flex items-center mt-2 text-sm text-gray-500">
-            <Calendar className="h-3 w-3 mr-1" />
-            <span>Joined {new Date(profile?.created_at || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+
+          <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-400">
+            {profile?.location ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+                <MapPin className="h-3 w-3" />
+                {profile.location}
+              </span>
+            ) : null}
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-slate-600">
+              Joined {new Date(profile?.created_at || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </span>
+          </div>
+
+          <div className="mt-5 flex gap-3">
+            <Button onClick={handleEditProfile} className="flex-1 rounded-full bg-slate-900 text-white hover:bg-slate-800">
+              {isEditingBio ? 'Save Bio' : 'Edit Profile'}
+            </Button>
+            <Button
+              onClick={() => toast({ title: 'Share Profile', description: 'Coming soon!' })}
+              variant="secondary"
+              className="flex-1 rounded-full"
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Share
+            </Button>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex space-x-3 mt-4">
-          <Button
-            onClick={handleEditProfile}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-black border-0 rounded-lg py-2"
-          >
-            {isEditingBio ? 'Save Bio' : 'Edit Profile'}
-          </Button>
-          <Button
-            onClick={() => toast({ title: "Share Profile", description: "Coming soon!" })}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-black border-0 rounded-lg py-2"
-          >
-            Share Profile
-          </Button>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Highlights</h2>
+            <Button variant="ghost" size="sm" className="text-xs font-medium text-slate-500">
+              Manage
+            </Button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            <button className="flex flex-col items-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-slate-200">
+                <Camera className="h-5 w-5 text-slate-400" />
+              </span>
+              <span className="mt-2 text-xs text-slate-500">New</span>
+            </button>
+            {['Travel', 'Food', 'Events'].map((title) => (
+              <button key={title} className="flex flex-col items-center">
+                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-slate-900 to-slate-700 p-0.5">
+                  <span className="flex h-full w-full items-center justify-center rounded-full bg-white/5 text-xs text-white/80">
+                    {title.charAt(0)}
+                  </span>
+                </span>
+                <span className="mt-2 text-xs text-slate-500">{title}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Highlights (Instagram-style) */}
-        <div className="flex space-x-4 mt-6 overflow-x-auto">
-          <button className="flex flex-col items-center">
-            <div className="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
-              <Camera className="h-6 w-6 text-gray-400" />
-            </div>
-            <span className="text-xs mt-1">New</span>
-          </button>
-          {/* Mock highlights */}
-          {['Travel', 'Food', 'Events'].map((title, i) => (
-            <button key={i} className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-lo-teal to-blue-500 p-0.5">
-                <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
-                  <div className="w-14 h-14 bg-gradient-to-br from-lo-teal/20 to-blue-500/20 rounded-full"></div>
-                </div>
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <Chip selected={activeTab === 'posts'} onClick={() => setActiveTab('posts')} className="flex-1">
+              Posts
+            </Chip>
+            <Chip selected={activeTab === 'saved'} onClick={() => setActiveTab('saved')} className="flex-1">
+              Saved
+            </Chip>
+            <Chip selected={activeTab === 'tagged'} onClick={() => setActiveTab('tagged')} className="flex-1">
+              Tagged
+            </Chip>
+          </div>
+
+          {activeTab === 'posts' ? (
+            posts.length ? (
+              <div className="grid grid-cols-3 gap-1 rounded-3xl bg-white p-1 shadow-sm">
+                {posts.map((post) => (
+                  <button
+                    key={post.id}
+                    onClick={() => toast({ title: 'Post details', description: 'Coming soon!' })}
+                    className="relative aspect-square overflow-hidden rounded-2xl"
+                  >
+                    {post.media_url ? (
+                      <img src={post.media_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-100 p-3 text-xs text-slate-500">
+                        {post.content}
+                      </div>
+                    )}
+                    {post.type === 'video' && (
+                      <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-xs text-white">
+                        <Play className="h-3 w-3" />
+                        Video
+                      </div>
+                    )}
+                  </button>
+                ))}
               </div>
-              <span className="text-xs mt-1">{title}</span>
-            </button>
-          ))}
+            ) : (
+              <div className="rounded-3xl bg-white p-10 text-center text-sm text-slate-500 shadow-sm">
+                Share your first Lo to populate your profile.
+              </div>
+            )
+          ) : activeTab === 'saved' ? (
+            <div className="rounded-3xl bg-white p-10 text-center text-sm text-slate-500 shadow-sm">
+              Saved posts will land here for quick access.
+            </div>
+          ) : (
+            <div className="rounded-3xl bg-white p-10 text-center text-sm text-slate-500 shadow-sm">
+              Posts you’re tagged in will appear here.
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Posts Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full grid grid-cols-3 h-12 p-0 bg-transparent border-t border-gray-200">
-          <TabsTrigger value="posts" className="data-[state=active]:border-t-2 data-[state=active]:border-black rounded-none">
-            <Grid3x3 className="h-5 w-5" />
-          </TabsTrigger>
-          <TabsTrigger value="saved" className="data-[state=active]:border-t-2 data-[state=active]:border-black rounded-none">
-            <Bookmark className="h-5 w-5" />
-          </TabsTrigger>
-          <TabsTrigger value="tagged" className="data-[state=active]:border-t-2 data-[state=active]:border-black rounded-none">
-            <Users className="h-5 w-5" />
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Posts Grid */}
-        <TabsContent value="posts" className="mt-0 p-0">
-          <div className="grid grid-cols-3 gap-0.5">
-            {posts.length > 0 ? (
-              posts.map((post) => (
-                <button
-                  key={post.id}
-                  className="relative aspect-square bg-gray-100 overflow-hidden group"
-                  onClick={() => toast({ title: "Post details", description: "Coming soon!" })}
-                >
-                  {post.media_url ? (
-                    <img src={post.media_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <p className="text-xs text-gray-500 p-2 text-center line-clamp-3">{post.content}</p>
-                    </div>
-                  )}
-                  
-                  {/* Hover Overlay with stats */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4">
-                    <div className="flex items-center text-white">
-                      <Heart className="h-5 w-5 mr-1 fill-white" />
-                      <span className="font-bold">{post.likes}</span>
-                    </div>
-                    <div className="flex items-center text-white">
-                      <MessageCircle className="h-5 w-5 mr-1 fill-white" />
-                      <span className="font-bold">{post.comments}</span>
-                    </div>
-                  </div>
-
-                  {/* Video indicator */}
-                  {post.type === 'video' && (
-                    <div className="absolute top-2 right-2">
-                      <Play className="h-5 w-5 text-white drop-shadow" />
-                    </div>
-                  )}
-                </button>
-              ))
-            ) : (
-              <div className="col-span-3 py-20 text-center">
-                <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                  <Camera className="h-10 w-10 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Share your first Lo</h3>
-                <p className="text-sm text-gray-500">Your posts will appear here</p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="saved" className="mt-0 p-0">
-          <div className="py-20 text-center">
-            <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              <Bookmark className="h-10 w-10 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Saved posts</h3>
-            <p className="text-sm text-gray-500">Save posts to view them later</p>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="tagged" className="mt-0 p-0">
-          <div className="py-20 text-center">
-            <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              <Users className="h-10 w-10 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Tagged posts</h3>
-            <p className="text-sm text-gray-500">Posts you're tagged in will appear here</p>
-          </div>
-        </TabsContent>
-      </Tabs>
 
       <BottomNavigation />
     </div>

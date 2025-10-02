@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-09-25T03:21:18.528Z",
+  "overallStatus": "PASSED_WITH_WARNINGS",
+  "summary": {
+    "total": 4,
+    "passed": 3,
+    "warnings": 1,
+    "failed": 0
+  },
+  "results": [
+    {
+      "test": "Server Running",
+      "status": "PASSED",
+      "httpStatus": 200,
+      "contentType": "text/html"
+    },
+    {
+      "test": "HTML Structure",
+      "status": "PASSED",
+      "hasRoot": true,
+      "hasTitle": true,
+      "hasAssets": true,
+      "htmlSize": 1496
+    },
+    {
+      "test": "Bundle Size",
+      "status": "WARNING",
+      "bundleSize": "1082KB",
+      "target": "300KB",
+      "excess": "782KB"
+    },
+    {
+      "test": "Critical Files",
+      "status": "PASSED",
+      "filesExist": "4/4",
+      "missingFiles": 0
+    }
+  ]
+}

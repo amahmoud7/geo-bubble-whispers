@@ -40,15 +40,7 @@ const EventsToggle: React.FC<EventsToggleProps> = ({ className = '', onEventsOnl
   }, [events]);
 
   const handleToggleEvents = async () => {
-    console.log('🎫 BUTTON CLICKED: Toggle events button pressed');
-    console.log('🎫 BUTTON STATE: eventsVisible =', eventsVisible);
-    console.log('🎫 BUTTON STATE: isEventsOnlyMode =', isEventsOnlyMode);
-    console.log('🎫 BUTTON STATE: currentCity =', currentCity);
-    console.log('🎫 BUTTON STATE: mapCenter =', mapCenter);
-    
     if (eventsVisible && isEventsOnlyMode) {
-      // Exit events-only mode - clear events and re-enable other content
-      console.log('🎫 BUTTON ACTION: Exiting events-only mode');
       await clearEvents();
       setIsEventsOnlyMode(false);
       setEventsVisible(false);
@@ -61,8 +53,6 @@ const EventsToggle: React.FC<EventsToggleProps> = ({ className = '', onEventsOnl
         duration: 2000,
       });
     } else {
-      // Enter events-only mode - clear other content and load events
-      console.log('🎫 BUTTON ACTION: Entering events-only mode - clearing other content');
       setIsEventsOnlyMode(true);
       onEventsOnlyModeChange?.(true);
       
@@ -89,14 +79,6 @@ const EventsToggle: React.FC<EventsToggleProps> = ({ className = '', onEventsOnl
     setIsLoading(true);
     
     try {
-      console.log(`🎫 EVENTS DEBUG: Loading events for ${currentCity.displayName} (${currentCity.id})`);
-      console.log(`🎫 EVENTS DEBUG: Request parameters:`, {
-        source: ['ticketmaster', 'predicthq'],
-        center: currentCity.coordinates,
-        radius: currentCity.radius,
-        timeframe: '24h'
-      });
-      
       const { data, error } = await supabase.functions.invoke('fetch-events-realtime', {
         body: { 
           source: ['ticketmaster', 'predicthq'],
@@ -108,47 +90,6 @@ const EventsToggle: React.FC<EventsToggleProps> = ({ className = '', onEventsOnl
 
       if (error) {
         throw error;
-      }
-
-      console.log('✅ Events loaded successfully:', data);
-      
-      // Log detailed source information
-      if (data?.sources) {
-        console.log('📊 SOURCE BREAKDOWN:');
-        console.log('  Processed:', data.sources.processed);
-        console.log('  Failed:', data.sources.failed);
-        
-        if (data.sources.processed?.includes('ticketmaster')) {
-          console.log('  ✅ Ticketmaster: Success');
-        } else {
-          console.log('  ❌ Ticketmaster: Failed or not processed');
-        }
-        
-        if (data.sources.processed?.includes('seatgeek')) {
-          console.log('  ✅ SeatGeek: Success');
-        } else {
-          console.log('  ❌ SeatGeek: Failed or not processed');
-        }
-        
-        if (data.sources.processed?.includes('predicthq')) {
-          console.log('  ✅ PredictHQ: Success');
-        } else {
-          console.log('  ❌ PredictHQ: Failed or not processed');
-        }
-        
-        if (data.sources.processed?.includes('yelp')) {
-          console.log('  ✅ Yelp: Success');
-        } else {
-          console.log('  ❌ Yelp: Failed or not processed');
-        }
-      }
-      
-      if (data?.events) {
-        console.log('📈 EVENTS BREAKDOWN:');
-        console.log(`  Total: ${data.events.total || 0}`);
-        console.log(`  Created: ${data.events.created || 0}`);
-        console.log(`  Updated: ${data.events.updated || 0}`);
-        console.log(`  Skipped: ${data.events.skipped || 0}`);
       }
       
       // Refresh events to show on map
@@ -165,7 +106,7 @@ const EventsToggle: React.FC<EventsToggleProps> = ({ className = '', onEventsOnl
       });
 
     } catch (error: any) {
-      console.error('❌ Error loading events:', error);
+      console.error('Error loading events:', error);
       
       if (error.message?.includes('Edge Function returned a non-2xx status code') || 
           error.message?.includes('NOT_FOUND')) {
@@ -175,7 +116,7 @@ const EventsToggle: React.FC<EventsToggleProps> = ({ className = '', onEventsOnl
           duration: 5000,
         });
         
-        console.log(`
+      console.info(`
 🔧 EVENTS SETUP REQUIRED:
 
 The events function needs to be deployed:
@@ -228,7 +169,7 @@ See REALTIME_EVENTS_SETUP.md for detailed instructions.
       });
 
     } catch (error: any) {
-      console.error('❌ Error clearing events:', error);
+      console.error('Error clearing events:', error);
       toast({
         title: "❌ Clear Error",
         description: "Failed to clear events from map",
@@ -241,153 +182,54 @@ See REALTIME_EVENTS_SETUP.md for detailed instructions.
 
   return (
     <div className={`flex flex-col items-center space-y-3 ${className}`}>
-      {/* Main Toggle Button with Liquid Glass UI */}
+      {/* Compact Toggle Button with Liquid Glass UI */}
       <button
         onClick={handleToggleEvents}
         disabled={isLoading}
         className={`
-          relative min-w-[220px] h-16 text-lg font-bold glass-card transition-all duration-300 glass-float
+          relative flex min-h-[36px] min-w-[80px] items-center justify-center rounded-xl border px-3 py-2 text-xs font-semibold text-white transition-transform duration-200
+          backdrop-blur-xl
           ${eventsVisible && isEventsOnlyMode
-            ? 'text-purple-300' 
+            ? 'bg-gradient-to-r from-purple-600/30 to-indigo-500/30 border-purple-400/40'
             : eventsVisible 
-            ? 'text-green-400' 
-            : 'text-yellow-400'
+            ? 'bg-gradient-to-r from-emerald-500/30 to-teal-500/30 border-emerald-400/40'
+            : 'bg-gradient-to-r from-amber-400/30 to-yellow-400/30 border-amber-300/40'
           }
-          ${isLoading ? 'scale-95 opacity-90' : 'hover:scale-105 active:scale-95'}
-          disabled:opacity-50 disabled:cursor-not-allowed
+          ${isLoading ? 'scale-95 opacity-80' : 'hover:scale-[1.02] active:scale-95'}
+          disabled:cursor-not-allowed disabled:transform-none disabled:opacity-60
         `}
-        style={{
-          background: eventsVisible && isEventsOnlyMode
-            ? 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(79, 70, 229, 0.2) 100%)'
-            : eventsVisible 
-            ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%)'
-            : 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(234, 179, 8, 0.2) 100%)',
-          backdropFilter: 'blur(20px)',
-          border: `2px solid ${eventsVisible && isEventsOnlyMode ? 'rgba(147, 51, 234, 0.3)' : eventsVisible ? 'rgba(34, 197, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
-        }}
       >
         {/* Animated Background */}
         {eventsVisible && (
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse rounded-2xl"></div>
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
         )}
         
-        <div className="relative flex items-center space-x-3">
+        <div className="relative flex items-center space-x-1">
           {isLoading ? (
-            <Loader2 className="w-7 h-7 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : eventsVisible ? (
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-              <Calendar className="w-6 h-6" />
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 bg-white rounded-full motion-safe:animate-pulse"></div>
+              <Calendar className="w-3 h-3" />
             </div>
           ) : (
-            <Calendar className="w-7 h-7" />
+            <Calendar className="w-4 h-4" />
           )}
           
-          <div className="flex flex-col items-start">
-            <span className="text-base leading-tight">
-              {isLoading 
-                ? 'Loading...' 
-                : eventsVisible && isEventsOnlyMode
-                ? 'Exit Events Mode'
-                : eventsVisible 
-                ? 'Events Only Mode' 
-                : 'Show Events'
-              }
-            </span>
-            <span className="text-sm opacity-90 leading-tight">
-              {eventsVisible && isEventsOnlyMode
-                ? `Events Only • ${eventCount} Found`
-                : eventsVisible 
-                ? `${eventCount} Live Events` 
-                : currentCity 
-                  ? `${currentCity.displayName} • 24h`
-                  : 'Next 24 Hours'
-              }
-            </span>
-          </div>
-          
-          {!isLoading && <ExternalLink className="w-5 h-5 ml-2" />}
+          <span className="text-xs leading-tight font-semibold">
+            {isLoading 
+              ? 'Loading' 
+              : eventsVisible && isEventsOnlyMode
+              ? 'Exit'
+              : eventsVisible 
+              ? 'Only' 
+              : 'Events'
+            }
+          </span>
         </div>
       </button>
 
-      {/* Status Information with Liquid Glass */}
-      {eventsVisible && (
-        <div className="glass px-4 py-2 rounded-2xl flex items-center space-x-4 text-sm">
-          <div className="flex items-center space-x-1 text-green-400">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="font-medium text-white">{eventCount} Active</span>
-          </div>
-          
-          <div className="flex items-center space-x-1 text-white/80">
-            <Clock className="w-4 h-4" />
-            <span>Next 24h</span>
-          </div>
-          
-          <div className="flex items-center space-x-1 text-white/80">
-            <MapPin className="w-4 h-4" />
-            <span>{currentCity?.displayName || 'No City'}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Location Detection Status */}
-      {!isWithinRange && currentCity && (
-        <div className="text-xs text-amber-600 text-center max-w-xs">
-          📍 You're outside major cities - showing {currentCity.displayName} events</div>
-      )}
-
-      {/* City Detection Loading */}
-      {!currentCity && map && (
-        <div className="flex items-center space-x-1 text-xs text-gray-500">
-          <Loader2 className="w-3 h-3 animate-spin" />
-          <span>Detecting city from map...</span>
-        </div>
-      )}
-
-      {/* Instructions */}
-      {!eventsVisible && !isLoading && currentCity && (
-        <p className="text-xs text-gray-500 text-center max-w-xs">
-          Move map to any major city • Tap to show live events for {formatCityDisplay(currentCity)}
-        </p>
-      )}
       
-      {/* Debug Tools - Only show in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="flex items-center space-x-2 mt-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              debugLogger.copyToClipboard();
-              toast({
-                title: "📋 Logs Copied!",
-                description: "Debug logs copied to clipboard - paste them to share",
-                duration: 2000,
-              });
-            }}
-            className="text-xs"
-          >
-            <Copy className="w-3 h-3 mr-1" />
-            Copy Logs
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              debugLogger.downloadLogs();
-              toast({
-                title: "📥 Logs Downloaded!",
-                description: "Debug logs saved to file",
-                duration: 2000,
-              });
-            }}
-            className="text-xs"
-          >
-            <Download className="w-3 h-3 mr-1" />
-            Download
-          </Button>
-        </div>
-      )}
     </div>
   );
 };

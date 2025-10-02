@@ -1,27 +1,41 @@
 /* Liquid Glass UI Design System for Lo */
 
 :root {
+  /* Glass backgrounds - restored to original scaling */
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-bg-heavy: rgba(255, 255, 255, 0.25);
+  --glass-bg-ultra: rgba(255, 255, 255, 0.35);
+  
+  /* Glass borders - restored to original */
   --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-border-heavy: rgba(255, 255, 255, 0.3);
+  
+  /* Glass shadows - restored to original */
   --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  --glass-shadow-heavy: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+  
   --glass-blur: 10px;
   --glass-blur-heavy: 20px;
   
-  /* Liquid animation colors */
+  /* Enhanced liquid animation colors */
   --liquid-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --liquid-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --liquid-tertiary: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   --liquid-success: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
   --liquid-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   
-  /* Glass morphism colors */
-  --glass-primary: rgba(102, 126, 234, 0.1);
-  --glass-secondary: rgba(240, 147, 251, 0.1);
-  --glass-tertiary: rgba(79, 172, 254, 0.1);
+  /* Enhanced glass morphism colors */
+  --glass-primary: rgba(102, 126, 234, 0.2);
+  --glass-secondary: rgba(240, 147, 251, 0.2);
+  --glass-tertiary: rgba(79, 172, 254, 0.2);
+  
+  /* Text colors - restored to original */
+  --glass-text: rgba(255, 255, 255, 0.9);
+  --glass-text-secondary: rgba(255, 255, 255, 0.7);
+  --glass-text-muted: rgba(255, 255, 255, 0.5);
 }
 
-/* Base glass morphism classes */
+/* Glass morphism classes - restored scaling */
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -29,14 +43,23 @@
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--glass-text);
 }
 
 .glass-heavy {
   background: var(--glass-bg-heavy);
   backdrop-filter: blur(var(--glass-blur-heavy));
   -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border-heavy);
+  box-shadow: var(--glass-shadow-heavy);
+  color: var(--glass-text);
+}
+
+.glass:hover {
+  background: var(--glass-bg-heavy);
+  border-color: var(--glass-border-heavy);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-shadow-heavy);
 }
 
 .glass-card {
@@ -281,12 +304,15 @@
   }
 }
 
-/* Dark mode enhancements */
+/* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   :root {
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-bg-heavy: rgba(255, 255, 255, 0.15);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-bg-heavy: rgba(255, 255, 255, 0.2);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass-border-heavy: rgba(255, 255, 255, 0.25);
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --glass-shadow-heavy: 0 12px 40px 0 rgba(0, 0, 0, 0.6);
+    --glass-text: rgba(255, 255, 255, 0.9);
   }
 }

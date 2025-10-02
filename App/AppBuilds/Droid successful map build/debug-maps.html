@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Debug</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #map { height: 400px; width: 100%; }
+        #debug { 
+            padding: 20px; 
+            background: #f0f0f0; 
+            font-family: monospace; 
+            white-space: pre-wrap;
+            border-bottom: 2px solid #ddd;
+        }
+        .log { margin: 5px 0; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <div id="debug">
+        <h3>Google Maps Debug Console</h3>
+        <div id="logs"></div>
+    </div>
+    <div id="map"></div>
+
+    <script>
+        const logs = document.getElementById('logs');
+        
+        function log(message, type = 'info') {
+            console.log(`[DEBUG] ${message}`);
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        // Test environment variables
+        log('Starting Google Maps debug test...', 'info');
+        
+        // Test API key
+        const apiKey = 'AIzaSyAjEgLbwLxPJ1PDPU446fL8fvsfWhUviuU';
+        log(`API Key: ${apiKey ? apiKey.substring(0, 20) + '...' : 'MISSING'}`, apiKey ? 'success' : 'error');
+        
+        // Test network connectivity
+        fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=test&key=${apiKey}`)
+            .then(response => {
+                log(`Geocoding API Response: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                return response.json();
+            })
+            .then(data => {
+                log(`Geocoding API Result: ${data.status}`, data.status === 'OK' ? 'success' : 'error');
+            })
+            .catch(error => {
+                log(`Network Error: ${error.message}`, 'error');
+            });
+
+        // Load Google Maps JavaScript API
+        function initMap() {
+            log('initMap callback triggered!', 'success');
+            
+            try {
+                log(`window.google available: ${!!window.google}`, window.google ? 'success' : 'error');
+                log(`window.google.maps available: ${!!(window.google && window.google.maps)}`, (window.google && window.google.maps) ? 'success' : 'error');
+                
+                if (window.google && window.google.maps) {
+                    const mapDiv = document.getElementById('map');
+                    const map = new google.maps.Map(mapDiv, {
+                        center: { lat: 37.7749, lng: -122.4194 },
+                        zoom: 13
+                    });
+                    
+                    log('Google Maps instance created successfully!', 'success');
+                    log(`Map center: ${map.getCenter()}`, 'info');
+                    log(`Map zoom: ${map.getZoom()}`, 'info');
+                    
+                    // Add a marker
+                    new google.maps.Marker({
+                        position: { lat: 37.7749, lng: -122.4194 },
+                        map: map,
+                        title: 'San Francisco'
+                    });
+                    
+                    log('Marker added successfully!', 'success');
+                } else {
+                    log('Google Maps API not available in window object', 'error');
+                }
+            } catch (error) {
+                log(`Error creating map: ${error.message}`, 'error');
+                log(`Error stack: ${error.stack}`, 'error');
+            }
+        }
+
+        // Load the Google Maps API
+        log('Loading Google Maps JavaScript API...', 'info');
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
+        script.async = true;
+        script.defer = true;
+        
+        script.onload = () => {
+            log('Google Maps script loaded successfully!', 'success');
+        };
+        
+        script.onerror = (error) => {
+            log(`Script loading error: ${error}`, 'error');
+        };
+        
+        document.head.appendChild(script);
+        
+        // Expose initMap globally
+        window.initMap = initMap;
+        
+        // Check for any global errors
+        window.addEventListener('error', (event) => {
+            log(`Global Error: ${event.message} at ${event.filename}:${event.lineno}`, 'error');
+        });
+        
+        // Check for unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            log(`Unhandled Promise Rejection: ${event.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>

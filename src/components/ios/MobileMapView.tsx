@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap } from '@react-google-maps/api';
+import { useGoogleMapsLoader } from '@/contexts/GoogleMapsContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { useGoogleMap } from '@/hooks/useGoogleMap';
@@ -10,6 +11,8 @@ import { useLiveStreams } from '@/hooks/useLiveStreams';
 import { useAuth } from '@/hooks/useAuth';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { LiveStream } from '@/types/livestream';
+import { environment } from '@/config/environment';
+import { getIOSMapOptions, getErrorMessage } from '@/utils/googleMapsUtils';
 
 // Mobile-optimized components
 import MobileHeader from './MobileHeader';
@@ -21,7 +24,7 @@ import LiveStreamMarkers from '../livestream/LiveStreamMarkers';
 import LiveStreamViewer from '../livestream/LiveStreamViewer';
 
 // Import icons
-import { Plus, Filter, Search, Layers, Navigation } from 'lucide-react';
+import { Plus, Filter, Search, Layers, Navigation, RefreshCw, Settings } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 
@@ -71,11 +74,7 @@ const MobileMapView: React.FC<MobileMapViewProps> = ({ className }) => {
     setNewPinPosition,
   } = usePinPlacement();
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: 'AIzaSyCja18mhM6OgcQPkZp7rCZM6C29SGz3S4U',
-    libraries: ['places']
-  });
+  const { isLoaded, loadError, apiKeyValid, retry, diagnostics } = useGoogleMapsLoader();
 
   // Mobile-specific handlers
   const handleCreateMessage = () => {
@@ -137,18 +136,100 @@ const MobileMapView: React.FC<MobileMapViewProps> = ({ className }) => {
     }
   };
 
-  if (!isLoaded) {
+  // Enhanced error handling for mobile with user-friendly messages
+  if (loadError || !apiKeyValid) {
+    const errorInfo = getErrorMessage(loadError);
+    
+    console.error('🚨 Mobile Google Maps failed to load:', {
+      loadError: loadError?.message,
+      apiKeyValid,
+      diagnostics,
+      userLocation,
+      timestamp: new Date().toISOString(),
+      errorInfo
+    });
+    
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-lg">Loading map...</div>
+      <div className="flex flex-col items-center justify-center h-full p-6 bg-gray-50">
+        <div className="text-center max-w-sm">
+          <div className="text-red-600 text-6xl mb-4">🗺️</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">{errorInfo.title}</h2>
+          <p className="text-gray-600 text-sm mb-6">
+            {errorInfo.message}
+          </p>
+          
+          <div className="space-y-3">
+            <Button 
+              onClick={retry}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => window.open('/diagnostic', '_blank')}
+              className="w-full"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Diagnose Issue
+            </Button>
+          </div>
+          
+          {/* Show suggestions */}
+          {errorInfo.suggestions.length > 0 && (
+            <div className="mt-6 text-xs text-left">
+              <p className="font-semibold text-gray-700 mb-2">Try these solutions:</p>
+              <ul className="text-gray-600 space-y-1">
+                {errorInfo.suggestions.slice(0, 3).map((suggestion, index) => (
+                  <li key={index}>• {suggestion}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          <div className="mt-4 text-xs text-gray-400">
+            <div>API Key: {diagnostics.keyFormat}</div>
+            <div>Network: {diagnostics.networkOnline ? 'Online' : 'Offline'}</div>
+          </div>
+        </div>
       </div>
     );
   }
+  
+  if (!isLoaded) {
+    console.log('⏳ Mobile Google Maps is loading...');
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-6"></div>
+          <div>
+            <p className="text-gray-800 font-medium text-lg">Loading Maps...</p>
+            <p className="text-gray-500 text-sm mt-2">Preparing your location experience</p>
+          </div>
+          <div className="mt-8 text-xs text-gray-400">
+            <p>Taking longer than expected?</p>
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => window.open('/diagnostic', '_blank')}
+              className="text-blue-600 p-0 h-auto"
+            >
+              Check diagnostics
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Log successful mobile load
+  console.log('✅ Mobile Google Maps loaded successfully!');
 
   const userAvatar = user?.user_metadata?.avatar_url || '/placeholder.svg';
   const userName = user?.user_metadata?.name;
 
-  const mapOptions = {
+  const mapOptions = getIOSMapOptions({
     ...defaultMapOptions,
     mapTypeId: mapType,
     gestureHandling: 'greedy', // Better for mobile touch
@@ -156,7 +237,7 @@ const MobileMapView: React.FC<MobileMapViewProps> = ({ className }) => {
     streetViewControl: false,
     fullscreenControl: false,
     mapTypeControl: false
-  };
+  });
 
   return (
     <div className={cn("relative w-full h-full overflow-hidden", className)}>

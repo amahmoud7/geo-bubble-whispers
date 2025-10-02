@@ -49,19 +49,24 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.geobubblewhispers.app</string>
+			<string>app.lo.social</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.geobubblewhispers.app</string>
+				<string>app.lo.social</string>
+				<string>lo</string>
 			</array>
 		</dict>
 	</array>
 	
-	<!-- Camera and Microphone Permissions -->
+	<!-- Camera and Media Permissions -->
 	<key>NSCameraUsageDescription</key>
 	<string>Lo needs access to your camera to take photos, videos, and use AR view to see messages around you</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Lo needs access to your microphone to record videos and enable live streaming</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Lo needs access to your photo library to select and share images</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Lo needs permission to save photos and videos to your photo library</string>
 	
 	<!-- Location Permissions -->
 	<key>NSLocationWhenInUseUsageDescription</key>

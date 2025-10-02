@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 10px;
+        }
+        .status { 
+            margin: 20px 0; 
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success { background: rgba(76, 175, 80, 0.2); }
+        .info { background: rgba(33, 150, 243, 0.2); }
+        .link { 
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .link:hover { background: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Server Test Page</h1>
+        
+        <div class="status success">
+            ✅ Server is running correctly!
+        </div>
+        
+        <div class="status info">
+            📍 Current Time: <span id="time"></span>
+        </div>
+        
+        <p>If you can see this page, the Vite development server is working properly.</p>
+        
+        <div>
+            <a href="/" class="link">🏠 Home Page</a>
+            <a href="/diagnostic" class="link">🔧 Diagnostic Page</a>
+        </div>
+        
+        <hr style="margin: 30px 0; border: 1px solid rgba(255,255,255,0.2);">
+        
+        <h3>Troubleshooting:</h3>
+        <ul style="text-align: left; max-width: 400px; margin: 0 auto;">
+            <li>✅ Vite server is running on port 8087</li>
+            <li>✅ This static HTML loads correctly</li>
+            <li>❓ If main app is blank, check browser console for errors</li>
+            <li>❓ Try hard refresh (Ctrl+F5 or Cmd+Shift+R)</li>
+            <li>❓ Check browser network tab for failed requests</li>
+        </ul>
+    </div>
+    
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleTimeString();
+        setInterval(() => {
+            document.getElementById('time').textContent = new Date().toLocaleTimeString();
+        }, 1000);
+    </script>
+</body>
+</html>

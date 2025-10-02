@@ -30,11 +30,9 @@ const ModernMapControls: React.FC<ModernMapControlsProps> = ({
 
   React.useEffect(() => {
     if (!inputRef.current || !window.google?.maps?.places) {
-      console.log('❌ Google Places API not loaded or input ref missing');
       return;
     }
 
-    console.log('✅ Initializing Google Places SearchBox');
     const searchBox = new google.maps.places.SearchBox(inputRef.current);
     onSearchBoxLoad(searchBox);
 
@@ -55,7 +53,6 @@ const ModernMapControls: React.FC<ModernMapControlsProps> = ({
             const userLocation = new google.maps.LatLng(latitude, longitude);
             map.setCenter(userLocation);
             map.setZoom(16);
-            console.log('📍 Centered map on user location:', latitude, longitude);
           }
           
           setIsLoadingLocation(false);
@@ -78,8 +75,11 @@ const ModernMapControls: React.FC<ModernMapControlsProps> = ({
   return (
     <>
       {/* Modern Centered Search Bar */}
-      <div className="absolute top-0 inset-x-0 z-30" style={{ paddingTop: 'env(safe-area-inset-top, 16px)' }}>
-        <div className="mx-4 mt-3">
+      <div
+        className="absolute inset-x-0 z-30"
+        style={{ top: 'calc(env(safe-area-inset-top, 24px) + 72px)' }}
+      >
+        <div className="px-6">
           <div className="relative max-w-md mx-auto">
             <div className="relative flex items-center">
               <Input
@@ -97,7 +97,7 @@ const ModernMapControls: React.FC<ModernMapControlsProps> = ({
                     <Button 
                       size="icon"
                       variant="ghost" 
-                      className="h-8 w-8 rounded-full hover:bg-gray-100 transition-colors"
+                      className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-full hover:bg-gray-100 transition-colors"
                     >
                       <Filter className="h-4 w-4" />
                     </Button>

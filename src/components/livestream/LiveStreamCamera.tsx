@@ -1,24 +1,25 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Video, 
-  VideoOff, 
-  Mic, 
-  MicOff, 
-  Square, 
-  Play, 
-  Users, 
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Camera as CameraIcon,
   Eye,
-  Settings,
-  Maximize2,
+  Loader2,
+  Mic,
+  MicOff,
+  Play,
   RotateCcw,
+  Square,
+  Users,
+  Video,
+  VideoOff,
+  X,
   Zap,
-  X
-} from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 interface LiveStreamCameraProps {
-  onStreamStart?: (streamData: MediaStream) => void;
-  onStreamEnd?: () => void;
+  onStreamStart?: (streamData: MediaStream, options: { title: string }) => void | Promise<unknown>;
+  onStreamEnd?: () => void | Promise<unknown>;
   onClose?: () => void;
   isStreaming: boolean;
   viewerCount?: number;
@@ -26,148 +27,121 @@ interface LiveStreamCameraProps {
   onTitleChange?: (title: string) => void;
 }
 
+type CameraStatus = "initializing" | "ready" | "error";
+
 const LiveStreamCamera: React.FC<LiveStreamCameraProps> = ({
   onStreamStart,
   onStreamEnd,
   onClose,
   isStreaming,
   viewerCount = 0,
-  streamTitle = '',
-  onTitleChange
+  streamTitle = "",
+  onTitleChange,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+
+  const [status, setStatus] = useState<CameraStatus>("initializing");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [currentCamera, setCurrentCamera] = useState<'user' | 'environment'>('user');
   const [availableDevices, setAvailableDevices] = useState<MediaDeviceInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [activeDeviceId, setActiveDeviceId] = useState<string | undefined>(undefined);
   const [streamDuration, setStreamDuration] = useState(0);
   const [title, setTitle] = useState(streamTitle);
-  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
-  const [permissionDenied, setPermissionDenied] = useState(false);
+  const [isStartPending, setIsStartPending] = useState(false);
+  const [isStopPending, setIsStopPending] = useState(false);
 
-  // Timer for stream duration
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    setTitle(streamTitle);
+  }, [streamTitle]);
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
     if (isStreaming) {
-      interval = setInterval(() => {
-        setStreamDuration(prev => prev + 1);
-      }, 1000);
+      interval = setInterval(() => setStreamDuration((prev) => prev + 1), 1000);
     } else {
       setStreamDuration(0);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isStreaming]);
 
-  // Get available devices
   useEffect(() => {
-    const getDevices = async () => {
+    const initialise = async () => {
       try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        setAvailableDevices(videoDevices);
-      } catch (error) {
-        console.error('Error getting devices:', error);
+        await startCamera(activeDeviceId);
+        await loadVideoDevices();
+        setStatus("ready");
+      } catch (error: unknown) {
+        setStatus("error");
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "We couldn't access your camera or microphone. Check permissions and try again."
+        );
       }
     };
-    getDevices();
-  }, []);
 
-  // Initialize camera on mount (with permission request)
-  useEffect(() => {
-    if (!showPermissionDialog && !permissionDenied) {
-      requestPermissionsAndInitialize();
-    }
-    return () => {
-      stopCamera();
-    };
-  }, [currentCamera]);
-  
-  const requestPermissionsAndInitialize = async () => {
-    setShowPermissionDialog(true);
-  };
-  
-  const handlePermissionGranted = async () => {
-    setShowPermissionDialog(false);
-    setPermissionDenied(false);
-    await initializeCamera();
-  };
-  
-  const handlePermissionDenied = () => {
-    setShowPermissionDialog(false);
-    setPermissionDenied(true);
-    setHasPermission(false);
-  };
+    initialise();
+    return () => stopCamera();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDeviceId]);
 
-  const initializeCamera = async () => {
+  const loadVideoDevices = async () => {
     try {
-      setIsLoading(true);
-      
-      // Stop existing stream
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+      if (typeof navigator === "undefined" || !navigator.mediaDevices?.enumerateDevices) {
+        return;
       }
-
-      const constraints: MediaStreamConstraints = {
-        video: {
-          facingMode: currentCamera,
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 30 }
-        },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-
-      setHasPermission(true);
-      setPermissionDenied(false);
-      
-      toast({
-        title: "Camera & Microphone Ready!",
-        description: "You can now start livestreaming",
-      });
-
-    } catch (error: any) {
-      console.error('Error accessing camera:', error);
-      setHasPermission(false);
-      setPermissionDenied(true);
-      
-      let errorMessage = "Please allow camera and microphone access";
-      if (error.name === 'NotAllowedError') {
-        errorMessage = "Camera and microphone access was denied. Please enable permissions in your browser settings.";
-      } else if (error.name === 'NotFoundError') {
-        errorMessage = "No camera or microphone found on this device.";
-      } else if (error.name === 'NotReadableError') {
-        errorMessage = "Camera or microphone is already in use by another application.";
-      }
-      
-      toast({
-        title: "Camera & Microphone Access Required",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      setAvailableDevices(devices.filter((device) => device.kind === "videoinput"));
+    } catch (error) {
+      console.error("Error loading devices", error);
     }
+  };
+
+  const startCamera = async (deviceId?: string) => {
+    stopCamera();
+
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      throw new Error("Camera access is not supported in this environment.");
+    }
+
+    if (typeof window !== "undefined" && window.isSecureContext === false) {
+      throw new Error("Camera access requires a secure (HTTPS) context.");
+    }
+
+    const constraints: MediaStreamConstraints = {
+      video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "user" },
+      audio: { echoCancellation: true, noiseSuppression: true },
+    };
+
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    streamRef.current = stream;
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.autoplay = true;
+      videoRef.current.playsInline = true;
+      videoRef.current.muted = true;
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current
+          ?.play()
+          .catch(() => {
+            setStatus("error");
+            setErrorMessage("Unable to start the preview automatically. Tap retry.");
+          });
+      };
+    }
+
+    setIsVideoEnabled(true);
+    setIsAudioEnabled(true);
   };
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
     if (videoRef.current) {
@@ -175,300 +149,249 @@ const LiveStreamCamera: React.FC<LiveStreamCameraProps> = ({
     }
   };
 
+  const retryCamera = () => {
+    setStatus("initializing");
+    setErrorMessage("");
+    startCamera(activeDeviceId)
+      .then(() => setStatus("ready"))
+      .catch((error) => {
+        setStatus("error");
+        setErrorMessage(
+          error instanceof Error ? error.message : "Unable to access camera"
+        );
+      });
+  };
+
   const toggleVideo = () => {
-    if (streamRef.current) {
-      const videoTrack = streamRef.current.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setIsVideoEnabled(videoTrack.enabled);
-      }
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (track) {
+      track.enabled = !track.enabled;
+      setIsVideoEnabled(track.enabled);
     }
   };
 
   const toggleAudio = () => {
-    if (streamRef.current) {
-      const audioTrack = streamRef.current.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsAudioEnabled(audioTrack.enabled);
-      }
+    const track = streamRef.current?.getAudioTracks()[0];
+    if (track) {
+      track.enabled = !track.enabled;
+      setIsAudioEnabled(track.enabled);
     }
   };
 
-  const switchCamera = () => {
-    setCurrentCamera(prev => prev === 'user' ? 'environment' : 'user');
+  const cycleCamera = () => {
+    if (!availableDevices.length) return;
+    const currentIndex = availableDevices.findIndex((device) => device.deviceId === activeDeviceId);
+    const nextDevice = availableDevices[(currentIndex + 1) % availableDevices.length];
+    setActiveDeviceId(nextDevice.deviceId);
   };
 
-  const startStream = () => {
+  const startStream = async () => {
+    if (isStartPending || isStopPending) {
+      return;
+    }
+
     if (!streamRef.current) {
-      toast({
-        title: "Camera not ready",
-        description: "Please wait for camera to initialize",
-        variant: "destructive"
-      });
+      toast({ title: "Camera not ready", description: "Retry camera access.", variant: "destructive" });
       return;
     }
 
-    if (!title.trim()) {
-      toast({
-        title: "Title required",
-        description: "Please add a title for your livestream",
-        variant: "destructive"
-      });
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      toast({ title: "Title required", description: "Add a title before going live." });
       return;
     }
 
-    onStreamStart?.(streamRef.current);
-    onTitleChange?.(title);
-    
-    toast({
-      title: "Live stream started!",
-      description: "You're now broadcasting live to your location",
-    });
+    try {
+      setIsStartPending(true);
+      const result = onStreamStart?.(streamRef.current, { title: trimmedTitle });
+      if (result && typeof (result as Promise<unknown>).then === "function") {
+        await result;
+      }
+
+      toast({ title: "You're live!", description: "Broadcasting to everyone nearby." });
+      onTitleChange?.(trimmedTitle);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Retry once permissions are granted.";
+      toast({ title: "Stream failed", description: message, variant: "destructive" });
+    } finally {
+      setIsStartPending(false);
+    }
   };
 
-  const stopStream = () => {
-    onStreamEnd?.();
-    setStreamDuration(0);
-    
-    toast({
-      title: "Live stream ended",
-      description: "Your broadcast has been stopped",
-    });
+  const stopStream = async () => {
+    if (isStartPending || isStopPending) {
+      return;
+    }
+
+    try {
+      setIsStopPending(true);
+      const result = onStreamEnd?.();
+      if (result && typeof (result as Promise<unknown>).then === "function") {
+        await result;
+      }
+
+      toast({ title: "Stream ended", description: "Your broadcast has concluded." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Please try ending the stream again.";
+      toast({ title: "Unable to end stream", description: message, variant: "destructive" });
+    } finally {
+      setIsStopPending(false);
+    }
   };
 
-  const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const isActionPending = isStartPending || isStopPending;
+
+  const renderStatusOverlay = () => {
+    if (status === "initializing") {
+      return (
+        <div className="flex h-48 flex-col items-center justify-center gap-3 rounded-2xl bg-slate-100 text-sm text-slate-500">
+          <div className="animate-spin rounded-full border-b-2 border-slate-400 p-6" />
+          Preparing camera…
+        </div>
+      );
+    }
+
+    if (status === "error") {
+      return (
+        <div className="flex h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-white px-6 text-center text-sm text-slate-500">
+          <CameraIcon className="h-8 w-8 text-slate-400" />
+          <p>{errorMessage}</p>
+          <Button size="sm" onClick={retryCamera}>
+            Try again
+          </Button>
+        </div>
+      );
+    }
+
+    return null;
   };
-
-  // Permission Dialog
-  if (showPermissionDialog) {
-    return (
-      <div className="text-center p-8 bg-gradient-to-br from-red-50 to-orange-50 rounded-lg border border-red-200">
-        <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Video className="h-8 w-8 text-white" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Camera & Microphone Access Required</h3>
-        <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-          To start livestreaming, this app needs access to your camera and microphone. 
-          Your browser will ask for permission when you click "Allow Access".
-        </p>
-        <div className="space-y-2 text-xs text-gray-500 mb-6">
-          <div className="flex items-center justify-center space-x-1">
-            <Video className="h-3 w-3" />
-            <span>Camera: To broadcast your video</span>
-          </div>
-          <div className="flex items-center justify-center space-x-1">
-            <Mic className="h-3 w-3" />
-            <span>Microphone: To broadcast your audio</span>
-          </div>
-        </div>
-        <div className="flex space-x-3 justify-center">
-          <button
-            onClick={handlePermissionDenied}
-            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handlePermissionGranted}
-            className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
-          >
-            <span>Allow Access</span>
-            <Video className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-  if (hasPermission === null) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-        <span className="ml-3 text-gray-600">Setting up camera...</span>
-      </div>
-    );
-  }
-
-  if (hasPermission === false || permissionDenied) {
-    return (
-      <div className="text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
-        <VideoOff className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Camera & Microphone Access Denied</h3>
-        <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-          Livestreaming requires camera and microphone permissions. Please:
-        </p>
-        <div className="text-left text-xs text-gray-600 bg-white p-3 rounded border mb-6 space-y-1">
-          <div>1. Click the camera icon in your browser's address bar</div>
-          <div>2. Select "Allow" for both camera and microphone</div>
-          <div>3. Refresh the page if needed</div>
-        </div>
-        <div className="flex space-x-3 justify-center">
-          <button
-            onClick={() => setShowPermissionDialog(true)}
-            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
-          >
-            Try Again
-          </button>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
-            >
-              Cancel
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="relative bg-black rounded-lg overflow-hidden">
-      {/* Video Preview */}
+    <div className="overflow-hidden rounded-2xl bg-black">
       <div className="relative aspect-video">
-        <video
-          ref={videoRef}
-          className="w-full h-full object-cover"
-          muted
-          playsInline
-        />
-        
-        {/* Loading Overlay */}
-        {isLoading && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-          </div>
-        )}
+        <video ref={videoRef} className="h-full w-full object-cover" muted playsInline autoPlay />
+        {renderStatusOverlay()}
 
-        {/* Stream Status Overlay */}
         {isStreaming && (
-          <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
-            {/* Live Badge */}
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold">
-                <div className="w-2 h-2 bg-white rounded-full mr-1 animate-pulse"></div>
+          <div className="absolute left-4 right-4 top-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center rounded-full bg-red-500 px-2 py-1 text-xs font-semibold text-white">
+                <span className="mr-1 inline-flex h-2 w-2 animate-pulse rounded-full bg-white" />
                 LIVE
               </div>
-              <span className="bg-black/50 text-white px-2 py-1 rounded text-sm">
-                {formatDuration(streamDuration)}
+              <span className="rounded bg-black/50 px-2 py-1 text-xs text-white">
+                {new Date(streamDuration * 1000).toISOString().substring(14, 19)}
               </span>
             </div>
-
-            {/* Viewer Count */}
-            <div className="flex items-center bg-black/50 text-white px-2 py-1 rounded text-sm">
-              <Eye className="h-3 w-3 mr-1" />
+            <div className="flex items-center rounded bg-black/50 px-2 py-1 text-xs text-white">
+              <Eye className="mr-1 h-3 w-3" />
               {viewerCount}
             </div>
           </div>
         )}
 
-        {/* Close Button */}
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
           >
             <X className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      {/* Stream Title Input */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="border-b border-slate-200 px-4 py-3">
         <input
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="What's your stream about?"
-          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          onChange={(event) => {
+            const value = event.target.value;
+            setTitle(value);
+            onTitleChange?.(value);
+          }}
+          placeholder="Give your stream a title"
+          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10"
           maxLength={100}
-          disabled={isStreaming}
+          disabled={isStreaming || isActionPending}
         />
-        <div className="text-right text-xs text-gray-500 mt-1">
-          {title.length}/100
-        </div>
+        <p className="mt-1 text-right text-[11px] text-slate-400">{title.length}/100</p>
       </div>
 
-      {/* Controls */}
-      <div className="p-4 bg-gray-50">
-        <div className="flex items-center justify-between mb-4">
-          {/* Media Controls */}
-          <div className="flex space-x-2">
-            <button
+      <div className="space-y-4 bg-slate-50 px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              className={!isVideoEnabled ? "bg-red-500 text-white hover:bg-red-600" : ""}
               onClick={toggleVideo}
-              className={`p-3 rounded-full transition-colors ${
-                isVideoEnabled
-                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                  : 'bg-red-500 hover:bg-red-600 text-white'
-              }`}
+              disabled={status !== "ready" || isStreaming || isActionPending}
             >
-              {isVideoEnabled ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
-            </button>
-            
-            <button
+              {isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              className={!isAudioEnabled ? "bg-red-500 text-white hover:bg-red-600" : ""}
               onClick={toggleAudio}
-              className={`p-3 rounded-full transition-colors ${
-                isAudioEnabled
-                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                  : 'bg-red-500 hover:bg-red-600 text-white'
-              }`}
+              disabled={status !== "ready" || isStreaming || isActionPending}
             >
-              {isAudioEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-            </button>
-
-            {availableDevices.length > 1 && (
-              <button
-                onClick={switchCamera}
-                className="p-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full transition-colors"
-                disabled={isStreaming}
+              {isAudioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+            </Button>
+            {availableDevices.length > 1 ? (
+              <Button
+                type="button"
+                size="icon"
+                variant="secondary"
+                onClick={cycleCamera}
+                disabled={status !== "ready" || isStreaming || isActionPending}
               >
-                <RotateCcw className="h-5 w-5" />
-              </button>
-            )}
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            ) : null}
           </div>
 
-          {/* Stream Control */}
-          <div>
-            {!isStreaming ? (
-              <button
-                onClick={startStream}
-                disabled={!hasPermission || isLoading}
-                className="flex items-center space-x-2 px-6 py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white rounded-full font-semibold transition-colors"
-              >
-                <Zap className="h-4 w-4" />
-                <span>Go Live</span>
-              </button>
-            ) : (
-              <button
-                onClick={stopStream}
-                className="flex items-center space-x-2 px-6 py-3 bg-gray-800 hover:bg-black text-white rounded-full font-semibold transition-colors"
-              >
-                <Square className="h-4 w-4" />
-                <span>End Stream</span>
-              </button>
-            )}
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <Users className="h-4 w-4" />
+            Followers notified automatically
           </div>
         </div>
 
-        {/* Stream Stats (when live) */}
-        {isStreaming && (
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                <Users className="h-4 w-4 mr-1" />
-                <span>{viewerCount} viewer{viewerCount !== 1 ? 's' : ''}</span>
-              </div>
-              <div>Duration: {formatDuration(streamDuration)}</div>
-            </div>
-            <div className="text-emerald-600 font-medium">
-              Broadcasting live
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={isStreaming ? stopStream : startStream}
+              className={`flex h-12 w-12 items-center justify-center rounded-full text-white transition ${
+                isStreaming ? "bg-red-500 hover:bg-red-600" : "bg-emerald-500 hover:bg-emerald-600"
+              } ${(status !== "ready" && !isStreaming) || isActionPending ? "opacity-60" : ""}`}
+              disabled={(status !== "ready" && !isStreaming) || isActionPending}
+            >
+              {isActionPending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : isStreaming ? (
+                <Square className="h-5 w-5" />
+              ) : (
+                <Play className="h-5 w-5" />
+              )}
+            </button>
+            <div>
+              <p className="text-sm font-semibold text-slate-700">
+                {isStreaming ? 'Streaming live' : 'Ready to stream'}
+              </p>
+              <p className="text-xs text-slate-400">
+                {isStreaming ? 'Tap stop when you are done' : 'Preview will stay private until you go live'}
+              </p>
             </div>
           </div>
-        )}
+
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-amber-500" />
+            <span className="text-xs text-slate-500">Optimized for low-latency</span>
+          </div>
+        </div>
       </div>
     </div>
   );

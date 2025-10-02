@@ -1,0 +1,114 @@
+{
+  "timestamp": "2025-09-25T03:11:24.921Z",
+  "testResults": {
+    "environmentConfig": true,
+    "googleMapsComponents": {
+      "errorBoundary": true,
+      "fallbackMap": true
+    },
+    "errorBoundaryFeatures": {
+      "retryMechanism": true,
+      "errorReporting": true,
+      "maxRetries": true
+    },
+    "fallbackUIFeatures": {
+      "staticMapFallback": true,
+      "troubleshootingTips": true,
+      "diagnosticLink": true
+    },
+    "databaseMigrations": {
+      "spatialOptimization": true,
+      "rlsPolicies": true,
+      "performanceConfig": true
+    },
+    "e2eSetup": {
+      "playwrightConfig": true,
+      "e2eTests": true
+    },
+    "coreComponents": {
+      "homePage": true,
+      "mapView": true
+    },
+    "mobileComponents": {
+      "mobileMapView": true,
+      "capacitorConfig": true
+    },
+    "responsiveDesign": {
+      "touchOptimizations": true,
+      "responsiveBreakpoints": false,
+      "tailwindConfig": true
+    },
+    "errorHandling": {
+      "errorBoundaries": [
+        "GoogleMapsErrorBoundary"
+      ],
+      "errorHandlingPatterns": 2,
+      "totalBoundaries": 1
+    },
+    "performanceConfig": {
+      "swcPlugin": true,
+      "buildOptimizations": false
+    }
+  },
+  "performanceMetrics": {
+    "environmentConfigTime": "0.68ms",
+    "googleMapsValidationTime": "0.63ms",
+    "bundleValidationTime": "3125.71ms",
+    "databaseValidationTime": "0.29ms",
+    "e2eValidationTime": "0.14ms",
+    "mobileValidationTime": "0.20ms",
+    "errorHandlingValidationTime": "0.31ms",
+    "coreWebVitals": {
+      "LCP": "2710ms",
+      "CLS": "0.104",
+      "FID": "98ms",
+      "lcpTarget": "2500ms",
+      "clsTarget": "0.1",
+      "fidTarget": "100ms"
+    },
+    "webVitalsStatus": {
+      "lcpPassed": false,
+      "clsPassed": false,
+      "fidPassed": true,
+      "overallPassed": false
+    },
+    "webVitalsValidationTime": "0.16ms"
+  },
+  "securityValidation": {
+    "configValidation": true,
+    "productionSafety": true,
+    "apiKeyProtection": true
+  },
+  "bundleAnalysis": {
+    "totalSizeKB": 1117,
+    "mainBundleKB": 1082,
+    "chunkCount": 7,
+    "files": [
+      "index-BQHUPioU.js",
+      "pwa-action-sheet.entry-B9AY5q2z.js",
+      "pwa-camera-modal-instance.entry-i2t_nW4b.js",
+      "pwa-camera-modal.entry-D9QdKHfF.js",
+      "pwa-camera.entry-D5TN6kQN.js",
+      "pwa-toast.entry-lCoPusj8.js",
+      "web-CACsfohG.js"
+    ]
+  },
+  "databasePerformance": {
+    "postGISEnabled": true,
+    "spatialIndexes": true,
+    "optimizedFunctions": true,
+    "performanceMonitoring": true,
+    "simulatedQueryTime": "29.16ms"
+  },
+  "overallStatus": "PASSED_WITH_WARNINGS",
+  "summary": {
+    "totalTests": 11,
+    "failures": 0,
+    "warnings": 2,
+    "failuresList": [],
+    "warningsList": [
+      "Bundle size 1082KB exceeds target 300KB",
+      "Some simulated Core Web Vitals exceed targets"
+    ]
+  }
+}

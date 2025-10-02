@@ -1,0 +1,24 @@
+{
+  "name": "linear-universal-mcp",
+  "version": "1.0.0",
+  "description": "Universal Linear project management and issue tracking MCP server",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "linear",
+    "project-management",
+    "issue-tracking",
+    "universal",
+    "development"
+  ],
+  "author": "Universal Development Toolkit",
+  "license": "MIT"
+}
