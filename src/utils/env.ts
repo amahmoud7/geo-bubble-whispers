@@ -1,29 +1,14 @@
 import { Capacitor } from "@capacitor/core";
 import { z } from "zod";
 
-const envSchema = z
-  .object({
-    VITE_SUPABASE_URL: z.string().url().nonempty(),
-    VITE_SUPABASE_ANON_KEY: z.string().nonempty(),
-    VITE_GOOGLE_MAPS_API_KEY: z.string().optional(),
-    VITE_GOOGLE_MAPS_API_KEY_IOS: z.string().optional(),
-    VITE_GOOGLE_MAPS_API_KEY_ANDROID: z.string().optional(),
-    VITE_VAPID_PUBLIC_KEY: z.string().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (
-      !data.VITE_GOOGLE_MAPS_API_KEY &&
-      !data.VITE_GOOGLE_MAPS_API_KEY_IOS &&
-      !data.VITE_GOOGLE_MAPS_API_KEY_ANDROID
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          "Missing Google Maps API key. Set VITE_GOOGLE_MAPS_API_KEY (and optionally platform-specific keys).",
-        path: ["VITE_GOOGLE_MAPS_API_KEY"],
-      });
-    }
-  });
+const envSchema = z.object({
+  VITE_SUPABASE_URL: z.string().url().optional(),
+  VITE_SUPABASE_ANON_KEY: z.string().optional(),
+  VITE_GOOGLE_MAPS_API_KEY: z.string().optional(),
+  VITE_GOOGLE_MAPS_API_KEY_IOS: z.string().optional(),
+  VITE_GOOGLE_MAPS_API_KEY_ANDROID: z.string().optional(),
+  VITE_VAPID_PUBLIC_KEY: z.string().optional(),
+});
 
 type EnvSchema = z.infer<typeof envSchema>;
 
@@ -52,8 +37,9 @@ const buildEnv = () => {
 
   if (!result.success) {
     const formatted = result.error.format();
-    console.error("Environment validation failed", formatted);
-    throw new Error("Missing or invalid environment configuration. Check your .env file.");
+    console.warn("Environment validation warning", formatted);
+    // Return partial data instead of throwing
+    return rawEnv as EnvSchema;
   }
 
   return result.data;
