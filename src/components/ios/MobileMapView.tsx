@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleMap } from '@react-google-maps/api';
-import { useGoogleMapsLoader } from '@/contexts/GoogleMapsContext';
+import { useGoogleMapsLoader } from '@/contexts/EnhancedMapContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePinPlacement } from '@/hooks/usePinPlacement';
 import { useGoogleMap } from '@/hooks/useGoogleMap';

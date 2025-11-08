@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
     preferredContentMode: 'mobile',
     backgroundColor: '#043651',
     // Performance optimizations for enhanced build
-    webContentsDebuggingEnabled: false,
+    webContentsDebuggingEnabled: true,
     allowsBackForwardNavigationGestures: false,
     scrollEnabled: true,
     // Enhanced security settings
@@ -24,7 +24,8 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000, // Reduced for faster startup
+      launchShowDuration: 0,
+      launchAutoHide: true,
       backgroundColor: "#043651",
       androidSplashResourceName: "splash",
       showSpinner: false,
@@ -63,6 +64,7 @@ const config: CapacitorConfig = {
     }
   },
   server: {
+    // url: 'http://localhost:8080', // Uncomment for live reload during development
     iosScheme: 'https',
     androidScheme: 'https',
     hostname: 'localhost',

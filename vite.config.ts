@@ -24,6 +24,12 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
+      external: [
+        // Externalize Capacitor packages - they're only used at runtime in native apps
+        '@capacitor/browser',
+        '@capacitor/app',
+        '@capacitor/device'
+      ],
       output: {
         manualChunks: {
           // Vendor chunk for React and core libraries

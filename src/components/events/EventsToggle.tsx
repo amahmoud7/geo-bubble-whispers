@@ -4,7 +4,7 @@ import { Calendar, Loader2, MapPin, ExternalLink, Clock, Copy, Download } from '
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useEventMessages } from '@/hooks/useEventMessages';
-import { useMapContext } from '@/contexts/MapContext';
+import { useMapContext } from '@/contexts/EnhancedMapContext';
 import { useMapCityDetection } from '@/hooks/useMapCityDetection';
 import { formatCityDisplay, type City } from '@/utils/cityDetection';
 import { debugLogger } from '@/utils/debugLogger';
@@ -67,41 +67,57 @@ const EventsToggle: React.FC<EventsToggleProps> = ({ className = '', onEventsOnl
   };
 
   const loadEvents = async () => {
-    if (!currentCity) {
-      toast({
-        title: "📍 Location Required",
-        description: "Detecting your location to find nearby events...",
-        duration: 3000,
-      });
-      return;
+    // Use city detection if available, otherwise use map center or default to LA
+    let center = currentCity?.coordinates;
+    let radius = currentCity?.radius || 50;
+    let locationName = currentCity?.displayName;
+
+    if (!center && mapCenter) {
+      center = mapCenter;
+      locationName = 'Current location';
+      console.log('📍 Using map center:', center);
     }
+
+    if (!center) {
+      // Default to LA if no location available
+      center = { lat: 34.0522, lng: -118.2437 };
+      locationName = 'Los Angeles';
+      console.log('📍 Using default location (LA)');
+    }
+
+    console.log(`🎫 Fetching events for ${locationName} (${center.lat}, ${center.lng}) radius: ${radius}mi`);
 
     setIsLoading(true);
     
     try {
       const { data, error } = await supabase.functions.invoke('fetch-events-realtime', {
         body: { 
-          source: ['ticketmaster', 'predicthq'],
-          center: currentCity.coordinates,
-          radius: currentCity.radius,
+          source: ['ticketmaster', 'eventbrite'],
+          center: center,
+          radius: radius,
           timeframe: '24h'
         }
       });
 
       if (error) {
+        console.error('❌ Supabase function error:', error);
         throw error;
       }
       
+      console.log('✅ Events fetch response:', data);
+      
       // Refresh events to show on map
+      console.log('🔄 Refetching events from database...');
       await refetch();
       
       // Mark events as visible
+      const eventCount = data?.events?.total || data?.events?.created || data?.totalEvents || 0;
       setEventsVisible(true);
-      setEventCount(data?.events?.total || data?.totalEvents || 0);
+      setEventCount(eventCount);
       
       toast({
-        title: `🎫 ${formatCityDisplay(currentCity)} Events Only!`,
-        description: `Showing ${data?.events?.total || data?.totalEvents || 0} events in ${currentCity.displayName} • Other content hidden for better performance`,
+        title: `🎫 ${locationName} Events Loaded!`,
+        description: `Showing ${eventCount} events • Other content hidden`,
         duration: 3000,
       });
 
@@ -153,7 +169,7 @@ See REALTIME_EVENTS_SETUP.md for detailed instructions.
         .from('messages')
         .delete()
         .eq('message_type', 'event')
-        .in('event_source', ['ticketmaster', 'seatgeek', 'predicthq', 'yelp', 'eventbrite']);
+        .in('event_source', ['ticketmaster', 'seatgeek', 'predicthq', 'yelp', 'eventbrite', 'meetup']);
 
       if (error) {
         throw error;

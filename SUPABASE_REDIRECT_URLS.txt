@@ -1,0 +1,17 @@
+# Supabase Redirect URLs Configuration
+# Copy these URLs to: Supabase Dashboard → Authentication → URL Configuration
+
+# Mobile URLs (REQUIRED for native app authentication)
+com.geobubblewhispers.app://auth
+com.geobubblewhispers.app://auth/callback
+
+# Web URLs (keep existing)
+http://localhost:8080/auth
+http://localhost:8081/auth
+https://yourdomain.com/auth
+
+# Instructions:
+# 1. Go to: https://app.supabase.com/project/YOUR_PROJECT_ID/auth/url-configuration
+# 2. Paste each URL on a new line in the "Redirect URLs" field
+# 3. Click "Save" at the bottom of the page
+# 4. Test mobile authentication!

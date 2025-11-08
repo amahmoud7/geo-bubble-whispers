@@ -16,7 +16,7 @@ import {
   Settings
 } from 'lucide-react';
 import { environment } from '@/config/environment';
-import { useGoogleMapsLoader } from '@/contexts/GoogleMapsContext';
+import { useGoogleMapsLoader } from '@/contexts/EnhancedMapContext';
 
 interface DiagnosticTest {
   name: string;

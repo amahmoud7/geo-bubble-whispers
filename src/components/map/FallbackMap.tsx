@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapPin, RefreshCw, Settings, AlertTriangle, Copy, CheckCircle } from 'lucide-react';
 import { environment } from '@/config/environment';
-import { useGoogleMapsLoader } from '@/contexts/GoogleMapsContext';
+import { useGoogleMapsLoader } from '@/contexts/EnhancedMapContext';
 
 interface FallbackMapProps {
   userLocation: { lat: number; lng: number };

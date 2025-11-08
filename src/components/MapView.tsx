@@ -12,7 +12,7 @@ import { useMessages } from '@/hooks/useMessages';
 import { useMessageState } from '@/hooks/useMessageState';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { useLiveStreams } from '@/hooks/useLiveStreams';
-import { useMapContext } from '@/contexts/MapContext';
+import { useMapContext } from '@/contexts/EnhancedMapContext';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { useAuth } from '@/hooks/useAuth';
 import { useEventMessages, type EventMessage } from '@/hooks/useEventMessages';
@@ -20,7 +20,7 @@ import EventMarkerIcon from './map/EventMarkerIcon';
 import EventDetailModal from './message/EventDetailModal';
 import { LiveStream } from '@/types/livestream';
 import { eventBus } from '@/utils/eventBus';
-import { useGoogleMapsLoader } from '@/contexts/GoogleMapsContext';
+import { useGoogleMapsLoader } from '@/contexts/EnhancedMapContext';
 const DEFAULT_CENTER = { lat: 34.0522, lng: -118.2437 };
 
 type MapCoordinates = { lat: number; lng: number };

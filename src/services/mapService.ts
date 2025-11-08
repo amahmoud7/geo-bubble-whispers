@@ -1,7 +1,13 @@
 /**
  * Unified Map Service
  * Single source of truth for Google Maps state
- * Replaces the three competing systems (GoogleMapsContext, useGoogleMap, MapContext)
+ * Integrates with EnhancedMapContext to provide service-layer abstraction
+ * 
+ * Benefits:
+ * - Decouples components from Google Maps API directly
+ * - Provides null-safe wrapper methods
+ * - Enables easier testing and mocking
+ * - Consistent error handling across the app
  */
 
 type MapInstance = google.maps.Map | null;

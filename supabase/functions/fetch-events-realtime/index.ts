@@ -5,6 +5,7 @@ import {
   fetchPredictHQEventsEnhanced, 
   fetchYelpEventsEnhanced 
 } from './events-new-apis.ts';
+import { fetchEventbriteEventsEnhanced } from './eventbrite-scraper.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -209,6 +210,19 @@ Deno.serve(async (req) => {
             })
           );
         }
+      }
+
+      if (source === 'eventbrite') {
+        // Eventbrite doesn't need API key - uses web scraping
+        console.log(`🎟️ [${requestId}] Adding Eventbrite scraper to queue`);
+        sourcePromises.push(
+          fetchEventbriteEventsEnhanced({
+            center,
+            radius,
+            timeframe,
+            requestId
+          })
+        );
       }
     }
     

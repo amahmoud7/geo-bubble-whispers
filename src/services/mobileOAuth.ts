@@ -1,10 +1,19 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Browser } from '@capacitor/browser';
-import { App } from '@capacitor/app';
 import { clearAllSessions } from '@/utils/clearWebAppSessions';
 
 class MobileOAuthService {
   private authInProgress = false;
+
+  // Lazy load Capacitor plugins only when needed to avoid module resolution errors on startup
+  private async getBrowser() {
+    const { Browser } = await import('@capacitor/browser');
+    return Browser;
+  }
+
+  private async getApp() {
+    const { App } = await import('@capacitor/app');
+    return App;
+  }
 
   async signInWithGoogle(): Promise<{ success: boolean; error?: string }> {
     if (this.authInProgress) {
@@ -61,6 +70,7 @@ class MobileOAuthService {
       
       console.log('Opening isolated OAuth URL:', oauthUrl.toString());
 
+      const Browser = await this.getBrowser();
       await Browser.open({
         url: oauthUrl.toString(),
         windowName: '_self',
@@ -69,13 +79,16 @@ class MobileOAuthService {
       });
 
       // STEP 4: Listen for the custom URL scheme callback
-      return new Promise((resolve) => {
+      return new Promise(async (resolve) => {
+        const App = await this.getApp();
+
         const handleAppUrlOpen = async (data: any) => {
           console.log('App URL opened:', data.url);
-          
+
           if (data.url?.startsWith('com.geobubblewhispers.app://auth/callback')) {
             try {
               // Close the browser
+              const Browser = await this.getBrowser();
               await Browser.close();
               
               // Parse the OAuth response

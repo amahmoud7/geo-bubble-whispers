@@ -1,7 +1,9 @@
 import React from 'react';
 import { Calendar, Music, Theater, Trophy, Gamepad2, Palette, Star } from 'lucide-react';
+import type { EventMessage } from '@/hooks/useEventMessages';
 
 interface EventMarkerIconProps {
+  event?: EventMessage;
   isStartingSoon?: boolean;
   eventCategory?: string;
   eventSource?: string;
@@ -10,12 +12,57 @@ interface EventMarkerIconProps {
 }
 
 const EventMarkerIcon: React.FC<EventMarkerIconProps> = ({
-  isStartingSoon = false,
-  eventCategory = 'general',
-  eventSource = 'ticketmaster',
-  priceRange = 'medium',
+  event,
+  isStartingSoon: propIsStartingSoon,
+  eventCategory: propEventCategory,
+  eventSource: propEventSource,
+  priceRange: propPriceRange,
   onClick
 }) => {
+  // Extract values from event object if provided
+  const isStartingSoon = propIsStartingSoon ?? (event ? isEventStartingSoon(event) : false);
+  const eventCategory = propEventCategory ?? (event ? getCategoryFromEvent(event) : 'general');
+  const eventSource = propEventSource ?? (event?.event_source || 'ticketmaster');
+  const priceRange = propPriceRange ?? (event ? getPriceRangeFromEvent(event) : 'medium');
+  
+  // Helper functions to extract data from event
+  function isEventStartingSoon(evt: EventMessage): boolean {
+    const startDate = new Date(evt.event_start_date);
+    const now = new Date();
+    const hoursUntilStart = (startDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return hoursUntilStart <= 2 && hoursUntilStart >= 0;
+  }
+  
+  function getCategoryFromEvent(evt: EventMessage): string {
+    const content = evt.content?.toLowerCase() || '';
+    if (content.includes('🎵') || content.includes('music') || content.includes('concert')) return 'music';
+    if (content.includes('🏟️') || content.includes('sport')) return 'sports';
+    if (content.includes('🎭') || content.includes('theater')) return 'theater';
+    if (content.includes('🎨') || content.includes('art')) return 'arts';
+    if (content.includes('👨‍👩‍👧‍👦') || content.includes('family')) return 'family';
+    return 'general';
+  }
+  
+  function getPriceRangeFromEvent(evt: EventMessage): 'low' | 'medium' | 'high' {
+    const minPrice = evt.event_price_min || 0;
+    if (minPrice === 0) return 'medium';
+    if (minPrice < 50) return 'low';
+    if (minPrice > 100) return 'high';
+    return 'medium';
+  }
+  
+  // Debug log (only once per render)
+  React.useEffect(() => {
+    if (event) {
+      console.log('🎫 EventMarkerIcon rendering:', {
+        title: event.event_title,
+        coords: `${event.lat}, ${event.lng}`,
+        category: eventCategory,
+        source: eventSource
+      });
+    }
+  }, []);
+  
   // Get category-specific icon and colors
   const getCategoryIcon = (category: string) => {
     const categoryMap: Record<string, { icon: JSX.Element; colors: string }> = {

@@ -2,6 +2,8 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
+import { PlatformService } from '@/services/platform';
+import { nativeAuthService } from '@/services/nativeAuth';
 
 interface AuthContextProps {
   user: User | null;
@@ -90,25 +92,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth`
+    try {
+      // Check if we're on a native platform (iOS/Android)
+      if (PlatformService.isNative()) {
+        console.log('Using native OAuth for Google on', PlatformService.getPlatform());
+        await nativeAuthService.signInWithGoogle();
+      } else {
+        // Web platform - use standard OAuth
+        console.log('Using web OAuth for Google');
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth`
+          }
+        });
+        if (error) throw error;
       }
-    });
-    
-    if (error) throw error;
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      throw error;
+    }
   };
 
   const signInWithApple = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: {
-        redirectTo: `${window.location.origin}/auth`
+    try {
+      // Check if we're on a native platform (iOS/Android)
+      if (PlatformService.isNative()) {
+        console.log('Using native OAuth for Apple on', PlatformService.getPlatform());
+        await nativeAuthService.signInWithApple();
+      } else {
+        // Web platform - use standard OAuth
+        console.log('Using web OAuth for Apple');
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: `${window.location.origin}/auth`
+          }
+        });
+        if (error) throw error;
       }
-    });
-    
-    if (error) throw error;
+    } catch (error) {
+      console.error('Apple sign-in error:', error);
+      throw error;
+    }
   };
 
   const signUp = async (email: string, password: string, metadata?: any) => {

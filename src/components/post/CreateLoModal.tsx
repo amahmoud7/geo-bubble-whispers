@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapPin, Camera, Type, Radio, Paperclip, UploadCloud, ShieldCheck, Navigation } from 'lucide-react';
+import { MapPin, Camera, Type, Radio, Paperclip, UploadCloud, ShieldCheck, Navigation, Image as ImageIcon, Smile, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import LiveStreamCamera from '@/components/livestream/LiveStreamCamera';
 import { LiveStreamService, LiveStreamData } from '@/services/livestreamService';
 import { GoogleMap, Marker } from '@react-google-maps/api';
-import { useGoogleMapsLoader } from '@/contexts/GoogleMapsContext';
+import { useGoogleMapsLoader } from '@/contexts/EnhancedMapContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
@@ -251,28 +251,21 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({ isOpen, onClose, onPostCr
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => (!open ? onClose() : undefined)}>
-      <SheetContent side="bottom" className="h-[88vh] overflow-y-auto rounded-t-[32px] px-6 pb-6 pt-4">
-        <SheetHeader className="items-start">
-          <SheetTitle className="text-left text-lg font-semibold text-slate-900">
-            Create Lo
+      <SheetContent side="bottom" className="h-[88vh] overflow-y-auto rounded-t-[32px] bg-lo-midnight border-lo-gray-800 px-6 pb-6 pt-4">
+        <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <SheetTitle className="text-lg font-semibold text-white">
+            New Lo
           </SheetTitle>
+          <button
+            onClick={handleSubmit}
+            disabled={composerFooterDisabled}
+            className="text-lo-electric-blue font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Post
+          </button>
         </SheetHeader>
 
         <div className="mt-4 space-y-6">
-          <div className="grid grid-cols-3 gap-2">
-            {POST_TYPE_OPTIONS.map(({ type, label, description, icon: Icon }) => (
-              <Chip
-                key={type}
-                selected={postType === type}
-                onClick={() => setPostType(type)}
-                className="flex-col items-start justify-start gap-1 rounded-2xl px-3 py-3 text-left"
-              >
-                <Icon className="mb-1 h-4 w-4" />
-                <span className="text-sm font-semibold">{label}</span>
-                <span className="text-[11px] font-normal text-slate-500">{description}</span>
-              </Chip>
-            ))}
-          </div>
 
           {postType === 'live' ? (
             <LiveStreamCamera
@@ -328,95 +321,113 @@ const CreateLoModal: React.FC<CreateLoModalProps> = ({ isOpen, onClose, onPostCr
                 <Textarea
                   value={content}
                   onChange={(event) => setContent(event.target.value)}
-                  placeholder="What's happening nearby?"
-                  maxLength={500}
-                  className="min-h-[120px] resize-none rounded-2xl border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-slate-900/10"
+                  placeholder="What's on your mind?"
+                  maxLength={280}
+                  className="min-h-[140px] resize-none rounded-2xl border-0 bg-lo-gray-800 text-base text-white placeholder:text-lo-gray-400 focus:ring-2 focus:ring-lo-electric-blue/50 p-4"
                 />
-                <p className="mt-1 text-right text-[11px] text-slate-400">{content.length}/500</p>
+                <p className="mt-2 text-right text-xs text-lo-gray-400">{content.length}/280</p>
               </div>
 
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4">
-                {!mediaFile ? (
+              {mediaFile && (
+                <div className="relative rounded-2xl overflow-hidden">
+                  {mediaFile.type.startsWith('image/') ? (
+                    <img src={mediaPreview ?? ''} alt="Preview" className="w-32 h-32 rounded-2xl object-cover" />
+                  ) : (
+                    <video src={mediaPreview ?? ''} className="w-32 h-32 rounded-2xl object-cover" />
+                  )}
                   <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 transition hover:border-slate-300 hover:bg-slate-100"
+                    onClick={clearMedia}
+                    className="absolute -top-2 -right-2 bg-lo-gray-600 rounded-full p-1.5 hover:bg-lo-gray-500 transition-colors"
                   >
-                    <Paperclip className="h-4 w-4" /> Attach photo or video
+                    <X className="h-4 w-4 text-white" />
                   </button>
-                ) : (
-                  <div className="relative">
-                    {mediaFile.type.startsWith('image/') ? (
-                      <img src={mediaPreview ?? ''} alt="Preview" className="h-48 w-full rounded-xl object-cover" />
-                    ) : (
-                      <video src={mediaPreview ?? ''} className="h-48 w-full rounded-xl object-cover" controls />
+                </div>
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFileSelect} />
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center gap-4 py-4 px-5 bg-lo-gray-800 hover:bg-lo-gray-800/70 rounded-2xl text-white transition-colors"
+                >
+                  <div className="bg-lo-electric-blue/20 p-3 rounded-xl">
+                    <ImageIcon className="h-5 w-5 text-lo-electric-blue" />
+                  </div>
+                  <span className="font-medium">Photo/Video</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setIsLocationExpanded(true)}
+                  className="w-full flex items-center gap-4 py-4 px-5 bg-lo-gray-800 hover:bg-lo-gray-800/70 rounded-2xl text-white transition-colors"
+                >
+                  <div className="bg-lo-electric-blue/20 p-3 rounded-xl">
+                    <MapPin className="h-5 w-5 text-lo-electric-blue" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <span className="font-medium">Location</span>
+                    {locationName && (
+                      <p className="text-xs text-lo-gray-400 mt-0.5">{locationName}</p>
                     )}
-                    <Button variant="ghost" size="sm" className="absolute right-3 top-3 rounded-full bg-white/80" onClick={clearMedia}>
-                      Remove
-                    </Button>
                   </div>
-                )}
-                <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFileSelect} />
-
-                <div className="mt-3 flex items-start gap-2 rounded-xl bg-slate-100 px-3 py-2 text-xs text-slate-500">
-                  <UploadCloud className="mt-0.5 h-3.5 w-3.5" />
-                  Your upload will be optimized before publishing.
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-700">Visibility</p>
-                    <p className="text-xs text-slate-400">Decide who sees this Lo</p>
+                </button>
+                
+                <button
+                  type="button"
+                  className="w-full flex items-center gap-4 py-4 px-5 bg-lo-gray-800 hover:bg-lo-gray-800/70 rounded-2xl text-white transition-colors"
+                >
+                  <div className="bg-lo-electric-blue/20 p-3 rounded-xl">
+                    <Smile className="h-5 w-5 text-lo-electric-blue" />
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <ShieldCheck className={`h-4 w-4 ${isPrivate ? 'text-amber-500' : 'text-emerald-500'}`} />
-                    <span>{isPrivate ? 'Followers' : 'Public'}</span>
-                    <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
-                  </div>
-                </div>
+                  <span className="font-medium">Mood</span>
+                </button>
               </div>
             </div>
           )}
 
-          <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-700">Location</p>
-                <p className="text-xs text-slate-400">Drop a pin to anchor this Lo</p>
+          {isLocationExpanded && (
+            <div className="space-y-3 rounded-2xl bg-lo-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-white">Choose Location</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setIsLocationExpanded(false)}
+                  className="text-lo-gray-400 hover:text-white"
+                >
+                  Done
+                </Button>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setIsLocationExpanded((state) => !state)}>
-                {isLocationExpanded ? 'Collapse' : 'Adjust'}
-              </Button>
+              <div className="overflow-hidden rounded-2xl border border-lo-gray-600">
+                {mapSection}
+              </div>
+              {locationDisplay && (
+                <div className="text-sm text-lo-gray-300">{locationName}</div>
+              )}
             </div>
-            <div className="overflow-hidden rounded-2xl border border-slate-100">
-              {mapSection}
+          )}
+          
+          {/* Public Toggle */}
+          <div className="flex items-center justify-between py-4 px-5 bg-lo-gray-800 rounded-2xl">
+            <div className="flex items-center gap-3">
+              <div className="bg-lo-electric-blue/20 p-2.5 rounded-xl">
+                <ShieldCheck className="h-5 w-5 text-lo-electric-blue" />
+              </div>
+              <span className="font-medium text-white">Public</span>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="w-full justify-start gap-2 rounded-xl"
-              onClick={() => {
-                if (userLocation) {
-                  setSelectedLocation(userLocation);
-                  setLocationName('Current location');
-                }
-              }}
-            >
-              <Navigation className="h-4 w-4" /> Use current position
-            </Button>
-            {locationDisplay}
+            <Switch checked={!isPrivate} onCheckedChange={(checked) => setIsPrivate(!checked)} />
           </div>
         </div>
 
         <SheetFooter className="mt-6">
           <Button
-            className="h-12 w-full rounded-full bg-slate-900 text-white hover:bg-slate-800"
+            className="h-14 w-full rounded-full bg-lo-electric-blue text-white hover:bg-lo-electric-blue/90 font-semibold text-base shadow-xl"
             disabled={composerFooterDisabled}
             onClick={handleSubmit}
           >
-            {isPublishing ? 'Publishing…' : postType === 'live' ? 'Go Live' : 'Share Lo'}
+            {isPublishing ? 'Publishing…' : postType === 'live' ? 'Go Live' : 'Post Lo'}
           </Button>
         </SheetFooter>
       </SheetContent>

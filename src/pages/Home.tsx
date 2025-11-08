@@ -1,15 +1,19 @@
 import React, { useState, useRef } from 'react';
-import MapView, { type MapViewHandle } from '../components/MapView';
+import MapView, { type MapViewHandle } from '../components/MapViewRobust';
 import EventsToggle from '@/components/events/EventsToggle';
+import SpectaclesToggle from '@/components/spectacles/SpectaclesToggle';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
 import CreateLoModal from '@/components/post/CreateLoModal';
 import TestPostManager from '@/components/dev/TestPostManager';
+import { EventsFetchTest } from '@/components/dev/EventsFetchTest';
 import { toast } from '@/hooks/use-toast';
 import { useMessages } from '@/hooks/useMessages';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { eventBus } from '@/utils/eventBus';
 import type { MapMessage } from '@/types/messages';
+import { Search, Waves } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 type Coordinates = { lat: number; lng: number };
 type DraftPost = {
@@ -139,17 +143,36 @@ const Home = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col relative overflow-hidden">
-      {/* Elevated Header */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-40">
-        <div className="bg-gradient-to-b from-black/55 via-black/25 to-transparent px-6 pt-[calc(env(safe-area-inset-top,24px))] pb-6">
-          <div className="flex items-end justify-between">
-            <div className="pointer-events-auto">
-              <h1 className="text-3xl font-semibold tracking-tight text-white drop-shadow-md">Lo</h1>
-              <p className="mt-1 text-xs uppercase tracking-[0.32em] text-white/65">
-                live • local • now
-              </p>
+    <div className="h-screen w-screen flex flex-col relative overflow-hidden bg-gradient-to-b from-sky-100 to-white">
+      {/* Header with Wave Logo and Search */}
+      <div className="absolute inset-x-0 top-0 z-40">
+        <div className="px-6 pt-[calc(env(safe-area-inset-top,24px)+16px)] pb-4 space-y-4">
+          {/* Logo and Toggle Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/90 backdrop-blur-sm p-2.5 rounded-2xl shadow-lg">
+                <Waves className="h-6 w-6 text-lo-electric-blue" strokeWidth={2} />
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">Lo</h1>
             </div>
+            <div className="flex items-center gap-2">
+              <SpectaclesToggle
+                className="animate-fade-in scale-90"
+              />
+              <EventsToggle
+                className="animate-fade-in scale-90"
+                onEventsOnlyModeChange={handleEventsOnlyModeChange}
+              />
+            </div>
+          </div>
+          
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <Input
+              placeholder="Search for places or people"
+              className="h-12 pl-12 pr-4 rounded-2xl bg-white/90 backdrop-blur-sm border-0 shadow-lg text-sm placeholder:text-slate-400"
+            />
           </div>
         </div>
       </div>
@@ -157,14 +180,6 @@ const Home = () => {
       {/* Main Map View - Full Screen */}
       <div className="flex-1 relative">
         <MapView ref={mapViewRef} isEventsOnlyMode={isEventsOnlyMode} />
-      </div>
-
-      {/* Events Toggle (Ticketmaster & Eventbrite) - positioned above action bar with 1/3 size */}
-      <div className="absolute bottom-44 left-1/2 transform -translate-x-1/2 z-40">
-        <EventsToggle 
-          className="animate-fade-in" 
-          onEventsOnlyModeChange={handleEventsOnlyModeChange}
-        />
       </div>
 
       <BottomNavigation onPostClick={handleCreateMessage} />
@@ -178,6 +193,9 @@ const Home = () => {
       
       {/* Test Post Manager (Development) */}
       <TestPostManager />
+      
+      {/* Events Fetch Debugger (Development) */}
+      <EventsFetchTest />
     </div>
   );
 };

@@ -15,10 +15,10 @@ interface NavItemProps {
 
 const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isActive, isCenter = false, onClick }) => {
   const baseClasses = "flex flex-col items-center justify-center text-xs font-medium transition-all duration-200";
-  const activeClasses = "text-lo-teal";
-  const inactiveClasses = "text-gray-400 hover:text-gray-600";
+  const activeClasses = "text-lo-electric-blue";
+  const inactiveClasses = "text-lo-gray-400 hover:text-lo-gray-600";
   const centerClasses = isCenter 
-    ? "bg-gradient-to-r from-emerald-500 to-lo-teal text-white rounded-full w-14 h-14 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200" 
+    ? "bg-lo-electric-blue text-white rounded-full w-16 h-16 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 border-none" 
     : "py-2 px-1 min-h-[44px] min-w-[44px]";
 
   const handleClick = (e: React.MouseEvent) => {
@@ -35,7 +35,7 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isActive, isCenter =
       <Button
         onClick={handleClick}
         className={cn(
-          "flex items-center justify-center border-0 p-0",
+          "flex items-center justify-center border-0 p-0 hover:bg-lo-electric-blue",
           centerClasses
         )}
         variant="ghost"
@@ -71,7 +71,7 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isActive, isCenter =
       )}
     >
       {icon}
-      <span className="mt-1 text-[10px]">{label}</span>
+      <span className="mt-1.5 text-[11px] font-normal">{label}</span>
     </Link>
   );
 };
@@ -92,33 +92,33 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ className, onPostCl
   const navItems = [
     {
       to: '/home',
-      icon: <Home className="h-5 w-5" />,
+      icon: <Home className="h-5 w-5" strokeWidth={1.5} />,
       label: 'Home',
       isActive: isActive('/home')
     },
     {
       to: '/explore',
-      icon: <Compass className="h-5 w-5" />,
-      label: 'Explore',
+      icon: <Compass className="h-5 w-5" strokeWidth={1.5} />,
+      label: 'Discover',
       isActive: isActive('/explore')
     },
     {
       to: '/post', // This will be ignored when onClick is present
-      icon: <Plus className="h-6 w-6" />,
-      label: 'Post',
+      icon: <Plus className="h-7 w-7" strokeWidth={2.5} />,
+      label: 'Create',
       isActive: false,
       isCenter: true,
       onClick: onPostClick
     },
     {
       to: '/inbox',
-      icon: <MessageSquare className="h-5 w-5" />,
+      icon: <MessageSquare className="h-5 w-5" strokeWidth={1.5} />,
       label: 'Inbox',
       isActive: isActive('/inbox')
     },
     {
       to: '/profile',
-      icon: <User className="h-5 w-5" />,
+      icon: <User className="h-5 w-5" strokeWidth={1.5} />,
       label: 'Profile',
       isActive: isActive('/profile')
     }
@@ -127,11 +127,11 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ className, onPostCl
   return (
     <nav className={cn(
       "fixed bottom-0 left-0 right-0 z-50",
-      "bottom-nav-glass",
+      "bg-lo-midnight/95 backdrop-blur-xl border-t border-lo-gray-800",
       "safe-area-inset-bottom",
       className
     )}>
-      <div className="flex items-center justify-around px-6 py-2">
+      <div className="flex items-center justify-around px-4 py-3">
         {navItems.map((item, index) => (
           <NavItem
             key={index}
@@ -146,7 +146,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ className, onPostCl
       </div>
       
       {/* Safe area padding for iOS devices */}
-      <div className="h-safe-area-inset-bottom bottom-nav-glass" />
+      <div className="h-safe-area-inset-bottom bg-lo-midnight" />
     </nav>
   );
 };

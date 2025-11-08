@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GoogleMap } from '@react-google-maps/api';
-import { MapErrorBoundary } from './MapErrorBoundary';
-import { useGoogleMapsLoader } from '@/contexts/GoogleMapsContext';
+import MapErrorBoundary from './MapErrorBoundary';
+import { useGoogleMapsLoader } from '@/contexts/EnhancedMapContext';
 import { mapService } from '@/services/mapService';
 import { defaultMapOptions } from '@/config/mapStyles';
 import { Loader2 } from 'lucide-react';
@@ -125,15 +125,22 @@ const RobustMapViewInternal: React.FC<RobustMapViewProps> = ({
     retry();
   }, [retry]);
 
+  // Debug logging
+  console.log('🗺️ RobustMapView:', { isLoaded, loadError, initError });
+  
   // Show loading state
   if (!isLoaded) {
+    console.log('🗺️ Map not loaded yet, showing loading state');
     return <LoadingFallback />;
   }
 
   // Show error state
   if (loadError || initError) {
+    console.error('🚨 Map load error:', loadError || initError);
     return <ErrorFallback error={loadError || initError || undefined} onRetry={handleRetry} />;
   }
+  
+  console.log('✅ Map is ready to render');
 
   // Render map
   return (

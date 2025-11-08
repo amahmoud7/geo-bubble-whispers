@@ -12,6 +12,7 @@ def capacitor_pods
   pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
+  pod 'CapacitorBrowser', :path => '../../node_modules/@capacitor/browser'
   pod 'CapacitorCamera', :path => '../../node_modules/@capacitor/camera'
   pod 'CapacitorDevice', :path => '../../node_modules/@capacitor/device'
   pod 'CapacitorGeolocation', :path => '../../node_modules/@capacitor/geolocation'
@@ -21,12 +22,37 @@ def capacitor_pods
   pod 'CapacitorNetwork', :path => '../../node_modules/@capacitor/network'
   pod 'CapacitorPushNotifications', :path => '../../node_modules/@capacitor/push-notifications'
   pod 'CapacitorShare', :path => '../../node_modules/@capacitor/share'
+  pod 'CapacitorSplashScreen', :path => '../../node_modules/@capacitor/splash-screen'
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
 end
 
 target 'App' do
   capacitor_pods
   # Add your Pods here
+
+  # ============================================================================
+  # Snap Spectacles Mobile Kit - AR/MR Integration
+  # ============================================================================
+  # NOTE: The Spectacles Mobile Kit SDK may require:
+  # 1. Access to Snap's developer program ($99/month)
+  # 2. Private CocoaPods repository access
+  # 3. Direct framework download from Snap Developer Portal
+  #
+  # When SDK is available, uncomment one of the following:
+  #
+  # Option 1: If available via CocoaPods
+  # pod 'SpectaclesMobileKit', '~> 1.0'
+  #
+  # Option 2: If provided as downloadable framework
+  # pod 'SpectaclesMobileKit', :path => './Frameworks/SpectaclesMobileKit'
+  #
+  # Option 3: If using Snap's private spec repo
+  # source 'https://github.com/Snapchat/Specs.git'
+  # pod 'SpectaclesMobileKit', '~> 1.0'
+  #
+  # For now, the SpectaclesBridge plugin will work with simulated data
+  # until the actual SDK is integrated.
+  # ============================================================================
 end
 
 post_install do |installer|

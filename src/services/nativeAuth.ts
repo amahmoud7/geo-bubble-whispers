@@ -1,9 +1,18 @@
-import { Browser } from '@capacitor/browser';
-import { App } from '@capacitor/app';
 import { supabase } from '@/integrations/supabase/client';
 
 class NativeAuthService {
   private authListener: any = null;
+
+  // Lazy load Capacitor plugins only when needed to avoid module resolution errors on startup
+  private async getBrowser() {
+    const { Browser } = await import('@capacitor/browser');
+    return Browser;
+  }
+
+  private async getApp() {
+    const { App } = await import('@capacitor/app');
+    return App;
+  }
 
   async initializeOAuthListener() {
     // Clean up existing listener
@@ -12,11 +21,13 @@ class NativeAuthService {
     }
 
     // Listen for app URL opens (OAuth callbacks)
+    const App = await this.getApp();
     this.authListener = await App.addListener('appUrlOpen', async (event) => {
       console.log('OAuth callback received:', event.url);
-      
+
       if (event.url.includes('auth')) {
         // Close the browser
+        const Browser = await this.getBrowser();
         await Browser.close();
         
         // Handle the OAuth callback
@@ -46,6 +57,7 @@ class NativeAuthService {
 
       if (data.url) {
         // Open OAuth URL in in-app browser
+        const Browser = await this.getBrowser();
         await Browser.open({
           url: data.url,
           windowName: '_self',
@@ -79,6 +91,7 @@ class NativeAuthService {
 
       if (data.url) {
         // Open OAuth URL in in-app browser
+        const Browser = await this.getBrowser();
         await Browser.open({
           url: data.url,
           windowName: '_self',

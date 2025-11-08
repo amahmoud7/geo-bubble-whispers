@@ -4,7 +4,7 @@ import { Calendar, Loader2, MapPin, ExternalLink, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useEventMessages } from '@/hooks/useEventMessages';
-import { useMapContext } from '@/contexts/MapContext';
+import { useMapContext } from '@/contexts/EnhancedMapContext';
 import { useMapCityDetection } from '@/hooks/useMapCityDetection';
 import { formatCityDisplay, type City } from '@/utils/cityDetection';
 

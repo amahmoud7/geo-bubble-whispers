@@ -20,13 +20,19 @@ export default {
 		},
 		extend: {
 			colors: {
-				// Lo Brand Colors
+				// Lo Brand Colors - Updated for Stitch Design
 				'lo-white': '#FFFFFF',
 				'lo-navy': '#043651',
 				'lo-dark-blue': '#051F39',
 				'lo-blue-gray': '#043550',
 				'lo-near-black': '#051E38',
 				'lo-teal': '#13D3AA',
+				// Stitch Design System Colors
+				'lo-midnight': '#0F1015', // Dark navy background
+				'lo-electric-blue': '#0000FF', // Primary blue
+				'lo-gray-800': '#1A1B2E', // Secondary dark
+				'lo-gray-600': '#64748B', // Medium gray
+				'lo-gray-400': '#94A3B8', // Light gray
 				// Original colors
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

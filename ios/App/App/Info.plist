@@ -81,6 +81,12 @@
 	<!-- User Notifications -->
 	<key>NSUserNotificationUsageDescription</key>
 	<string>Lo sends notifications about nearby messages and social interactions</string>
-	
+
+	<!-- Bluetooth Permissions for Spectacles AR Integration -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Lo uses Bluetooth to connect to Spectacles AR glasses for hands-free message viewing and immersive AR experiences</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Lo needs Bluetooth to pair with and communicate with your Spectacles device for AR features</string>
+
 </dict>
 </plist>

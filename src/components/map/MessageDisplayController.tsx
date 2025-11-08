@@ -11,7 +11,7 @@ interface MessageDisplayControllerProps {
   onClose: () => void;
 }
 
-const MessageDisplayController: React.FC<MessageDisplayControllerProps> = ({ 
+const MessageDisplayController: React.FC<MessageDisplayControllerProps> = React.memo(({ 
   selectedMessage, 
   filteredMessages, 
   onMessageClick,
@@ -35,6 +35,8 @@ const MessageDisplayController: React.FC<MessageDisplayControllerProps> = ({
       })()}
     </>
   );
-};
+});
+
+MessageDisplayController.displayName = 'MessageDisplayController';
 
 export default MessageDisplayController;

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Runtime Test</title>
+</head>
+<body>
+    <h1>Testing Built App</h1>
+    <div id="status"></div>
+    <script type="module">
+        const status = document.getElementById('status');
+
+        function log(msg, isError = false) {
+            const p = document.createElement('p');
+            p.textContent = msg;
+            p.style.color = isError ? 'red' : 'green';
+            status.appendChild(p);
+            console.log(msg);
+        }
+
+        try {
+            log('✅ HTML loaded');
+
+            // Test if the built files exist
+            fetch('/dist/index.html')
+                .then(r => {
+                    if (r.ok) log('✅ dist/index.html exists');
+                    else log('❌ dist/index.html not found', true);
+                })
+                .catch(e => log('❌ Error fetching index: ' + e.message, true));
+
+            // Try to load the app
+            const iframe = document.createElement('iframe');
+            iframe.src = '/dist/index.html';
+            iframe.style.width = '100%';
+            iframe.style.height = '600px';
+            iframe.style.border = '2px solid #ccc';
+            iframe.style.marginTop = '20px';
+
+            iframe.onload = () => {
+                log('✅ iFrame loaded');
+                setTimeout(() => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        const root = iframeDoc.getElementById('root');
+                        if (root) {
+                            if (root.innerHTML.trim().length > 0) {
+                                log('✅ React app rendered content');
+                            } else {
+                                log('❌ React root is empty (blank screen)', true);
+                            }
+                        } else {
+                            log('❌ Root element not found', true);
+                        }
+                    } catch (e) {
+                        log('❌ Cannot access iframe: ' + e.message, true);
+                    }
+                }, 2000);
+            };
+
+            iframe.onerror = () => {
+                log('❌ iFrame failed to load', true);
+            };
+
+            document.body.appendChild(iframe);
+
+        } catch (e) {
+            log('❌ Fatal error: ' + e.message, true);
+        }
+    </script>
+</body>
+</html>

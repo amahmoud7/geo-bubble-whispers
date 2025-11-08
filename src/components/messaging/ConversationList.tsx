@@ -4,7 +4,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/Card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 import { 
   Search, 
   MoreVertical, 
@@ -143,10 +145,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       )}
 
       {/* Conversations list */}
-      <div className="divide-y">
+      <div className="space-y-2 p-4">
         {filteredConversations.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">
+          <div className="text-center py-12">
+            <MessageCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-500">
               {localSearchQuery ? 'No conversations found' : 'No conversations yet'}
             </p>
           </div>
@@ -183,88 +186,107 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   formattedTime,
 }) => {
   return (
-    <Link
-      to={`/chat/${conversation.id}`}
-      className="block hover:bg-muted/50 transition-colors"
-    >
-      <div className="flex items-center space-x-3 p-4">
-        {/* Avatar with online indicator */}
-        <div className="relative">
-          <Avatar className="h-14 w-14">
-            <AvatarImage 
-              src={conversation.other_user_avatar || ''} 
-              alt={conversation.other_user_name || 'User'} 
-            />
-            <AvatarFallback>
-              {(conversation.other_user_name || conversation.other_user_username || 'U')
-                .charAt(0)
-                .toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          {isOnline && (
-            <div className="absolute bottom-0 right-0 h-4 w-4 bg-green-500 border-2 border-background rounded-full" />
-          )}
-        </div>
+    <Link to={`/chat/${conversation.id}`}>
+      <Card 
+        hover
+        className={cn(
+          "p-4 border-0",
+          conversation.has_unread_messages && "bg-gradient-to-r from-blue-50 to-white shadow-lg"
+        )}
+      >
+        <div className="flex items-start space-x-4">
+          {/* Avatar with online indicator */}
+          <div className="relative flex-shrink-0">
+            <Avatar className="h-14 w-14 ring-2 ring-white shadow-md">
+              <AvatarImage 
+                src={conversation.other_user_avatar || ''} 
+                alt={conversation.other_user_name || 'User'} 
+              />
+              <AvatarFallback className="bg-gradient-to-br from-lo-teal/20 to-blue-100">
+                {(conversation.other_user_name || conversation.other_user_username || 'U')
+                  .charAt(0)
+                  .toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {isOnline && (
+              <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-emerald-500 border-2 border-white rounded-full shadow-md" />
+            )}
+            {conversation.has_unread_messages && (
+              <div className="absolute -top-1 -right-1 h-5 w-5 bg-lo-teal rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+                <span className="text-xs font-bold text-white">•</span>
+              </div>
+            )}
+          </div>
 
-        {/* Conversation info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="font-semibold text-sm truncate pr-2">
-              {conversation.other_user_name || conversation.other_user_username || 'Unknown User'}
-            </h3>
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              {conversation.has_unread_messages && (
-                <Badge className="h-2 w-2 p-0 bg-blue-500" />
-              )}
-              <span className="text-xs text-muted-foreground">
+          {/* Conversation info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className={cn(
+                "font-semibold text-sm truncate pr-2",
+                conversation.has_unread_messages && "text-slate-900"
+              )}>
+                {conversation.other_user_name || conversation.other_user_username || 'Unknown User'}
+              </h3>
+              <span className="text-xs text-slate-500 flex-shrink-0 ml-2">
                 {formattedTime}
               </span>
             </div>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground truncate pr-2 flex-1">
-              {isTyping ? (
-                <span className="text-blue-500 italic">typing...</span>
-              ) : (
-                lastMessagePreview
-              )}
-            </div>
             
-            {/* Conversation actions */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
-                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  {conversation.is_muted_by_1 || conversation.is_muted_by_2 ? (
-                    <>
-                      <Volume2 className="h-4 w-4 mr-2" />
-                      Unmute
-                    </>
-                  ) : (
-                    <>
-                      <VolumeX className="h-4 w-4 mr-2" />
-                      Mute
-                    </>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Archive className="h-4 w-4 mr-2" />
-                  Archive
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Message preview with typing indicator */}
+            {isTyping ? (
+              <div className="flex items-center space-x-1 mt-2">
+                <div className="flex space-x-1">
+                  <div className="h-2 w-2 bg-lo-teal rounded-full animate-bounce" style={{animationDelay: '0ms'}} />
+                  <div className="h-2 w-2 bg-lo-teal rounded-full animate-bounce" style={{animationDelay: '150ms'}} />
+                  <div className="h-2 w-2 bg-lo-teal rounded-full animate-bounce" style={{animationDelay: '300ms'}} />
+                </div>
+                <span className="text-xs text-lo-teal font-medium">typing...</span>
+              </div>
+            ) : (
+              <div className={cn(
+                "text-sm truncate pr-2",
+                conversation.has_unread_messages ? "font-medium text-slate-700" : "text-slate-500"
+              )}>
+                {lastMessagePreview}
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      </Card>
     </Link>
   );
 };
+
+// Hidden dropdown for now - can be added back later
+const ConversationActions: React.FC<{ conversation: any }> = ({ conversation }) => (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
+        <MoreVertical className="h-4 w-4" />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end">
+      <DropdownMenuItem>
+        {conversation.is_muted_by_1 || conversation.is_muted_by_2 ? (
+          <>
+            <Volume2 className="h-4 w-4 mr-2" />
+            Unmute
+          </>
+        ) : (
+          <>
+            <VolumeX className="h-4 w-4 mr-2" />
+            Mute
+          </>
+        )}
+      </DropdownMenuItem>
+      <DropdownMenuItem>
+        <Archive className="h-4 w-4 mr-2" />
+        Archive
+      </DropdownMenuItem>
+      <DropdownMenuItem className="text-destructive">
+        <Trash2 className="h-4 w-4 mr-2" />
+        Delete
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+);

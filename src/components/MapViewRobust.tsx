@@ -226,75 +226,48 @@ const MapViewRobust = React.forwardRef<MapViewHandle, MapViewProps>(
             onMapReady={updateBoundsFromMap}
             onClick={handleMapClick}
           >
-            {/* Events-only mode: Show ONLY event markers */}
-            {isEventsOnlyMode ? (
-              <>
-                {events.map((event) => {
-                  if (event.lat == null || event.lng == null) return null;
-
-                  return (
-                    <OverlayView
-                      key={event.id}
-                      position={{ lat: event.lat, lng: event.lng }}
-                      mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-                    >
-                      <EventMarkerIcon
-                        event={event}
-                        onClick={() => handleEventClick(event)}
-                      />
-                    </OverlayView>
-                  );
-                })}
-              </>
-            ) : (
-              <>
-                {/* Regular mode: Show all markers */}
-                <MessageDisplayController
-                  messages={filteredMessages}
-                  selectedMessageId={selectedMessage}
-                  onMessageClick={handleMessageClick}
-                  onClose={handleClose}
-                />
-
-                <MessageCreationController
-                  isCreating={isCreating}
-                  newPinPosition={newPinPosition}
-                  onCancel={() => {
-                    setIsCreating(false);
-                    endPinPlacement();
-                  }}
-                  onSubmit={(message) => {
-                    addMessage(message);
-                    setIsCreating(false);
-                    endPinPlacement();
-                  }}
-                  userAvatar={userAvatar}
-                  userName={userName}
-                />
-
-                <LiveStreamMarkers
-                  liveStreams={liveStreams}
-                  onStreamSelect={handleStreamSelect}
-                />
-
-                {events.map((event) => {
-                  if (event.lat == null || event.lng == null) return null;
-
-                  return (
-                    <OverlayView
-                      key={event.id}
-                      position={{ lat: event.lat, lng: event.lng }}
-                      mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-                    >
-                      <EventMarkerIcon
-                        event={event}
-                        onClick={() => handleEventClick(event)}
-                      />
-                    </OverlayView>
-                  );
-                })}
-              </>
+            {/* Message Creation Controller (hidden in events-only mode) */}
+            {!isEventsOnlyMode && (
+              <MessageCreationController
+                isCreating={isCreating}
+                newPinPosition={newPinPosition}
+                onCancel={() => {
+                  setIsCreating(false);
+                  endPinPlacement();
+                }}
+                onSubmit={(message) => {
+                  addMessage(message);
+                  setIsCreating(false);
+                  endPinPlacement();
+                }}
+                userAvatar={userAvatar}
+                userName={userName}
+              />
             )}
+
+            {/* Event Markers - Always rendered the same way */}
+            {(() => {
+              console.log(`🗺️ Rendering ${events.length} events (${isEventsOnlyMode ? 'events-only mode' : 'regular mode'})`);
+              return events.map((event) => {
+                if (event.lat == null || event.lng == null) {
+                  console.warn('⚠️ Skipping event with null coords:', event.event_title);
+                  return null;
+                }
+
+                return (
+                  <OverlayView
+                    key={event.id}
+                    position={{ lat: event.lat, lng: event.lng }}
+                    mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                  >
+                    <EventMarkerIcon
+                      event={event}
+                      onClick={() => handleEventClick(event)}
+                    />
+                  </OverlayView>
+                );
+              });
+            })()}
           </RobustMapView>
         </div>
 
@@ -307,12 +280,11 @@ const MapViewRobust = React.forwardRef<MapViewHandle, MapViewProps>(
         )}
 
         {/* Event Detail Modal */}
-        {showEventModal && selectedEvent && (
-          <EventDetailModal
-            event={selectedEvent}
-            onClose={handleCloseEventModal}
-          />
-        )}
+        <EventDetailModal
+          isOpen={showEventModal}
+          event={selectedEvent}
+          onClose={handleCloseEventModal}
+        />
       </div>
     );
   }

@@ -13,6 +13,10 @@ import AppTopBar from '@/components/layout/AppTopBar';
 import { Chip } from '@/components/ui/chip';
 import { format } from 'date-fns';
 import type { MapMessage } from '@/types/messages';
+import { PageContainer } from '@/components/ui/PageContainer';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { Card } from '@/components/ui/Card';
+import { PillTabs } from '@/components/ui/PillTabs';
 
 interface ParsedEventContent {
   title?: string;
@@ -198,7 +202,7 @@ const Explore = () => {
   }, [filteredMessages, searchQuery]);
 
   return (
-    <div className="relative min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen overflow-y-auto">
       <AppTopBar
         title="Explore"
         subtitle="discover"
@@ -214,138 +218,163 @@ const Explore = () => {
         }
       />
 
-      <div className="px-6">
-        {/* Search */}
-        <div className="relative -mt-2">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search places, events, or people"
-            className="h-12 w-full rounded-full bg-white pl-11 pr-4 text-sm shadow-sm focus:ring-2 focus:ring-slate-900/10"
-          />
-        </div>
-
-        {/* Filters */}
-        <div className="mt-4 flex space-x-2 overflow-x-auto pb-2">
-          {filters.map((filter) => (
-            <Chip
-              key={filter}
-              selected={filter === activeFilter}
-              onClick={() => setActiveFilter(filter)}
-              className="whitespace-nowrap"
-            >
-              {filter}
-            </Chip>
-          ))}
-        </div>
-      </div>
-
-        {/* Highlights */}
-      <div className="mt-6 space-y-10 px-6">
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">Trending Events</h2>
-              <p className="text-xs text-slate-500">Hand-picked happenings near you</p>
+      <PageContainer className="pb-24">
+        <div className="px-0 md:px-2 space-y-8">
+          {/* Enhanced Search Section */}
+          <div className="bg-gradient-to-br from-lo-teal/5 to-blue-50/50 rounded-3xl p-6 shadow-lg border border-lo-teal/10">
+            <SectionHeader 
+              title="Discover" 
+              subtitle="Events, places, and people near you" 
+              variant="large"
+              className="mb-4" 
+            />
+            <div className="relative">
+              <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search places, events, or people..."
+                className="h-14 w-full rounded-2xl bg-white pl-14 pr-4 text-sm shadow-md hover:shadow-lg focus:shadow-xl transition-shadow border-0"
+              />
             </div>
-            <Button variant="ghost" size="sm" className="text-xs font-medium">
-              View all
-            </Button>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {highlightedEvents.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                We’ll surface curated events once they’re available in your area.
-              </div>
-            ) : (
-              highlightedEvents.map((event) => (
-                <button
-                  key={event.id}
-                  onClick={() => handleEventClick(event)}
-                  className="group flex flex-col justify-between rounded-2xl bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                >
-                  <div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/90 px-3 py-1 text-xs font-semibold text-white">
-                      Live
-                      <span className="h-2 w-2 rounded-full bg-green-400" />
-                    </span>
-                    <h3 className="mt-4 line-clamp-2 text-base font-semibold text-slate-900">
-                      {event.event_title || event.content || 'Upcoming Event'}
-                    </h3>
-                    <p className="mt-2 flex items-center text-sm text-slate-500">
-                      <MapPin className="mr-2 h-4 w-4 text-slate-400" />
-                      {event.location || 'Unknown location'}
-                    </p>
-                  </div>
-                  <p className="mt-4 text-xs uppercase tracking-[0.3em] text-slate-400">
-                    {event.event_start_date
-                      ? format(new Date(event.event_start_date), 'MMM d, h:mm a')
-                      : 'Anytime'}
-                  </p>
-                </button>
-              ))
-            )}
-          </div>
-        </section>
 
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">Suggested Posts</h2>
-              <p className="text-xs text-slate-500">A mix of public Los and highlights from friends</p>
-            </div>
-            <Button variant="ghost" size="sm" className="text-xs font-medium">
-              Refresh
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {curatedMessages.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                No posts match your filters yet. Try a different category.
-              </div>
-            ) : (
-              curatedMessages.map((message) => (
-                <button
-                  key={message.id}
-                  onClick={() => handleMessageClick(message.id)}
-                  className="group flex flex-col justify-between overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                >
-                  <div className="space-y-3 p-5 text-left">
-                    <p className="line-clamp-3 text-sm text-slate-600">{message.content}</p>
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-400">
-                      <span>{message.location || 'Somewhere nearby'}</span>
-                      <span className="h-1 w-1 rounded-full bg-slate-300" />
-                      <span>{format(new Date(message.timestamp), 'MMM d')}</span>
-                    </div>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </section>
-
-        <section className="overflow-hidden rounded-3xl bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">Interactive Map</h2>
-              <p className="text-xs text-slate-500">Tap a pin to open details instantly</p>
-            </div>
-            <Button variant="secondary" size="sm" onClick={() => setActiveFilter('Nearby')}>
-              Reset view
-            </Button>
-          </div>
-          <div className="h-[420px]">
-            <TabbedMapViewList
-              messages={filteredMessages}
-              events={events}
-              onMessageClick={handleMessageClick}
-              onEventClick={handleEventClick}
-              selectedMessage={selectedMessage}
+          <div className="mt-4">
+            <PillTabs
+              items={filters.map((f) => ({ key: f, label: f }))}
+              value={activeFilter}
+              onChange={setActiveFilter}
             />
           </div>
-        </section>
-      </div>
+
+          <div className="mt-6 space-y-10">
+            <section>
+              <SectionHeader 
+                title="Trending Events" 
+                subtitle="Hand-picked happenings near you" 
+                action={<Button variant="ghost" size="sm" className="text-xs font-medium text-lo-teal hover:text-lo-teal/80">View all</Button>} 
+                className="mb-6"
+              />
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {highlightedEvents.length === 0 ? (
+                  <Card className="p-6 text-center text-sm text-slate-500 border-dashed">We’ll surface curated events once they’re available in your area.</Card>
+                ) : (
+                  highlightedEvents.map((event) => (
+                    <Card
+                      key={event.id}
+                      onClick={() => handleEventClick(event)}
+                      hover
+                      className="group overflow-hidden border-0"
+                    >
+                      {/* Event Image/Gradient Header */}
+                      <div className="relative h-48 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
+                        {event.media_url && (
+                          <img 
+                            src={event.media_url} 
+                            alt={event.event_title}
+                            className="h-full w-full object-cover mix-blend-overlay"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                        
+                        {/* Live Badge */}
+                        <div className="absolute top-4 left-4">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1.5 text-xs font-semibold text-white shadow-lg shadow-red-500/50">
+                            <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                            Live
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Event Content */}
+                      <div className="p-6 space-y-4">
+                        <h3 className="font-bold text-lg line-clamp-2 text-slate-900">
+                          {event.event_title || event.content || 'Upcoming Event'}
+                        </h3>
+                        <div className="flex items-center text-sm text-slate-600">
+                          <MapPin className="h-4 w-4 mr-2 text-lo-teal flex-shrink-0" />
+                          <span className="truncate">{event.location || 'Unknown location'}</span>
+                        </div>
+                        <div className="pt-4 border-t border-slate-100">
+                          <p className="text-xs text-slate-500 uppercase tracking-wider">
+                            {event.event_start_date
+                              ? format(new Date(event.event_start_date), 'MMM d, h:mm a')
+                              : 'Anytime'}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section>
+              <SectionHeader 
+                title="Suggested Posts" 
+                subtitle="A mix of public Los and highlights from friends" 
+                action={<Button variant="ghost" size="sm" className="text-xs font-medium text-lo-teal hover:text-lo-teal/80">Refresh</Button>} 
+                className="mb-6"
+              />
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {curatedMessages.length === 0 ? (
+                  <Card className="p-6 text-center text-sm text-slate-500 border-dashed">No posts match your filters yet. Try a different category.</Card>
+                ) : (
+                  curatedMessages.map((message) => (
+                    <Card
+                      key={message.id}
+                      onClick={() => handleMessageClick(message.id)}
+                      hover
+                      className="border-0"
+                    >
+                      <div className="p-6 space-y-4">
+                        <p className="line-clamp-3 text-sm text-slate-700 leading-relaxed">{message.content}</p>
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <MapPin className="h-3.5 w-3.5 text-lo-teal" />
+                            <span>{message.location || 'Somewhere nearby'}</span>
+                          </div>
+                          <span className="text-xs text-slate-400">
+                            {format(new Date(message.timestamp), 'MMM d')}
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </section>
+
+            <Card variant="elevated" className="overflow-hidden border-lo-teal/20">
+              <div className="bg-gradient-to-r from-lo-teal/10 to-blue-50/50 px-6 py-5 border-b border-lo-teal/20">
+                <SectionHeader
+                  title="Interactive Map"
+                  subtitle="Explore nearby events and posts"
+                  action={
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={() => setActiveFilter('Nearby')}
+                      className="shadow-sm"
+                    >
+                      Reset view
+                    </Button>
+                  }
+                />
+              </div>
+              <div className="h-[500px]">
+                <TabbedMapViewList
+                  messages={filteredMessages}
+                  events={events}
+                  onMessageClick={handleMessageClick}
+                  onEventClick={handleEventClick}
+                  selectedMessage={selectedMessage}
+                />
+              </div>
+            </Card>
+          </div>
+        </div>
+      </PageContainer>
 
       {/* Message Detail Modal for user posts */}
       {selectedMessage && (() => {
