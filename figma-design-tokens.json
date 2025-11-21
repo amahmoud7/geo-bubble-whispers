@@ -1,0 +1,251 @@
+{
+  "name": "Lo App Design System",
+  "colors": {
+    "primary": {
+      "electric-blue": {
+        "value": "#00B4D8",
+        "description": "Primary CTA, active states"
+      },
+      "teal": {
+        "value": "#14B8A6",
+        "description": "Accent, secondary actions"
+      },
+      "midnight": {
+        "value": "#0F172A",
+        "description": "Dark backgrounds, bottom nav"
+      }
+    },
+    "gray": {
+      "50": { "value": "#F8FAFC", "description": "Light backgrounds" },
+      "100": { "value": "#F1F5F9" },
+      "200": { "value": "#E2E8F0", "description": "Borders, dividers" },
+      "400": { "value": "#94A3B8", "description": "Secondary text" },
+      "600": { "value": "#475569" },
+      "800": { "value": "#1E293B", "description": "Cards on dark bg" }
+    },
+    "semantic": {
+      "success": { "value": "#10B981" },
+      "error": { "value": "#EF4444" },
+      "warning": { "value": "#F59E0B" },
+      "info": { "value": "#3B82F6" }
+    }
+  },
+  "typography": {
+    "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "styles": {
+      "h1": {
+        "fontSize": 32,
+        "lineHeight": 40,
+        "fontWeight": 700
+      },
+      "h2": {
+        "fontSize": 24,
+        "lineHeight": 32,
+        "fontWeight": 600
+      },
+      "h3": {
+        "fontSize": 20,
+        "lineHeight": 28,
+        "fontWeight": 600
+      },
+      "h4": {
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 600
+      },
+      "body-large": {
+        "fontSize": 16,
+        "lineHeight": 24,
+        "fontWeight": 400
+      },
+      "body-base": {
+        "fontSize": 14,
+        "lineHeight": 20,
+        "fontWeight": 400
+      },
+      "body-small": {
+        "fontSize": 12,
+        "lineHeight": 16,
+        "fontWeight": 400
+      },
+      "body-xsmall": {
+        "fontSize": 11,
+        "lineHeight": 14,
+        "fontWeight": 400
+      }
+    }
+  },
+  "spacing": {
+    "base": 4,
+    "scale": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80]
+  },
+  "borderRadius": {
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 20,
+    "2xl": 24,
+    "3xl": 32,
+    "full": 9999
+  },
+  "shadows": {
+    "sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    "base": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+    "md": "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+    "lg": "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+    "xl": "0 20px 25px -5px rgb(0 0 0 / 0.1)"
+  },
+  "components": {
+    "button": {
+      "primary": {
+        "height": 48,
+        "paddingX": 32,
+        "paddingY": 16,
+        "borderRadius": 20,
+        "backgroundColor": "#00B4D8",
+        "textColor": "#FFFFFF",
+        "fontSize": 14,
+        "fontWeight": 600
+      },
+      "secondary": {
+        "height": 48,
+        "paddingX": 32,
+        "paddingY": 16,
+        "borderRadius": 20,
+        "backgroundColor": "transparent",
+        "borderWidth": 2,
+        "borderColor": "#00B4D8",
+        "textColor": "#00B4D8",
+        "fontSize": 14,
+        "fontWeight": 600
+      }
+    },
+    "input": {
+      "default": {
+        "height": 48,
+        "paddingX": 16,
+        "paddingY": 12,
+        "borderRadius": 20,
+        "borderWidth": 1,
+        "borderColor": "#E2E8F0",
+        "fontSize": 14
+      }
+    },
+    "card": {
+      "default": {
+        "borderRadius": 32,
+        "padding": 24,
+        "backgroundColor": "#FFFFFF",
+        "borderWidth": 1,
+        "borderColor": "#F1F5F9",
+        "shadow": "sm"
+      }
+    }
+  },
+  "pages": [
+    {
+      "name": "Landing Page",
+      "route": "/landing",
+      "sections": [
+        "Navigation Bar (64px height)",
+        "Hero Section (Full viewport)",
+        "Features Section (3-column grid)",
+        "Statistics Section",
+        "Testimonials Section",
+        "CTA Section",
+        "Footer"
+      ]
+    },
+    {
+      "name": "Authentication",
+      "route": "/auth",
+      "width": 400,
+      "sections": [
+        "Auth Card",
+        "Tab Switcher (Sign In / Sign Up)",
+        "Login Form",
+        "Social Login Buttons"
+      ]
+    },
+    {
+      "name": "Home/Map",
+      "route": "/home",
+      "fullscreen": true,
+      "sections": [
+        "Header with Logo & Toggles",
+        "Search Bar",
+        "Google Maps View",
+        "Bottom Navigation",
+        "Floating Action Buttons"
+      ]
+    },
+    {
+      "name": "Explore",
+      "route": "/explore",
+      "sections": [
+        "Top Bar",
+        "Search Section",
+        "Filter Tabs",
+        "Trending Events Grid",
+        "Suggested Posts Grid",
+        "Interactive Map Card",
+        "Bottom Navigation"
+      ]
+    },
+    {
+      "name": "Profile",
+      "route": "/profile",
+      "sections": [
+        "Top Bar",
+        "Profile Header Card (gradient)",
+        "Bio Card",
+        "Highlights Section",
+        "Content Tabs",
+        "Posts Grid (3 columns)",
+        "Bottom Navigation"
+      ]
+    },
+    {
+      "name": "Inbox",
+      "route": "/inbox",
+      "sections": [
+        "Top Bar",
+        "Tab Switcher (Messages/Requests)",
+        "Search Bar",
+        "Conversation List",
+        "Bottom Navigation"
+      ]
+    },
+    {
+      "name": "Chat",
+      "route": "/chat/:id",
+      "sections": [
+        "Header with User Info",
+        "Messages List",
+        "Message Input Bar"
+      ]
+    },
+    {
+      "name": "Settings",
+      "route": "/settings",
+      "sections": [
+        "Top Bar",
+        "Settings Sections (5 groups)",
+        "Toggle/Link Items"
+      ]
+    },
+    {
+      "name": "Create Lo Modal",
+      "type": "modal",
+      "height": "88vh",
+      "sections": [
+        "Sheet Header",
+        "Content Area (Textarea)",
+        "Action Buttons",
+        "Location Picker",
+        "Privacy Toggle",
+        "Post Button"
+      ]
+    }
+  ]
+}
